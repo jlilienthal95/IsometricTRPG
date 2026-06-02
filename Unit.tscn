@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://dywc2dw5g764c"]
+
+[ext_resource type="Texture2D" uid="uid://dfd1ni0h12pgc" path="res://Assets/Sprites/Characters/Small-8-Direction-Characters_by_AxulArt.png" id="1_c58w5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ypl2c"]
+atlas = ExtResource("1_c58w5")
+region = Rect2(16, 168, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lqx2h"]
+atlas = ExtResource("1_c58w5")
+region = Rect2(16, 144, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lvdn7"]
+atlas = ExtResource("1_c58w5")
+region = Rect2(16, 120, 16, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_d172s"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ypl2c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lqx2h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lvdn7")
+}],
+"loop": true,
+"name": &"default",
+"speed": 4.0
+}]
+
+[node name="Unit" type="Node2D" unique_id=1864226610]
+
+[node name="UnitSprite" type="AnimatedSprite2D" parent="." unique_id=1846776714]
+sprite_frames = SubResource("SpriteFrames_d172s")
+frame_progress = 0.4366205

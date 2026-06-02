@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://daj4wua81wwpi"]
+
+[ext_resource type="Script" uid="uid://trceolafsptg" path="res://Scenes/UI/BattleHUD.gd" id="1_xilco"]
+
+[node name="BattleHUD" type="Control" unique_id=1260164239]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_xilco")
+
+[node name="ActionMenu" type="PanelContainer" parent="." unique_id=1146287213]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ActionMenu" unique_id=98039181]
+layout_mode = 2
+
+[node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1078247193]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+
+[node name="AttackButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1459068095]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+
+[node name="WaitButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=335231776]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2

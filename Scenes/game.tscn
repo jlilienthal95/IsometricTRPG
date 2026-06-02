@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ufftbus5plev"]
+
+[ext_resource type="PackedScene" uid="uid://mpvvfa1v586r" path="res://Scenes/Battle/Maps/testmap.tscn" id="1_ebmjs"]
+[ext_resource type="PackedScene" uid="uid://whn3ehlnh1fk" path="res://Scenes/Battle/Unit.tscn" id="2_qxrlw"]
+
+[node name="Game" type="Node2D" unique_id=1445532681]
+
+[node name="Map" parent="." unique_id=1198034331 instance=ExtResource("1_ebmjs")]
+position = Vector2(940, 524)
+
+[node name="Unit" parent="." unique_id=1864226610 instance=ExtResource("2_qxrlw")]
+position = Vector2(599, 352)
+
+[node name="Camera2D" type="Camera2D" parent="Unit" unique_id=714777430]
+z_index = 5
+limit_smoothed = true
+position_smoothing_enabled = true
