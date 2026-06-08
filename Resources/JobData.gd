@@ -3,6 +3,7 @@ extends Resource
 
 @export var job_name: String = ""
 @export var job_id: int = 0  # permanent, never reuse if you add/remove jobs
+@export var sprite_frames: SpriteFrames = null
 
 # Stat modifiers this job applies to base stats
 @export var hp_modifier: float = 1.0      # multiplier

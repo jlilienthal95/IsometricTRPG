@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://bmf27j11nde6l"]
+
+[ext_resource type="Script" uid="uid://ldc6ph2g5wim" path="res://Resources/UnitData.gd" id="1_s07lb"]
+
+[resource]
+script = ExtResource("1_s07lb")
+unit_name = "Marta"
+move_range = 4
+metadata/_custom_type_script = "uid://ldc6ph2g5wim"

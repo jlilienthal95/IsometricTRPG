@@ -20,11 +20,14 @@ layout_mode = 2
 [node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1078247193]
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
+text = "Move"
 
 [node name="AttackButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1459068095]
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
+text = "Attack"
 
 [node name="WaitButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=335231776]
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
+text = "Wait"

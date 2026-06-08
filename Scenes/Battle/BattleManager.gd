@@ -13,11 +13,17 @@ enum BattleState {
 
 signal state_changed(new_state: BattleState)
 signal active_unit_changed(unit: Unit)
+signal unit_moved(unit: Unit, to_cell: Vector3i)
 
 var current_state: BattleState = BattleState.SETUP
 var active_unit: Unit = null
 var player_units: Array[Unit] = []
 var enemy_units: Array[Unit] = []
+
+var _grid: BattleGrid = null
+
+func setup(grid: BattleGrid) -> void:
+	_grid = grid
 
 func change_state(new_state: BattleState) -> void:
 	current_state = new_state
@@ -54,18 +60,27 @@ func cancel_action() -> void:
 		return
 	change_state(BattleState.ACTION_SELECT)
 
-func confirm_move(target_cell: Vector2i) -> void:
+func confirm_move(target_cell: Vector3i) -> void:
 	if current_state != BattleState.MOVE_SELECT:
 		_state_error("confirm_move", BattleState.MOVE_SELECT)
 		return
 	change_state(BattleState.RESOLVING)
-	# movement execution will go here
+	var from_cell = active_unit.grid_position
+	emit_signal("unit_moved", active_unit, target_cell)
 	change_state(BattleState.ACTION_SELECT)
+
+var turn = 0
 
 func _start_next_turn() -> void:
 	# TurnQueue will replace this entire function later
 	# for now just cycle back to the first player unit
-	active_unit = player_units[0]
+	var players = player_units.size() - 1;
+	if turn >= players:
+		turn = 0
+	else:
+		turn += 1
+	active_unit = player_units[turn]
+	
 	emit_signal("active_unit_changed", active_unit)
 	# determine if next unit is player or enemy controlled
 	if player_units.has(active_unit):

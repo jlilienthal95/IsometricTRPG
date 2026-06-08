@@ -4,41 +4,74 @@ const TILE_HEIGHT = 64
 const UNIT_Y_OFFSET = 60	# shifts unit up to sit on tile surface
 const UNIT_X_OFFSET = 5		# corrects horizontal centering of sprite
 
+var _reachable_cells: Array[Vector3i] = []
+
 func _ready() -> void:
+	print('getting ready...')
 	for i in range(15):
 		var layer = $TerrainLayers.get_node("Elevation" + str(i))
 		if layer:
 			$BattleGrid.build_from_tilemap(layer, i)
 
-	#setup input handling
+	#set up input handling
 	$InputHandler.setup($TerrainLayers/Elevation0)
 	$InputHandler.cell_selected.connect(_on_cell_selected)
 	$InputHandler.cell_hovered.connect(_on_cell_hovered)
 	$InputHandler.cell_cancelled.connect(_on_cell_cancelled)
 	
-	#setup battleHUD
-	$BattleHUD.setup($BattleManager)
+	#set up battleHUD
+	$CanvasLayer/BattleHUD.setup($BattleManager)
+	
+	#set up pathfinder
+	$Pathfinder.setup($BattleGrid)
+	
+	#set up highlight layer
+	$HighlightManager.setup($HighlightLayer)
+	
+	#set up battle manager
+	$BattleManager.setup($BattleGrid)
+	$BattleManager.state_changed.connect(_on_battle_state_changed)
+	$BattleManager.unit_moved.connect(_on_unit_moved)
+	$BattleManager.active_unit_changed.connect(_on_active_unit_changed)
+	
+	#set up unit mover
+	$UnitMover.setup($BattleGrid)
+	$BattleManager.unit_moved.connect(_on_unit_moved)
+	$UnitMover.movement_complete.connect(_on_movement_complete)
 	
 	#temp hardcoded logic to generate units
-	var unit = _spawn_test_unit()
-	var player_units: Array[Unit] = [unit];
+	var marta = _spawn_test_unit(Vector3i(-1,2,1), load("res://Data/Units/Marta.tres"))
+	var theo = _spawn_test_unit(Vector3i(-2,2,1), load("res://Data/Units/Theo.tres"))
+	var player_units: Array[Unit] = [marta,theo];
 	var enemy_units: Array[Unit] = [];
 	
 	$BattleManager.start_battle(player_units, enemy_units);
+	print("setup complete")
+	
+func grid_to_world(cell: Vector3i) -> Vector2:
+	var tile = $BattleGrid.get_tile(cell)
+	if tile == null:
+		return Vector2.ZERO
+	var layer = $TerrainLayers.get_node("Elevation" + str(cell.z))
+	var world_pos = layer.to_global(layer.map_to_local(Vector2i(cell.x, cell.y)))
+	world_pos.y -= UNIT_Y_OFFSET
+	world_pos.x += UNIT_X_OFFSET;
+	return world_pos
 	
 func _on_cell_hovered(cell: Vector2i) -> void:
 	pass
 	
 func _on_cell_selected(cell: Vector2i) -> void:
-	print("cell selected:")
-	var tile = $BattleGrid.get_tile(cell)
-	if tile == null:
-		return
+	print("cell selected: ", cell)
 	match $BattleManager.current_state:
 		BattleManager.BattleState.MOVE_SELECT:
-			$BattleManager.confirm_move(cell)
+			# find matching Vector3i in reachable cells
+			for reachable_cell in _reachable_cells:
+				if reachable_cell.x == cell.x and reachable_cell.y == cell.y:
+					$BattleManager.confirm_move(reachable_cell)
+					break
 		BattleManager.BattleState.TARGET_SELECT:
-			$BattleManager.confirm_target(cell)
+			$BattleManager.confirm_target(Vector3i(cell.x, cell.y, 0))
 
 func _on_cell_cancelled() -> void:
 	$BattleManager.cancel_action()
@@ -48,27 +81,37 @@ func _debug_print_grid():
 		var tile = $BattleGrid.get_tile(cell)
 		print(cell, " → elevation: ", tile.elevation, " terrain: ", tile.terrain_type, " is_walkable: ", str(tile.is_walkable));
 
-func _spawn_test_unit() -> Unit:
+func _spawn_test_unit(test_cell: Vector3i, unit_data: UnitData) -> Unit:
 	var unit_scene = preload("res://Scenes/Battle/Unit.tscn")
-	var unit = unit_scene.instantiate()
-	add_child(unit)
-	var test_cell = Vector2i(-1, 2)
+	var unit: Unit = unit_scene.instantiate()
 	unit.global_position = grid_to_world(test_cell)
-	var test_data = UnitData.new()
-	test_data.unit_name = "Test Unit"
-	unit.setup(test_data, test_cell)
+	#print(unit_data.unit_name)
+	add_child(unit)
+	unit.setup(unit_data, test_cell)
 	$BattleGrid.place_unit(unit, test_cell)
 	$BattleCamera.snap_to(unit.global_position)
-	print(unit);
-	return unit
 
-func grid_to_world(cell: Vector2i) -> Vector2:
-	var tile = $BattleGrid.get_tile(cell)
-	if tile == null:
-		return Vector2.ZERO
-	var layer = $TerrainLayers.get_node("Elevation" + str(tile.elevation))
-	var world_pos = layer.to_global(layer.map_to_local(cell))
-	world_pos.y -= UNIT_Y_OFFSET
-	world_pos.x += UNIT_X_OFFSET;
-	return world_pos
+	return unit
+func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
+	match new_state:
+		BattleManager.BattleState.MOVE_SELECT:
+			var unit = $BattleManager.active_unit
+			var query = $Pathfinder.build_move_query(unit.data, true)
+			_reachable_cells = $Pathfinder.get_cells_in_range(unit.grid_position, query, unit)
+			$HighlightManager.show_move_range(_reachable_cells)
+			
+		BattleManager.BattleState.ACTION_SELECT:
+			$HighlightManager.clear()
+		BattleManager.BattleState.TARGET_SELECT:
+			$HighlightManager.clear()
+
+func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
+	var query = $Pathfinder.build_move_query(unit.data, true)
+	var steps = $Pathfinder.get_movement_path(unit.grid_position, to_cell, query, unit)
+	$UnitMover.execute_movement(unit, steps, grid_to_world, $BattleCamera)
+
+func _on_active_unit_changed(unit: Unit) -> void:
+	$BattleCamera.pan_to(Vector2(unit.grid_position.x,unit.grid_position.y))
 	
+func _on_movement_complete(unit: Unit) -> void:
+	print("movement complete: ", unit.data.unit_name)

@@ -8,12 +8,13 @@ enum TerrainType {
 	LAVA = 3,
 	ICE = 4,
 	SAND = 5,
-	ROCK = 6
+	ROCK = 6,
+	FOREST = 7
 }
 
 @export var terrain_type: TerrainType = TerrainType.NORMAL
 @export var elevation: int = 0
-@export var is_walkable: bool = true
+@export var is_walkable: bool = false
 
 # Runtime only — not exported, not saved
 var unit_ref = null        # will hold a UnitData reference later

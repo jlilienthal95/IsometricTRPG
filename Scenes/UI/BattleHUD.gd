@@ -19,3 +19,6 @@ func _on_state_changed(new_state: BattleManager.BattleState) -> void:
 			action_menu.show()
 		_:
 			action_menu.hide()
+		BattleManager.BattleState.MOVE_SELECT:
+			print("move select battlehud")
+			$HighlightManager.setup($HighlightLayer)
