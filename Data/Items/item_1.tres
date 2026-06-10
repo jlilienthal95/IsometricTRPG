@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://e5vgnlh20jjr"]
+
+[ext_resource type="Script" uid="uid://bu3xhcb3er48r" path="res://Resources/ItemData.gd" id="1_qbh5s"]
+
+[resource]
+script = ExtResource("1_qbh5s")
+item_name = "Bronze Plate"
+item_id = 1001
+item_type = 1
+description = "Basic garb for a knight, providing some defense against standard physical attacks."
+hp_bonus = 30
+defense_bonus = 10
+metadata/_custom_type_script = "uid://bu3xhcb3er48r"

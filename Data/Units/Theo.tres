@@ -5,9 +5,12 @@
 [resource]
 script = ExtResource("1_gw5mv")
 unit_name = "Theo"
+job_id = 1
 max_hp = 145
 max_mp = 8
 current_mp = 8
 jump_height = 1
 base_attack = 9
+equipped_weapon_id = 1
+equipped_armor_id = 1001
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

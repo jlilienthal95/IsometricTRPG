@@ -21,6 +21,7 @@ func _execute_steps(unit: Unit, steps: Array[MovementStep], get_world_pos: Calla
 		# update grid position
 		var from = unit.grid_position
 		_grid.move_unit(from, step.cell)
+		unit.update_z_index()
 		
 		# flip unit horizontally depending on movement direction
 		if (from.x > step.cell.x || from.y < step.cell.y) && from.z == step.cell.z:

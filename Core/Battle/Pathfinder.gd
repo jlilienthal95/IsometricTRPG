@@ -32,6 +32,8 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 				pass
 			elif query.requires_empty and _grid.is_cell_occupied(cell) and cell != origin:
 				pass
+			elif query.can_end_on_ally == false and _grid.is_cell_occupied(cell) and cell != origin:
+				pass
 			else:
 				reachable.append(cell)
 

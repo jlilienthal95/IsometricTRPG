@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://waiyxlauo63w"
-path="res://.godot/imported/L_wait_8x7.png-c34916003f63ce63652ed56ab60e36dd.ctex"
+uid="uid://c8hi7il5bm3xs"
+path="res://.godot/imported/L_wait_8x7.png-1d9462fe09511353b333cd695da0e0b5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Characters/L_wait_8x7.png"
-dest_files=["res://.godot/imported/L_wait_8x7.png-c34916003f63ce63652ed56ab60e36dd.ctex"]
+source_file="res://Assets/Sprites/Jobs/Pirate/L_wait_8x7.png"
+dest_files=["res://.godot/imported/L_wait_8x7.png-1d9462fe09511353b333cd695da0e0b5.ctex"]
 
 [params]
 

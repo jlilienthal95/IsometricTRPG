@@ -1,7 +1,7 @@
 class_name ItemData
 extends Resource
 
-enum ItemType { WEAPON = 0, ARMOR = 1, SHIELD = 2, ACCESSORY = 3, CONSUMABLE = 4 }
+enum ItemType { WEAPON = 0, ARMOR = 1, SHIELD = 2, BOOTS = 3, ACCESSORY = 4 }
 
 @export var item_name: String = ""
 @export var item_id: int = 0		# permanent, never reuse

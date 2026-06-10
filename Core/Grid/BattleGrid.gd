@@ -31,7 +31,10 @@ func get_elevation(cell: Vector3i) -> int:
 	return tile.elevation if tile else 0
 
 func get_all_cells() -> Array[Vector3i]:
-	return _grid.keys()
+	var cells: Array[Vector3i] = []
+	for key in _grid.keys():
+		cells.append(key)
+	return cells
 
 func place_unit(unit: Unit, cell: Vector3i) -> void:
 	var tile = get_tile(cell)

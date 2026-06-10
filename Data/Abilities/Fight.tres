@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://dwbmft28hcwbx"]
+
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_owiq4"]
+
+[resource]
+script = ExtResource("1_owiq4")
+ability_name = "Fight"
+description = "A basic attack. Hits anything in a one tile range."
+max_elevation_difference = 1
+base_power = 10
+metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

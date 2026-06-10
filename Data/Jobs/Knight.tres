@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="JobData" format=3 uid="uid://dpbujg0ifjm1m"]
+
+[ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_byrk4"]
+[ext_resource type="SpriteFrames" uid="uid://cb0sg4wgbbtyi" path="res://Data/Jobs/KnightFrames.tres" id="2_jn4e3"]
+
+[resource]
+script = ExtResource("2_byrk4")
+job_name = "Knight"
+sprite_frames = ExtResource("2_jn4e3")
+shadow_offset = Vector2(-207, -170)
+shadow_scale = Vector2(4, 4)
+hp_modifier = 1.2
+mp_modifier = 0.8
+attack_modifier = 1.2
+speed_modifier = 0.8
+move_range = 4
+metadata/_custom_type_script = "uid://ct2virpcpm7ny"

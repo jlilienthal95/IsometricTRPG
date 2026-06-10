@@ -12,6 +12,7 @@ func _ready() -> void:
 		var layer = $TerrainLayers.get_node("Elevation" + str(i))
 		if layer:
 			$BattleGrid.build_from_tilemap(layer, i)
+			layer.z_index = i
 
 	#set up input handling
 	$InputHandler.setup($TerrainLayers/Elevation0)
@@ -29,21 +30,34 @@ func _ready() -> void:
 	$HighlightManager.setup($HighlightLayer)
 	
 	#set up battle manager
-	$BattleManager.setup($BattleGrid)
+	$BattleManager.setup($BattleGrid, $UnitMover)
 	$BattleManager.state_changed.connect(_on_battle_state_changed)
 	$BattleManager.unit_moved.connect(_on_unit_moved)
 	$BattleManager.active_unit_changed.connect(_on_active_unit_changed)
+	$BattleManager.move_consumed.connect($CanvasLayer/BattleHUD.move_consumed)
+	$BattleManager.attack_consumed.connect($CanvasLayer/BattleHUD.attack_consumed)
 	
 	#set up unit mover
 	$UnitMover.setup($BattleGrid)
-	$BattleManager.unit_moved.connect(_on_unit_moved)
 	$UnitMover.movement_complete.connect(_on_movement_complete)
 	
 	#temp hardcoded logic to generate units
 	var marta = _spawn_test_unit(Vector3i(-1,2,1), load("res://Data/Units/Marta.tres"))
 	var theo = _spawn_test_unit(Vector3i(-2,2,1), load("res://Data/Units/Theo.tres"))
-	var player_units: Array[Unit] = [marta,theo];
-	var enemy_units: Array[Unit] = [];
+	var player_units: Array[Unit] = [marta,theo]
+	var enemy_units: Array[Unit] = []
+	var inventory: Array[int] = []
+	
+	# load items needed for this battle into ItemRegistry
+	var all_units: Array[Unit] = []
+	all_units.append_array(player_units)
+	all_units.append_array(enemy_units)
+	ItemRegistry.load_items_for_battle(all_units, PartyManager.inventory)
+
+	# resolve equipment on all units so equipped_items is populated
+	for unit in all_units:
+		unit.data.resolve_equipment()
+	
 	
 	$BattleManager.start_battle(player_units, enemy_units);
 	print("setup complete")
@@ -98,20 +112,38 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			var unit = $BattleManager.active_unit
 			var query = $Pathfinder.build_move_query(unit.data, true)
 			_reachable_cells = $Pathfinder.get_cells_in_range(unit.grid_position, query, unit)
+			_reachable_cells = _reachable_cells.filter(func(cell): 
+				return cell != unit.grid_position
+			)
 			$HighlightManager.show_move_range(_reachable_cells)
 			
 		BattleManager.BattleState.ACTION_SELECT:
 			$HighlightManager.clear()
 		BattleManager.BattleState.TARGET_SELECT:
 			$HighlightManager.clear()
+		
 
 func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 	var query = $Pathfinder.build_move_query(unit.data, true)
 	var steps = $Pathfinder.get_movement_path(unit.grid_position, to_cell, query, unit)
 	$UnitMover.execute_movement(unit, steps, grid_to_world, $BattleCamera)
 
+var _previous_unit: Unit = null
+
 func _on_active_unit_changed(unit: Unit) -> void:
-	$BattleCamera.pan_to(Vector2(unit.grid_position.x,unit.grid_position.y))
+	# disconnect previous unit
+	if _previous_unit != null:
+		if _previous_unit.move_consumed.is_connected($CanvasLayer/BattleHUD.move_consumed):
+			_previous_unit.move_consumed.disconnect($CanvasLayer/BattleHUD.move_consumed)
+		if _previous_unit.action_consumed.is_connected($CanvasLayer/BattleHUD.attack_consumed):
+			_previous_unit.action_consumed.disconnect($CanvasLayer/BattleHUD.attack_consumed)
+	# connect new unit
+	unit.move_consumed.connect($CanvasLayer/BattleHUD.move_consumed)
+	unit.action_consumed.connect($CanvasLayer/BattleHUD.attack_consumed)
+	$CanvasLayer/BattleHUD.on_turn_changed(unit.data.equipped_items)
+	$BattleCamera.pan_to(grid_to_world(unit.grid_position))
+	_previous_unit = unit
 	
 func _on_movement_complete(unit: Unit) -> void:
 	print("movement complete: ", unit.data.unit_name)
+	
