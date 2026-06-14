@@ -1,4 +1,3 @@
-class_name BattleManager
 extends Node
 
 enum BattleState {
@@ -18,19 +17,33 @@ signal active_unit_changed(unit: Unit)
 signal unit_moved(unit: Unit, to_cell: Vector3i)
 signal move_consumed
 signal attack_consumed
-signal ability_selected(unit: Unit, origin_cell: Vector3i, ability: AbilityData)
+signal ability_selected(unit: Unit, ability: AbilityData)
+signal unit_executed_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera)
 
 var current_state: BattleState = BattleState.SETUP
 var active_unit: Unit = null
 var player_units: Array[Unit] = []
 var enemy_units: Array[Unit] = []
+var turn: int = -1
 
 var _grid: BattleGrid = null
+var _camera: BattleCamera = null
 var _unit_mover: UnitMover = null
+var _unit_ability_executor: UnitAbilityExecutor = null
+var _current_ability: AbilityData = null
 
-func setup(grid: BattleGrid, unit_mover: UnitMover) -> void:
+func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor) -> void:
 	_grid = grid
+	_camera = camera
 	_unit_mover = unit_mover
+	_unit_ability_executor = unit_ability_executor
+	
+func reset() -> void:
+	current_state = BattleState.SETUP
+	active_unit = null
+	player_units.clear()
+	enemy_units.clear()
+	turn = -1
 	
 func change_state(new_state: BattleState) -> void:
 	current_state = new_state
@@ -61,7 +74,9 @@ func select_ability(ability: AbilityData):
 	if current_state != BattleState.ATTACK_SELECT:
 		_state_error("select_action_attack", BattleState.ACTION_SELECT)
 		return
-	emit_signal("ability_selected", active_unit, active_unit.grid_position, ability)
+	_current_ability = ability
+	emit_signal("ability_selected", active_unit, ability)
+	change_state(BattleState.TARGET_SELECT)
 	print("ability selected: ", ability.ability_name)
 	
 func select_action_equipment() -> void:
@@ -97,11 +112,10 @@ func confirm_target(target_cell: Vector3i) -> void:
 	if not active_unit.can_act():
 		push_error("confirm_target called when active_unit cannot act")
 		return
-		
+	#TODO display target unit's info, expected damage, elemental effects, and hit chance
+	emit_signal("unit_executed_ability", active_unit, target_cell, _current_ability, _camera)
 	emit_signal("attack_consumed")
-	#TODO replace with _enter_resolving once action logic is implemented
-	change_state(BattleState.RESOLVING)
-	#await _enter_resolving(resolving_complete, BattleState.ACTION_SELECT)
+	await _enter_resolving(_unit_ability_executor.ability_complete, BattleState.ACTION_SELECT)
 		
 func end_turn() -> void:
 	if current_state != BattleState.ACTION_SELECT:
@@ -120,8 +134,6 @@ func _state_error(func_name: String, expected: BattleState) -> void:
 		BattleState.keys()[expected],
 		BattleState.keys()[current_state]
 	])
-	
-var turn = -1
 
 func _start_next_turn() -> void:
 	# TurnQueue will replace this entire function later
@@ -144,7 +156,5 @@ func _start_next_turn() -> void:
 
 func _enter_resolving(completion_signal: Signal, next_state: BattleState) -> void:
 	change_state(BattleState.RESOLVING)
-	print("awaiting")
 	await completion_signal
-	print("complete")
 	change_state(next_state)

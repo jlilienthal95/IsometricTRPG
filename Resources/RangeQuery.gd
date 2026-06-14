@@ -7,6 +7,7 @@ var min_range: int = 0
 var jump_height: int = 999
 
 # filters
+var show_full_range: bool = false
 var respect_terrain_cost: bool = false
 var blocked_by_enemies: bool = false		# can't move through enemies
 var blocked_by_allies: bool = false			# can't move through allies (override for some abilities/jobs)
@@ -17,3 +18,5 @@ var ignore_elevation: bool = false
 # target filters
 var requires_unit: bool = false
 var requires_empty: bool = false
+var requires_enemy: bool = false
+var requires_ally: bool = false

@@ -26,10 +26,10 @@ func _apply_job_sprite() -> void:
 		return
 	if job.sprite_frames != null:
 		unit_sprite.sprite_frames = job.sprite_frames
-		$VisualRoot.position = job.sprite_offset ## This was previously commented out, and had an error
-		unit_shadow.position = job.shadow_offset
+		$VisualRoot/UnitSprite.position += job.sprite_offset ## This was previously commented out, and had an error
 		unit_shadow.scale = job.shadow_scale
 		unit_shadow.z_index = unit_sprite.z_index - 1
+		
 #animations
 func play_idle() -> void:
 	unit_sprite.play("idle")
@@ -49,25 +49,19 @@ func play_attack() -> void:
 #appearance
 func set_facing(flip: bool) -> void:
 	$VisualRoot.scale.x = -1 if flip else 1
+	var job = JobRegistry.get_job(data.job_id)
 	
 func update_z_index() -> void:
-	var base_z = grid_position.z
+	var battle_grid = get_parent().get_node("BattleGrid")
+	var occluders = battle_grid.occlusion_map.get(grid_position, [])
 	
-	# check tiles in the "behind" directions (lower x, lower y in your layout)
-	var behind_cells = [
-		Vector2i(grid_position.x - 2, grid_position.y),
-		Vector2i(grid_position.x, grid_position.y - 2),
-		Vector2i(grid_position.x - 2, grid_position.y - 2),
-	]
-	
-	var highest_behind = base_z
-	for xy in behind_cells:
-		var tile = get_parent().get_node("BattleGrid").get_tile_at_highest_elevation(xy)
-		if tile != null and tile.elevation > highest_behind:
-			highest_behind = tile.elevation
-	
-	z_index = highest_behind + 1
-	
+	if occluders.is_empty():
+		z_index = 14 * 4 + 3
+	else:
+		# use lowest elevation occluder so unit draws behind all occluders
+		var lowest_occluder = occluders[occluders.size() - 1]
+		z_index = lowest_occluder.z * 4 - 1
+			
 #state
 func consume_move() -> void:
 	data.has_moved = true

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c2gtjas3rpmad"
-path="res://.godot/imported/L_wait_8x7.png-3bb99ea2e1209d20b8a25cf3fa254571.ctex"
+uid="uid://cg4clu7mxb6nc"
+path="res://.godot/imported/L_hited_4x3.png-3409c42d6417d7b1022171c3e8813774.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Jobs/Knight/L_wait_8x7.png"
-dest_files=["res://.godot/imported/L_wait_8x7.png-3bb99ea2e1209d20b8a25cf3fa254571.ctex"]
+source_file="res://Assets/Sprites/Jobs/Knight/L_hited_4x3.png"
+dest_files=["res://.godot/imported/L_hited_4x3.png-3409c42d6417d7b1022171c3e8813774.ctex"]
 
 [params]
 

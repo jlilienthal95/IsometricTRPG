@@ -22,6 +22,9 @@ func _execute_steps(unit: Unit, steps: Array[MovementStep], get_world_pos: Calla
 		var from = unit.grid_position
 		_grid.move_unit(from, step.cell)
 		unit.update_z_index()
+		# TODO: Z index flickers during tween as unit passes through intermediate
+		# screen positions with different occlusion rules. Fix by interpolating
+		# Z index based on actual world position during movement animation.
 		
 		# flip unit horizontally depending on movement direction
 		if (from.x > step.cell.x || from.y < step.cell.y) && from.z == step.cell.z:

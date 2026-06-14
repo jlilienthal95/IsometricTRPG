@@ -5,7 +5,7 @@ extends Resource
 @export var job_id: int = 0  # permanent, never reuse if you add/remove jobs
 @export var sprite_frames: SpriteFrames = null
 @export var sprite_offset: Vector2 = Vector2.ZERO
-@export var shadow_offset: Vector2 = Vector2.ZERO
+@export var flip_offset: Vector2 = Vector2.ZERO
 @export var shadow_scale: Vector2 = Vector2.ONE
 
 # Stat modifiers this job applies to base stats

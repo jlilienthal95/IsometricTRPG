@@ -1,15 +1,23 @@
 class_name HighlightManager
 extends Node
 
-var highlight_layer: TileMapLayer = null
+const HIGHLIGHT_SCENE = preload("res://Scenes/Battle/HighlightTile.tscn")
+var _active_highlights: Array[Node2D] = []
 
-func setup(layer: TileMapLayer) -> void:
-	highlight_layer = layer
-
-func show_move_range(cells: Array[Vector3i]) -> void:
+func show_move_range(cells: Dictionary, get_world_pos: Callable) -> void:
 	clear()
 	for cell in cells:
-		highlight_layer.set_cell(Vector2i(cell.x, cell.y), 0, Vector2i(0, 0))
+		var highlight: Node2D = HIGHLIGHT_SCENE.instantiate()
+		add_child(highlight)
+		highlight.global_position = get_world_pos.call(cell)
+		highlight.z_index = cell.z * 4 + 1
+		print("cells[cell]: ", cells[cell])
+		if cells[cell] == false:
+			print("bag target!")
+			highlight.modulate = Color(255,0,0,.75)
+		_active_highlights.append(highlight)
 
 func clear() -> void:
-	highlight_layer.clear()
+	for highlight in _active_highlights:
+		highlight.queue_free()
+	_active_highlights.clear()

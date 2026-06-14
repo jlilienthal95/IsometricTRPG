@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://djcnqynklsoer"]
+
+[ext_resource type="Texture2D" uid="uid://dikm40ht87wxs" path="res://Assets/Sprites/Tilesets/CursorTile.png" id="1_066nv"]
+[ext_resource type="Script" uid="uid://bd72xgccb26q7" path="res://Scenes/Battle/cursor.gd" id="1_nvec1"]
+
+[node name="Cursor" type="Node2D" unique_id=998784835]
+script = ExtResource("1_nvec1")
+
+[node name="CursorSprite" type="Sprite2D" parent="." unique_id=1734883385]
+texture = ExtResource("1_066nv")

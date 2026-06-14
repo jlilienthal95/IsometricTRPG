@@ -15,13 +15,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _reference_layer == null:
 		return
 	if event is InputEventMouseMotion:
+		#print("mouse motion")
 		var cell = _get_cell_under_mouse()
 		if cell != _last_hovered_cell:
 			_last_hovered_cell = cell
 			emit_signal("cell_hovered", cell)
 	if event.is_action_pressed("menu_select"):
 		var cell = _get_cell_under_mouse()
-		print("InputHandler emitting cell_selected: ", cell)
 		emit_signal("cell_selected", cell)
 	if event.is_action_pressed("menu_cancel"):
 		emit_signal("cell_cancelled")
