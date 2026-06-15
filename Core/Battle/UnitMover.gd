@@ -44,7 +44,7 @@ func _execute_steps(unit: Unit, steps: Array[MovementStep], get_world_pos: Calla
 		tween.tween_property(unit, "global_position", target_pos, 0.15)
 		await tween.finished
 		camera.pan_to(target_pos)
-	
+
 	unit.play_idle()
 	_is_moving = false
 	emit_signal("movement_complete", unit)

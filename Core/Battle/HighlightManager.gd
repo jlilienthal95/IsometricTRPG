@@ -11,9 +11,7 @@ func show_move_range(cells: Dictionary, get_world_pos: Callable) -> void:
 		add_child(highlight)
 		highlight.global_position = get_world_pos.call(cell)
 		highlight.z_index = cell.z * 4 + 1
-		print("cells[cell]: ", cells[cell])
 		if cells[cell] == false:
-			print("bag target!")
 			highlight.modulate = Color(255,0,0,.75)
 		_active_highlights.append(highlight)
 

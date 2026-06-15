@@ -59,7 +59,7 @@ z_index = 100
 script = ExtResource("12_68j0i")
 
 [node name="Cursor" parent="." unique_id=998784835 instance=ExtResource("13_36cr5")]
-z_index = 1000
+z_index = 50
 z_as_relative = false
 
 [node name="TerrainLayers" type="Node2D" parent="." unique_id=1207183569]

@@ -3,10 +3,10 @@ extends Node
 enum BattleState {
 	SETUP,			# units being placed, pre-battle
 	ACTION_SELECT,	# player has selected a unit, choosing an action (move, attack, wait)
+	EQUIPMENT_SELECT,	#list of unit's equipped items
 	ATTACK_SELECT,	# player has selected a unit, choosing an action (move, attack, wait)
 	MOVE_SELECT,	# player is selecting a tile to move to
 	TARGET_SELECT,	# player is selecting a target for an ability
-	EQUIPMENT_SELECT,	#list of unit's equipped items
 	RESOLVING,		# an action is executing, no input accepted
 	ENEMY_TURN,		# AI is taking its turn
 	BATTLE_END,		# battle is over, win or lose
@@ -115,6 +115,7 @@ func confirm_target(target_cell: Vector3i) -> void:
 	#TODO display target unit's info, expected damage, elemental effects, and hit chance
 	emit_signal("unit_executed_ability", active_unit, target_cell, _current_ability, _camera)
 	emit_signal("attack_consumed")
+	
 	await _enter_resolving(_unit_ability_executor.ability_complete, BattleState.ACTION_SELECT)
 		
 func end_turn() -> void:

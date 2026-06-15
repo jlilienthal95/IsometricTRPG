@@ -45,6 +45,11 @@ func play_attack() -> void:
 	# return to idle when attack animation finishes
 	await unit_sprite.animation_finished
 	play_idle()
+	
+func play_hit() -> void:
+	unit_sprite.play("hit")
+	await unit_sprite.animation_finished
+	play_idle()
 
 #appearance
 func set_facing(flip: bool) -> void:
@@ -80,3 +85,19 @@ func can_move() -> bool:
 
 func can_act() -> bool:
 	return not data.has_acted
+	
+#battle
+func adjust_hp(amount: int, isDamage: bool = true) -> void:	
+	if isDamage:
+		data.current_hp -= amount
+	else:
+		data.current_hp += amount
+
+func adjust_mp(amount: int, isDamage: bool = true) -> void:
+	if isDamage:
+		data.current_mp -= amount
+	else:
+		data.current_mp += amount
+		
+func applyStatus(effect: StatusEffect.StatusEffect, turns: int) -> void:
+	data.active_status_effects[effect] = turns

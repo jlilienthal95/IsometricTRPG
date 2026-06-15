@@ -30,6 +30,7 @@ var has_acted: bool = false
 @export var equipped_accessory_id = -1
 
 var equipped_items: Array[ItemData] = []
+var active_status_effects: Dictionary[StatusEffect.StatusEffect, int] = {}
 
 func get_equipped_ids() -> Array[int]:
 	return [equipped_weapon_id, equipped_armor_id, equipped_shield_id, equipped_boots_id, equipped_accessory_id]

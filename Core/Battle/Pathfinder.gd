@@ -13,9 +13,7 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 	var reachable: Dictionary = {} # Vector3i : target_isValid
 	
 	for cell in visited.keys():
-		
 		var cost = visited[cell]
-	
 		if cost < query.min_range:
 			continue
 		if cell == origin:

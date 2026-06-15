@@ -9,6 +9,7 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 @export var ability_id: int = 0		# permanent, never reuse
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
+@export var status_effect: Dictionary[StatusEffect.StatusEffect, int] = {StatusEffect.StatusEffect.NONE: 0}
 @export var target_type: TargetType = TargetType.SINGLE_ENEMY
 
 # Cost
@@ -32,3 +33,4 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
+@export var impact_delay: float = 1.3  # seconds before hit animation triggers

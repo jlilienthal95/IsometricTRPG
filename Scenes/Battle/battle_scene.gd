@@ -1,7 +1,6 @@
 extends Node2D
 
 const TILE_HEIGHT = 64
-		# corrects horizontal centering of sprite
 
 var _reachable_cells: Dictionary = {}
 var _current_move_query: RangeQuery = null
@@ -50,6 +49,9 @@ func _ready() -> void:
 	#set up unit mover
 	$UnitMover.setup($BattleGrid)
 	$UnitMover.movement_complete.connect(_on_movement_complete)
+	
+	#set up unit ability executor
+	$UnitAbilityExecutor.setup($BattleGrid)
 	
 	#temp hardcoded logic to generate units
 	var marta = _spawn_test_unit(Vector3i(-6,0,1), load("res://Data/Units/Marta.tres"))
@@ -155,6 +157,7 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			_reachable_cells = $Pathfinder.get_cells_in_range(unit.grid_position, query, unit)
 			$HighlightManager.show_move_range(_reachable_cells, grid_to_world)
 		BattleManager.BattleState.RESOLVING:
+			$HighlightManager.clear()
 			pass
 
 func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
@@ -162,7 +165,6 @@ func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 	$UnitMover.execute_movement(unit, steps, grid_to_world, $BattleCamera)
 
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
-	print("executing ability...")
 	$UnitAbilityExecutor.execute_ability(caster, target_cell, ability, camera)
 
 var _previous_unit: Unit = null
