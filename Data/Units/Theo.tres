@@ -14,4 +14,5 @@ jump_height = 1
 base_attack = 9
 equipped_weapon_id = 1
 equipped_armor_id = 1001
+ability_ids = Array[int]([3])
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

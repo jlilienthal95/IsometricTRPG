@@ -68,14 +68,6 @@ func play_attack_animation(impact_delay: float) -> void:
 		notify_ability_impact()
 		await unit_sprite.animation_finished
 		play_idle()
-	
-# plays the full attack sequence via AnimationPlayer which handles impact timing
-#func play_attack_animation() -> void:
-	#if data.is_dead:
-		#return
-	#unit_animation_player.play("fight")
-	#await unit_animation_player.animation_finished
-	#play_idle()
 
 # plays the hit reaction animation and returns to idle when finished
 func play_hit() -> void:
@@ -83,6 +75,12 @@ func play_hit() -> void:
 		return
 	unit_sprite.play("hit")
 	await unit_sprite.animation_finished
+	play_idle()
+	
+func play_missed() -> void:
+	print("playing missed")
+	unit_animation_player.play("missed")
+	await unit_animation_player.animation_finished
 	play_idle()
 
 # plays the death animation and marks the unit as dead — does not return to idle

@@ -96,6 +96,7 @@ func _spawn_units() -> void:
 	# resolve equipment and ability references so equipped_items[] and abilties[] is populated on each unit
 	for unit in all_units:
 		unit.data.resolve_equipment()
+		print("resolving abilities...")
 		unit.data.resolve_abilities()
 
 	BattleManager.start_battle(player_units, enemy_units)
@@ -200,7 +201,7 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			_highlight_manager.clear()
 			_current_move_query = null
 			_current_ability = null
-		BattleManager.BattleState.ATTACK_SELECT:
+		BattleManager.BattleState.ABILITIES_SELECT:
 			pass
 		BattleManager.BattleState.TARGET_SELECT:
 			var query: RangeQuery = _pathfinder.build_ability_query(_current_ability)
@@ -217,11 +218,11 @@ func _on_active_unit_changed(unit: Unit) -> void:
 	if _previous_unit != null:
 		if _previous_unit.move_consumed.is_connected(_battle_hud.move_consumed):
 			_previous_unit.move_consumed.disconnect(_battle_hud.move_consumed)
-		if _previous_unit.action_consumed.is_connected(_battle_hud.attack_consumed):
-			_previous_unit.action_consumed.disconnect(_battle_hud.attack_consumed)
+		if _previous_unit.action_consumed.is_connected(_battle_hud.ability_consumed):
+			_previous_unit.action_consumed.disconnect(_battle_hud.ability_consumed)
 	# connect new unit's signals
 	unit.move_consumed.connect(_battle_hud.move_consumed)
-	unit.action_consumed.connect(_battle_hud.attack_consumed)
+	unit.action_consumed.connect(_battle_hud.ability_consumed)
 	_battle_hud.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
@@ -232,6 +233,8 @@ func _on_active_unit_changed(unit: Unit) -> void:
 
 # stores the selected ability for use when TARGET_SELECT state is entered
 func _on_ability_selected(unit: Unit, ability: AbilityData) -> void:
+	print("on ability selected")
+	print("unit: ", unit.data.unit_name, "ability: ", ability.ability_name)
 	_current_ability = ability
 
 # resolves ability damage via ActionResolver and refreshes the character info panel

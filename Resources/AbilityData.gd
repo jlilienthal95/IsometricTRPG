@@ -22,6 +22,10 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 @export var range_shape: RangeShape = RangeShape.ALL_DIRECTIONS
 @export var area_of_effect: int = 0		# 0 = single tile, 1 = surrounding tiles, etc.
 
+# Modifiers
+@export var base_hit_chance: float = 1.0 # base hit chance as a percentage (1.0 = 100%, 0.85 = 85% etc.)
+@export var base_crit_chance: float = 0.05 # base critical hit chance as a percentage
+
 # Elevation rules
 @export var ignores_elevation: bool = false
 @export var max_elevation_difference: int = 2

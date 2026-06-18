@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Isometric"
+run/main_scene="uid://b3xqdai4s2st3"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

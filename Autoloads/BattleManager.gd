@@ -2,10 +2,11 @@ extends Node
 
 enum BattleState {
 	SETUP,				# units being placed, pre-battle
-	ACTION_SELECT,		# active unit's turn — player choosing an action (move, attack, equipment, wait)
+	ACTION_SELECT,		# active unit's turn — player choosing an action (move, abilities, equipment, wait)
 	EQUIPMENT_SELECT,	# player browsing equipped items
-	ATTACK_SELECT,		# player choosing which ability to use
-	MOVE_SELECT,		# player selecting a destination tile
+	ABILITIES_SELECT,	# player choosing which ability to use
+	JOB_ABILITIES_SELECT,
+	MOVE_SELECT,			# player selecting a destination tile
 	TARGET_SELECT,		# player selecting a target for an ability
 	RESOLVING,			# action is executing, no input accepted
 	ENEMY_TURN,			# AI is taking its turn
@@ -16,7 +17,7 @@ signal state_changed(new_state: BattleState)
 signal active_unit_changed(unit: Unit)
 signal unit_moved(unit: Unit, to_cell: Vector3i)
 signal move_consumed
-signal attack_consumed
+signal ability_consumed
 signal ability_selected(unit: Unit, ability: AbilityData)
 signal unit_executed_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera)
 
@@ -67,24 +68,14 @@ func select_action_move() -> void:
 	if active_unit.can_move():
 		change_state(BattleState.MOVE_SELECT)
 
-# transitions to ATTACK_SELECT to show the ability list
-func select_action_attack() -> void:
+# transitions to ABILITIES_SELECT to show the ability list
+func select_action_abilities() -> void:
 	if current_state != BattleState.ACTION_SELECT:
-		_state_error("select_action_attack", BattleState.ACTION_SELECT)
+		_state_error("select_action_abilities", BattleState.ACTION_SELECT)
 		return
 	# TODO: check active_unit.can_act() once action handling logic is implemented
-	change_state(BattleState.ATTACK_SELECT)
-
-# stores the chosen ability and transitions to TARGET_SELECT
-func select_ability(ability: AbilityData) -> void:
-	if current_state != BattleState.ATTACK_SELECT:
-		_state_error("select_ability", BattleState.ATTACK_SELECT)
-		return
-	_current_ability = ability
-	emit_signal("ability_selected", active_unit, ability)
-	change_state(BattleState.TARGET_SELECT)
-	print("ability selected: ", ability.ability_name)
-
+	change_state(BattleState.ABILITIES_SELECT)
+	
 # transitions to EQUIPMENT_SELECT to show the unit's equipped items
 func select_action_equipment() -> void:
 	if current_state != BattleState.ACTION_SELECT:
@@ -92,15 +83,35 @@ func select_action_equipment() -> void:
 		return
 	change_state(BattleState.EQUIPMENT_SELECT)
 
+func select_job_ability() -> void:
+	if current_state != BattleState.ABILITIES_SELECT:
+		_state_error("select_job_ability", BattleState.ACTION_SELECT)
+		return
+	change_state(BattleState.JOB_ABILITIES_SELECT)
+	
+# stores the chosen ability and transitions to TARGET_SELECT
+func select_ability(ability: AbilityData) -> void:
+	if current_state != BattleState.JOB_ABILITIES_SELECT and \
+	current_state != BattleState.ABILITIES_SELECT:
+		_state_error("select_ability", BattleState.JOB_ABILITIES_SELECT)
+		return
+	_current_ability = ability
+	emit_signal("ability_selected", active_unit, ability)
+	change_state(BattleState.TARGET_SELECT)
+
 # returns to ACTION_SELECT from any sub-selection state
 func cancel_action() -> void:
 	if current_state != BattleState.MOVE_SELECT and \
 	   current_state != BattleState.TARGET_SELECT and \
 	   current_state != BattleState.EQUIPMENT_SELECT and \
-	   current_state != BattleState.ATTACK_SELECT:
+	   current_state != BattleState.ABILITIES_SELECT and \
+	   current_state != BattleState.JOB_ABILITIES_SELECT:
 		_state_error("cancel_action", BattleState.MOVE_SELECT)
 		return
-	change_state(BattleState.ACTION_SELECT)
+	if current_state == BattleState.JOB_ABILITIES_SELECT:
+		change_state(BattleState.ABILITIES_SELECT)
+	else:
+		change_state(BattleState.ACTION_SELECT)
 
 # executes unit movement to target_cell and awaits completion before returning to ACTION_SELECT
 func confirm_move(target_cell: Vector3i) -> void:
@@ -121,7 +132,7 @@ func confirm_target(target_cell: Vector3i) -> void:
 		return
 	# TODO: display target unit's info, expected damage, elemental effects, and hit chance
 	emit_signal("unit_executed_ability", active_unit, target_cell, _current_ability, _camera)
-	emit_signal("attack_consumed")
+	emit_signal("ability_consumed")
 	await _enter_resolving(_unit_ability_executor.ability_complete, BattleState.ACTION_SELECT)
 
 # ends the active unit's turn and advances to the next

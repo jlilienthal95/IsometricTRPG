@@ -55,10 +55,10 @@ script = ExtResource("3_4nlbu")
 [node name="BattleHUD" parent="CanvasLayer" unique_id=1260164239 instance=ExtResource("7_cbixj")]
 z_index = 4096
 z_as_relative = false
-offset_left = 920.0
-offset_top = 400.0
-offset_right = 920.0
-offset_bottom = 400.0
+offset_left = -370.0
+offset_top = -310.0
+offset_right = -170.0
+offset_bottom = 190.0
 
 [node name="CharacterInfo" parent="CanvasLayer" unique_id=161366874 instance=ExtResource("10_6tvrj")]
 anchors_preset = 2

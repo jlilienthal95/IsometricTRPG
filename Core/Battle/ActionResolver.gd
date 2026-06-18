@@ -7,11 +7,24 @@ const VARIANCE_PERCENT: float = 0.2
 
 func resolve(caster: Unit, target: Unit, ability: AbilityData) -> ActionResult:
 	var result = ActionResult.new()
-	if not result.is_miss:
-		var damage_result = _calc_damage(caster, target, ability)
-		result.damage = damage_result[0]
-		result.is_critical = damage_result[1]
-		result.element = ability.element
+	
+	#check if ability hits at all
+	#TODO: incorperate unit speed/appropriate stat base mods
+	if _check_miss(result, ability.base_hit_chance).is_miss:
+		return result
+	
+	var damage_result = _calc_damage(caster, target, ability)
+	result.damage = damage_result[0]
+	result.is_critical = damage_result[1]
+	result.element = ability.element
+	return result
+	
+func _check_miss(result: ActionResult, hit_chance: float) -> ActionResult:
+	#TODO: incorperate unit speed/appropriate stat base mods
+	var hit_roll = randf()
+	if hit_roll > hit_chance:
+		result.is_miss = true
+		result.damage = 0
 	return result
 
 func _calc_damage(caster: Unit, target: Unit, ability: AbilityData) -> Array:
@@ -24,7 +37,7 @@ func _calc_damage(caster: Unit, target: Unit, ability: AbilityData) -> Array:
 	if job != null:
 		raw = int(raw * job.attack_modifier)
 	
-	if randf() < BASE_CRIT_CHANCE:
+	if randf() < (BASE_CRIT_CHANCE + ability.base_crit_chance):
 		raw = int(raw * 2.0)
 		is_critical = true
 	

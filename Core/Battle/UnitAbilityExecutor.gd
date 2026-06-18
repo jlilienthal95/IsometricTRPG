@@ -64,7 +64,9 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 			_single_target.adjust_hp(result.damage)
 			_single_target.take_hit()
 			print("dealt ", result.damage, " damage. target HP: ", _single_target.data.current_hp)
-		# TODO: add miss animation
+		else:
+			#TODO set facing on miss, refactor func to take in target cell
+			_single_target.play_missed()
 		# TODO: handle multi_target resolution
 		# TODO: apply status effects from result
 	
