@@ -1,0 +1,7 @@
+[gd_resource type="StyleBoxFlat" format=3 uid="uid://wiger353w0d7"]
+
+[resource]
+bg_color = Color(0.14509805, 0.14117648, 0.27450982, 0.6745098)
+skew = Vector2(0.5, 0)
+border_width_right = 10
+border_color = Color(0.11764706, 0.34117648, 0.6117647, 0.4862745)

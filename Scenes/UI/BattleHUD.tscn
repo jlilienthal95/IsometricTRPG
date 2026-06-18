@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://daj4wua81wwpi"]
 
+[ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_hcak5"]
 [ext_resource type="Script" uid="uid://trceolafsptg" path="res://Scenes/UI/BattleHUD.gd" id="1_xilco"]
 
 [node name="BattleHUD" type="Control" unique_id=1260164239]
@@ -7,15 +8,50 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+theme = ExtResource("1_hcak5")
 script = ExtResource("1_xilco")
+
+[node name="InventoryMenu" type="PanelContainer" parent="." unique_id=25345652]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = 336.0
+offset_bottom = 88.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InventoryMenu" unique_id=727246058]
+layout_mode = 2
+
+[node name="AttackMenu" type="PanelContainer" parent="." unique_id=156690001]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = 336.0
+offset_bottom = 172.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="AttackMenu" unique_id=1168510152]
+layout_mode = 2
+
+[node name="FightButton" type="Button" parent="AttackMenu/VBoxContainer" unique_id=2011413579]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "Fight"
+
+[node name="JobActionButton" type="Button" parent="AttackMenu/VBoxContainer" unique_id=1147136800]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "Job Action"
 
 [node name="ActionMenu" type="PanelContainer" parent="." unique_id=1146287213]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = 336.0
+offset_bottom = 300.0
+theme = ExtResource("1_hcak5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ActionMenu" unique_id=98039181]
 layout_mode = 2
+alignment = 1
 
 [node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1078247193]
 custom_minimum_size = Vector2(200, 60)
@@ -36,29 +72,3 @@ text = "Equipment"
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 text = "Wait"
-
-[node name="InventoryMenu" type="PanelContainer" parent="." unique_id=25345652]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="InventoryMenu" unique_id=727246058]
-layout_mode = 2
-
-[node name="AttackMenu" type="PanelContainer" parent="." unique_id=156690001]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="AttackMenu" unique_id=1168510152]
-layout_mode = 2
-
-[node name="FightButton" type="Button" parent="AttackMenu/VBoxContainer" unique_id=2011413579]
-custom_minimum_size = Vector2(200, 60)
-layout_mode = 2
-text = "Fight"
-
-[node name="JobActionButton" type="Button" parent="AttackMenu/VBoxContainer" unique_id=1147136800]
-custom_minimum_size = Vector2(200, 60)
-layout_mode = 2
-text = "Job Action"

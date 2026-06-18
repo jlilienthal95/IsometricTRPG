@@ -31,6 +31,10 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 		if _grid.is_cell_occupied(cell):
 			var occupant = _grid.get_unit_at(cell)
 			if occupant != null:
+				# skip dead units unless ability explicitly allows targeting them
+				if occupant.data.is_dead and not query.requires_dead:
+					reachable[cell] = false
+					continue
 				if _is_ally(occupant, acting_unit):
 					if not query.can_end_on_ally:
 						reachable[cell] = false

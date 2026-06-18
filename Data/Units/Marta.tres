@@ -5,6 +5,8 @@
 [resource]
 script = ExtResource("1_s07lb")
 unit_name = "Marta"
+max_hp = 20
+current_hp = 20
 move_range = 4
 equipped_weapon_id = 1
 equipped_armor_id = 1001

@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://dwbmft28hcwbx"]
 
-[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_owiq4"]
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_p0aup"]
 
 [resource]
-script = ExtResource("1_owiq4")
-ability_name = "Fight"
+script = ExtResource("1_p0aup")
+ability_name = "Fight_Pirate"
+ability_id = 2
 description = "A basic attack. Hits anything in a one tile range."
 max_elevation_difference = 1
 base_power = 10
+impact_delay = 367
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

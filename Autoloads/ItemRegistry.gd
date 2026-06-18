@@ -6,7 +6,7 @@ func load_items_for_battle(units: Array[Unit], inventory: Array[int]) -> void:
 	_items.clear()
 	var ids_to_load: Array[int] = []
 	
-	#collect equiped items to load
+	#collect equipped items to load
 	for unit in units:
 		for id in unit.data.get_equipped_ids():
 			if id != -1 and not ids_to_load.has(id):

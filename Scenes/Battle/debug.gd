@@ -2,11 +2,14 @@ extends Node2D
 
 var show_grid: bool = false
 
+# toggles the debug grid overlay on/off with the Home key
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_home"):
 		show_grid = not show_grid
 		queue_redraw()
 
+# draws isometric diamond outlines over every cell in the battle grid
+# uses Elevation1 as the reference layer for consistent screen positioning
 func _draw() -> void:
 	if not show_grid:
 		return

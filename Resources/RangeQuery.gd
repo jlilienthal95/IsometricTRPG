@@ -20,3 +20,4 @@ var requires_unit: bool = false
 var requires_empty: bool = false
 var requires_enemy: bool = false
 var requires_ally: bool = false
+var requires_dead: bool = false

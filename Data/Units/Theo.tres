@@ -6,7 +6,8 @@
 script = ExtResource("1_gw5mv")
 unit_name = "Theo"
 job_id = 1
-max_hp = 145
+max_hp = 25
+current_hp = 25
 max_mp = 8
 current_mp = 8
 jump_height = 1

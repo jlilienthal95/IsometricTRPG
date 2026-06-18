@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b74o60i8lila4"
-path="res://.godot/imported/L_dead_6x5.png-9d09a30a14ebc99916207c5564237eda.ctex"
+uid="uid://n701j6kwuj0q"
+path="res://.godot/imported/L_hit_4x3-ADJUSTED.png-a4e4a5ff46785c8823c3b648c3d35a1e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Jobs/Pirate/L_dead_6x5.png"
-dest_files=["res://.godot/imported/L_dead_6x5.png-9d09a30a14ebc99916207c5564237eda.ctex"]
+source_file="res://Assets/Sprites/Jobs/Knight/L_hit_4x3-ADJUSTED.png"
+dest_files=["res://.godot/imported/L_hit_4x3-ADJUSTED.png-a4e4a5ff46785c8823c3b648c3d35a1e.ctex"]
 
 [params]
 

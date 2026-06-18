@@ -21,6 +21,7 @@ ItemRegistry="*uid://umubdlftfovg"
 PartyManager="*uid://dnj12n1aeu24x"
 GameState="*uid://f7i1y6cek5uf"
 BattleManager="*uid://dqlce1f2qr4ru"
+AbilityRegistry="*uid://b2bmnf6hiymnh"
 
 [display]
 

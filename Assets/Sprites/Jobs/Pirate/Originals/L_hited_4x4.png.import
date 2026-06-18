@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ch4luiavw0d18"
-path="res://.godot/imported/L_attack_b_6x6ADJUSTED.png-0e842ee96e7351c887af34a3b19b6473.ctex"
+uid="uid://cbx3o02ckawqy"
+path="res://.godot/imported/L_hited_4x4.png-7cb556f73b242eab7343e144495ab803.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Jobs/Pirate/L_attack_b_6x6ADJUSTED.png"
-dest_files=["res://.godot/imported/L_attack_b_6x6ADJUSTED.png-0e842ee96e7351c887af34a3b19b6473.ctex"]
+source_file="res://Assets/Sprites/Jobs/Pirate/Originals/L_hited_4x4.png"
+dest_files=["res://.godot/imported/L_hited_4x4.png-7cb556f73b242eab7343e144495ab803.ctex"]
 
 [params]
 

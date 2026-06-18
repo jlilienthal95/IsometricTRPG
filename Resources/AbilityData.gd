@@ -33,4 +33,4 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
-@export var impact_delay: float = 1.3  # seconds before hit animation triggers
+@export var impact_delay: int = 0   # reference to which animation to play

@@ -3,6 +3,7 @@ extends Resource
 
 @export var job_name: String = ""
 @export var job_id: int = 0  # permanent, never reuse if you add/remove jobs
+@export var portrait: Texture2D = null  # permanent, never reuse if you add/remove jobs
 @export var sprite_frames: SpriteFrames = null
 @export var sprite_offset: Vector2 = Vector2.ZERO
 @export var flip_offset: Vector2 = Vector2.ZERO

@@ -15,7 +15,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _reference_layer == null:
 		return
 	if event is InputEventMouseMotion:
-		#print("mouse motion")
 		var cell = _get_cell_under_mouse()
 		if cell != _last_hovered_cell:
 			_last_hovered_cell = cell

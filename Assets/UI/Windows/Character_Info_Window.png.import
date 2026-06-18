@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c4chhc4oi2e74"
-path="res://.godot/imported/L_hited_4x4-ADJUSTED.png-757af9d2562c0f35106bc622df51a659.ctex"
+uid="uid://dqdq5cimollg5"
+path="res://.godot/imported/Character_Info_Window.png-8b3782be4fe2324b320f812626a2ba35.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Jobs/Pirate/L_hited_4x4-ADJUSTED.png"
-dest_files=["res://.godot/imported/L_hited_4x4-ADJUSTED.png-757af9d2562c0f35106bc622df51a659.ctex"]
+source_file="res://Assets/UI/Windows/Character_Info_Window.png"
+dest_files=["res://.godot/imported/Character_Info_Window.png-8b3782be4fe2324b320f812626a2ba35.ctex"]
 
 [params]
 

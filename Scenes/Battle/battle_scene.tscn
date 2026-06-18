@@ -1,24 +1,28 @@
 [gd_scene format=4 uid="uid://b3xqdai4s2st3"]
 
-[ext_resource type="Script" uid="uid://blr86pqcnobg2" path="res://Scenes/Battle/battle_scene.gd" id="1_owr4d"]
+[ext_resource type="Script" uid="uid://blr86pqcnobg2" path="res://Scenes/Battle/battle_scene.gd" id="1_68j0i"]
 [ext_resource type="Script" uid="uid://bxa0s5gon4uee" path="res://Core/Grid/BattleGrid.gd" id="2_c3aki"]
+[ext_resource type="Script" uid="uid://cl5j70hkqepge" path="res://Core/Battle/ActionResolver.gd" id="2_ik5sk"]
 [ext_resource type="Script" uid="uid://bvcboe225kcx0" path="res://Scenes/Battle/battle_camera.gd" id="3_4nlbu"]
 [ext_resource type="TileSet" uid="uid://b0qee0pmpguq5" path="res://Assets/Sprites/Tilesets/KenneyTiles.tres" id="4_68j0i"]
 [ext_resource type="Script" uid="uid://bmju1mbepa1a" path="res://Core/Battle/InputHandler.gd" id="6_jp0ri"]
 [ext_resource type="PackedScene" uid="uid://daj4wua81wwpi" path="res://Scenes/UI/BattleHUD.tscn" id="7_cbixj"]
-[ext_resource type="Script" uid="uid://jmkk6j3cdgyd" path="res://UnitAbilityExecutor.gd" id="8_68j0i"]
+[ext_resource type="Script" uid="uid://db1exqfvfisy" path="res://Core/Battle/UnitAbilityExecutor.gd" id="8_68j0i"]
 [ext_resource type="Script" uid="uid://crsa6b6lekfyu" path="res://Core/Battle/Pathfinder.gd" id="8_imn02"]
 [ext_resource type="Script" uid="uid://db6ignfw75cjq" path="res://Core/Battle/HighlightManager.gd" id="10_5mge4"]
+[ext_resource type="PackedScene" uid="uid://c7d6etrr2nsvd" path="res://Scenes/UI/CharacterInfoWindow.tscn" id="10_6tvrj"]
 [ext_resource type="Script" uid="uid://cqw56ibuwgshn" path="res://Core/Battle/UnitMover.gd" id="11_hopcy"]
+[ext_resource type="Script" uid="uid://cxssptshyo6ra" path="res://Scenes/UI/CharacterInfo.gd" id="11_ik5sk"]
 [ext_resource type="Script" uid="uid://bogca4prbel7l" path="res://Scenes/Battle/debug.gd" id="12_68j0i"]
 [ext_resource type="PackedScene" uid="uid://djcnqynklsoer" path="res://Scenes/Battle/Cursor.tscn" id="13_36cr5"]
 
 [node name="BattleScene" type="Node2D" unique_id=1985472959]
 y_sort_enabled = true
-script = ExtResource("1_owr4d")
+script = ExtResource("1_68j0i")
 
-[node name="BattleCamera" type="Camera2D" parent="." unique_id=636914002]
-script = ExtResource("3_4nlbu")
+[node name="ActionResolver" type="Node" parent="." unique_id=1754629182]
+script = ExtResource("2_ik5sk")
+metadata/_custom_type_script = "uid://cl5j70hkqepge"
 
 [node name="BattleGrid" type="Node" parent="." unique_id=73758981]
 script = ExtResource("2_c3aki")
@@ -42,17 +46,29 @@ metadata/_custom_type_script = "uid://cqw56ibuwgshn"
 
 [node name="UnitAbilityExecutor" type="Node" parent="." unique_id=691203692]
 script = ExtResource("8_68j0i")
-metadata/_custom_type_script = "uid://jmkk6j3cdgyd"
+
+[node name="BattleCamera" type="Camera2D" parent="." unique_id=636914002]
+script = ExtResource("3_4nlbu")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=645934609]
 
 [node name="BattleHUD" parent="CanvasLayer" unique_id=1260164239 instance=ExtResource("7_cbixj")]
 z_index = 4096
 z_as_relative = false
-offset_left = 950.0
-offset_top = 450.0
-offset_right = 950.0
-offset_bottom = 450.0
+offset_left = 920.0
+offset_top = 400.0
+offset_right = 920.0
+offset_bottom = 400.0
+
+[node name="CharacterInfo" parent="CanvasLayer" unique_id=161366874 instance=ExtResource("10_6tvrj")]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_right = 0.0
+offset_top = -280.0
+offset_bottom = -280.0
+grow_horizontal = 1
+grow_vertical = 0
+script = ExtResource("11_ik5sk")
 
 [node name="Debug" type="Node2D" parent="." unique_id=1058149904]
 z_index = 100

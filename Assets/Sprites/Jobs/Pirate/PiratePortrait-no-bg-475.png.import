@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c03e6iptxn2jj"
-path="res://.godot/imported/L_run_5x5.png-037aa5cf5adee1d4d4528a5813becc73.ctex"
+uid="uid://bqsdqpkh4tf64"
+path="res://.godot/imported/PiratePortrait-no-bg-475.png-b6f13e1b5b16f7a56750a2b57bb5cd24.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/Jobs/Pirate/L_run_5x5.png"
-dest_files=["res://.godot/imported/L_run_5x5.png-037aa5cf5adee1d4d4528a5813becc73.ctex"]
+source_file="res://Assets/Sprites/Jobs/Pirate/PiratePortrait-no-bg-475.png"
+dest_files=["res://.godot/imported/PiratePortrait-no-bg-475.png-b6f13e1b5b16f7a56750a2b57bb5cd24.ctex"]
 
 [params]
 

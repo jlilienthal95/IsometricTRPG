@@ -1,0 +1,30 @@
+[gd_resource type="Theme" format=3 uid="uid://cowt1pq1qf0qm"]
+
+[ext_resource type="FontFile" uid="uid://d1g1uhypaacmj" path="res://Assets/Theme/pixeloid.sans-bold.ttf" id="1_sg5qf"]
+[ext_resource type="StyleBox" uid="uid://wiger353w0d7" path="res://Assets/Theme/UI_Button_Disabled.tres" id="2_1prd6"]
+[ext_resource type="StyleBox" uid="uid://dmj62yay0yfpe" path="res://Assets/Theme/UI_Button_Hovered.tres" id="3_sml3a"]
+[ext_resource type="StyleBox" uid="uid://d0x4xgoo3l2nr" path="res://Assets/Theme/UI_Button_Normal.tres" id="4_12ofx"]
+[ext_resource type="Texture2D" uid="uid://b57831ifn3gkv" path="res://Assets/UI/Windows/UI_Window.png" id="5_wfr7n"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3xgds"]
+texture = ExtResource("5_wfr7n")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_sg5qf"]
+
+[resource]
+default_font = ExtResource("1_sg5qf")
+Button/colors/font_color = Color(0.8509804, 0.9019608, 0.9490196, 1)
+Button/colors/font_disabled_color = Color(0.8509804, 0.9019608, 0.9490196, 0.38431373)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/font_sizes/font_size = 28
+Button/fonts/font = ExtResource("1_sg5qf")
+Button/styles/disabled = ExtResource("2_1prd6")
+Button/styles/focus = ExtResource("2_1prd6")
+Button/styles/hover = ExtResource("3_sml3a")
+Button/styles/hover_pressed = ExtResource("2_1prd6")
+Button/styles/normal = ExtResource("4_12ofx")
+Button/styles/pressed = ExtResource("2_1prd6")
+Label/colors/font_color = Color(0.8509804, 0.9019608, 0.9490196, 1)
+Label/font_sizes/font_size = 50
+Panel/styles/panel = SubResource("StyleBoxTexture_3xgds")
+PanelContainer/styles/panel = SubResource("StyleBoxEmpty_sg5qf")
