@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://dwbu06odki00a"]
+
+[ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_vco0b"]
+
+[node name="DamageCount" type="Control" unique_id=783185985]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DamageLabel" type="Label" parent="." unique_id=1415576407]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme = ExtResource("1_vco0b")
+theme_override_colors/font_color = Color(1, 0, 0.23137255, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 15
+theme_override_font_sizes/font_size = 24
+text = "99"

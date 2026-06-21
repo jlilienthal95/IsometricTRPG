@@ -40,32 +40,37 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 func _execute_sequence() -> void:
 	# 1. caster plays attack animation
 	#y down, x up = face right
-	if _caster.grid_position.y > _single_target.grid_position.y || \
-	_caster.grid_position.x < _single_target.grid_position.x:
-		_caster.set_facing(false)
-	else:
-		_caster.set_facing(true)
+	if _single_target != null:
+		if _caster.grid_position.y > _single_target.grid_position.y or \
+		_caster.grid_position.x < _single_target.grid_position.x:
+			_caster.set_facing(false)
+		else:
+			_caster.set_facing(true)
 
+	await _camera.zoom_in()
 	await _caster.play_attack_animation(_ability.impact_delay)
-	#await _caster.ability_impact
-
 	# TODO: add anim displaying ability power numerically above target
 
 	##TODO play damage count animation and refresh character info pane state
+	await _camera.zoom_reset()
+	
 	_is_executing = false
 	emit_signal("ability_complete")
+	_clear_context()
 	
 # battle_scene calls this after ability_impact fires
 # passes ActionResolver in so UnitAbilityExecutor can coordinate resolution internally
 func resolve_ability(action_resolver: ActionResolver) -> void:
 	if _single_target != null:
 		var result = action_resolver.resolve(_caster, _single_target, _ability)
+		#_camera.play_attack_effects()
 		if not result.is_miss:
+			_camera.play_shake()
 			_single_target.adjust_hp(result.damage)
-			_single_target.take_hit()
+			_single_target.take_hit(result.damage)
 			print("dealt ", result.damage, " damage. target HP: ", _single_target.data.current_hp)
 		else:
-			#TODO set facing on miss, refactor func to take in target cell
+			_single_target.set_facing_toward(_single_target.grid_position, _caster.grid_position)
 			_single_target.play_missed()
 		# TODO: handle multi_target resolution
 		# TODO: apply status effects from result

@@ -26,12 +26,7 @@ func _execute_steps(unit: Unit, steps: Array[MovementStep], get_world_pos: Calla
 		unit.update_z_index()
 		# TODO: Z index flickers during tween as unit passes through cells with different
 		# occlusion rules. Fix by interpolating Z index based on actual world position.
-
-		# flip unit to face the direction of movement
-		if (from.x > step.cell.x or from.y < step.cell.y) and from.z == step.cell.z:
-			unit.set_facing(true)
-		else:
-			unit.set_facing(false)
+		unit.set_facing_toward(from, step.cell)
 
 		# play appropriate animation for step type
 		if step.is_jump:
