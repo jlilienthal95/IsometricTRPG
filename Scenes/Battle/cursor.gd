@@ -1,12 +1,11 @@
 extends Node2D
 
-var _cursor: Sprite2D = null
+@onready var _cursor: Sprite2D = $CursorSprite
 var is_visible: bool = false
 
 # initializes the cursor with its sprite node reference
-func setup(cursor: Sprite2D) -> void:
-	_cursor = cursor
-	is_visible = cursor.visible
+func setup() -> void:
+	is_visible = _cursor.visible
 
 # moves the cursor to the given world position
 func move_cursor(destination: Vector2) -> void:

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://cxeopt4v5rj1a"]
+
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_cenhd"]
+
+[resource]
+script = ExtResource("1_cenhd")
+ability_name = "Spark"
+ability_id = 100
+description = "An arcane spell granting the power to call forth lightning and shock your foes."
+ability_type = 1
+mp_cost = 10
+min_range = 2
+max_range = 5
+range_shape = 3
+max_elevation_difference = 3
+base_power = 12
+element = 4
+animation_id = "spark"
+impact_delay = 1700
+charge_delay = 500
+metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

@@ -26,14 +26,12 @@ func _load_info_from_unit(unit_data: UnitData) -> void:
 	mp_count.text = str(unit_data.current_mp)
 	mp_max_count.text = str(unit_data.max_mp)
 	lvl_count.text = str(unit_data.current_lvl)
-	
-	# load portrait from job data
 	var job: JobData = JobRegistry.get_job(unit_data.job_id)
 	if job != null and job.portrait != null:
 		portrait_rect.texture = job.portrait
 	else:
 		portrait_rect.texture = null
-	
+
 func _clear_info() -> void:
 	name_label.text = ""
 	hp_count.text = ""
@@ -41,7 +39,7 @@ func _clear_info() -> void:
 	mp_count.text = ""
 	mp_max_count.text = ""
 	lvl_count.text = ""
-	
+
 func hide_window() -> void:
 	_clear_info()
 	hide()
@@ -49,4 +47,3 @@ func hide_window() -> void:
 func refresh() -> void:
 	if _current_unit != null:
 		_load_info_from_unit(_current_unit)
-	

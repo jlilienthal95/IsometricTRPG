@@ -15,13 +15,9 @@ var data: UnitData = null
 var grid_position: Vector3i = Vector3i.ZERO
 
 func _ready() -> void:
-	print("units ready")
 	unit_sprite.material = unit_sprite.material.duplicate(true)
-	print(get_name(), " material id: ", unit_sprite.material.get_instance_id())
 	if data != null:
 		play_idle()
-		#TODO: figure out why both units flash on hit
-		
 
 # initializes the unit with its data resource and places it at the given grid position
 func setup(unit_data: UnitData, start_position: Vector3i) -> void:
@@ -64,15 +60,28 @@ func play_attack() -> void:
 	if data.is_dead:
 		return
 	unit_sprite.play("attack")
+	print("playing attack anim")
 	await unit_animation_player.animation_finished
+	
+func play_cast_spell() -> void:
+	if data.is_dead:
+		return
+	unit_sprite.play("cast_spell")
 
-func play_attack_animation(impact_delay: float) -> void:
+func play_attack_animation(cast_impact_delay: float, has_effect: bool) -> void:
 	if not data.is_dead:
-		unit_sprite.play("attack")
-		await get_tree().create_timer(impact_delay * .001).timeout
+		if has_effect:
+			#TODO unit animation should be custom - not just play spell. Special abilities will not always be spells. 
+			play_cast_spell()
+		else:
+			print("play attack")
+			play_attack()
+			print("attack complete")
+		
+		#print("await impact")
+		await get_tree().create_timer(cast_impact_delay / 1000).timeout
+		#print("impact!")
 		notify_ability_impact()
-		await unit_sprite.animation_finished
-		play_idle()
 
 # plays the hit reaction animation and returns to idle when finished
 func play_hit() -> void:
@@ -103,7 +112,6 @@ func play_damage_count(damage: int) -> void:
 	unit_animation_player.play("damage_count")
 	
 func play_missed() -> void:
-	print("playing missed")
 	unit_animation_player.play("missed")
 	await unit_animation_player.animation_finished
 	play_idle()
@@ -186,7 +194,6 @@ func reset_move() -> void:
 func can_move() -> bool:
 	return not data.has_moved and not data.is_dead
 	
-
 func can_act() -> bool:
 	return not data.has_acted and not data.is_dead
 

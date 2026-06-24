@@ -68,7 +68,6 @@ func resolve_equipment() -> void:
 func resolve_abilities() -> void:
 	abilities.clear()
 	for id in ability_ids:
-		print("ability id: ", id)
 		var ability = AbilityRegistry.get_ability(id)
 		if ability != null:
 			abilities.append(ability)

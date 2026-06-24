@@ -1,16 +1,15 @@
 [gd_scene format=3 uid="uid://c7d6etrr2nsvd"]
 
+[ext_resource type="Script" uid="uid://cxssptshyo6ra" path="res://Scenes/UI/CharacterInfo.gd" id="1_2vp68"]
 [ext_resource type="Texture2D" uid="uid://dqdq5cimollg5" path="res://Assets/UI/Windows/Character_Info_Window.png" id="1_tronk"]
 [ext_resource type="Texture2D" uid="uid://dv8p1kemk34o3" path="res://Assets/Sprites/Jobs/Knight/Knight-Portrait-no-bg-475.png" id="2_fv5t1"]
 [ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="3_fv5t1"]
 
 [node name="CharacterInfo" type="Control" unique_id=161366874]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 800.0
+offset_bottom = 280.0
+script = ExtResource("1_2vp68")
 
 [node name="Background" type="NinePatchRect" parent="." unique_id=416064163]
 layout_mode = 0

@@ -4,9 +4,10 @@ extends Resource
 enum AbilityType { PHYSICAL, MAGICAL, HEALING, STATUS, MOVEMENT }
 enum TargetType { SINGLE_ENEMY, SINGLE_ALLY, SELF, AREA_ENEMY, AREA_ALLY, AREA_ALL }
 enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
+enum AnimationPath { PROJECTILE, INSTANT, PATH }
 
 @export var ability_name: String = ""
-@export var ability_id: int = 0		# permanent, never reuse
+@export var ability_id: = 0		# permanent, never reuse
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
 @export var status_effect: Dictionary[StatusEffect.StatusEffect, int] = {StatusEffect.StatusEffect.NONE: 0}
@@ -37,4 +38,7 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
-@export var impact_delay: int = 0   # reference to which animation to play
+@export var impact_delay: int = 0 #time from ability anim start until ability impact
+@export var cast_impact_delay: float = 0 #time from caster anim start until ability anim start
+@export var charge_delay: int = 0  #if any, time from ability anim start until tween start
+@export var animation_path: AnimationPath = AnimationPath.PROJECTILE #path ability anim tweens through

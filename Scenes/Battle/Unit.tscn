@@ -171,7 +171,7 @@ material = SubResource("ShaderMaterial_165ns")
 position = Vector2(-126, -253)
 scale = Vector2(2.5, 2.5)
 sprite_frames = ExtResource("2_63c20")
-animation = &"idle"
+animation = &"attack"
 centered = false
 
 [node name="UnitSpriteShadow" type="Sprite2D" parent="VisualRoot" unique_id=2222824]

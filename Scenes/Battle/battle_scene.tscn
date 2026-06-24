@@ -6,15 +6,14 @@
 [ext_resource type="Script" uid="uid://bvcboe225kcx0" path="res://Scenes/Battle/battle_camera.gd" id="3_4nlbu"]
 [ext_resource type="TileSet" uid="uid://b0qee0pmpguq5" path="res://Assets/Sprites/Tilesets/KenneyTiles.tres" id="4_68j0i"]
 [ext_resource type="Script" uid="uid://bmju1mbepa1a" path="res://Core/Battle/InputHandler.gd" id="6_jp0ri"]
-[ext_resource type="PackedScene" uid="uid://daj4wua81wwpi" path="res://Scenes/UI/BattleHUD.tscn" id="7_cbixj"]
 [ext_resource type="Script" uid="uid://db1exqfvfisy" path="res://Core/Battle/UnitAbilityExecutor.gd" id="8_68j0i"]
 [ext_resource type="Script" uid="uid://crsa6b6lekfyu" path="res://Core/Battle/Pathfinder.gd" id="8_imn02"]
 [ext_resource type="Script" uid="uid://db6ignfw75cjq" path="res://Core/Battle/HighlightManager.gd" id="10_5mge4"]
-[ext_resource type="PackedScene" uid="uid://c7d6etrr2nsvd" path="res://Scenes/UI/CharacterInfoWindow.tscn" id="10_6tvrj"]
+[ext_resource type="PackedScene" uid="uid://cbn17ml2s7oxl" path="res://Scenes/UI/BattleUI.tscn" id="10_n1ain"]
 [ext_resource type="Script" uid="uid://cqw56ibuwgshn" path="res://Core/Battle/UnitMover.gd" id="11_hopcy"]
-[ext_resource type="Script" uid="uid://cxssptshyo6ra" path="res://Scenes/UI/CharacterInfo.gd" id="11_ik5sk"]
 [ext_resource type="Script" uid="uid://bogca4prbel7l" path="res://Scenes/Battle/debug.gd" id="12_68j0i"]
 [ext_resource type="PackedScene" uid="uid://djcnqynklsoer" path="res://Scenes/Battle/Cursor.tscn" id="13_36cr5"]
+[ext_resource type="Script" uid="uid://dqs1cbe4cjpdt" path="res://Scenes/Battle/CinematicBars.gd" id="13_n1ain"]
 
 [sub_resource type="Animation" id="Animation_ik5sk"]
 length = 0.001
@@ -29,18 +28,6 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath(".:zoom")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(1, 1)]
 }
 
 [sub_resource type="Animation" id="Animation_sufya"]
@@ -57,18 +44,6 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 0,
 "values": [Vector2(0, 0), Vector2(5, 3), Vector2(-4, 2), Vector2(3, -4), Vector2(-2, -2), Vector2(0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath(".:zoom")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.3333),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(1.5, 1.5), Vector2(1.5, 1.5)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_n1ain"]
@@ -109,7 +84,7 @@ metadata/_custom_type_script = "uid://cqw56ibuwgshn"
 script = ExtResource("8_68j0i")
 
 [node name="BattleCamera" type="Camera2D" parent="." unique_id=636914002]
-rotation = -0.086635605
+position = Vector2(640, 360)
 script = ExtResource("3_4nlbu")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="BattleCamera" unique_id=1679858811]
@@ -117,23 +92,45 @@ libraries/ = SubResource("AnimationLibrary_n1ain")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=645934609]
 
-[node name="BattleHUD" parent="CanvasLayer" unique_id=1260164239 instance=ExtResource("7_cbixj")]
-z_index = 4096
-z_as_relative = false
-offset_left = -370.0
-offset_top = -310.0
-offset_right = -170.0
-offset_bottom = 190.0
+[node name="BattleUI" parent="CanvasLayer" unique_id=968464910 instance=ExtResource("10_n1ain")]
+mouse_filter = 2
 
-[node name="CharacterInfo" parent="CanvasLayer" unique_id=161366874 instance=ExtResource("10_6tvrj")]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_right = 0.0
-offset_top = -280.0
-offset_bottom = -280.0
-grow_horizontal = 1
-grow_vertical = 0
-script = ExtResource("11_ik5sk")
+[node name="CinematicBars" type="Control" parent="CanvasLayer" unique_id=105823281]
+modulate = Color(1, 1, 1, 0)
+z_index = -4096
+z_as_relative = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("13_n1ain")
+
+[node name="BlackBarTop" type="ColorRect" parent="CanvasLayer/CinematicBars" unique_id=924869438]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -620.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BlackBarBottom" type="ColorRect" parent="CanvasLayer/CinematicBars" unique_id=515170751]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 528.0
+offset_bottom = -92.0
+size_flags_vertical = 8
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 
 [node name="Debug" type="Node2D" parent="." unique_id=1058149904]
 z_index = 100
@@ -148,6 +145,7 @@ z_as_relative = false
 
 [node name="Elevation0" type="TileMapLayer" parent="TerrainLayers" unique_id=512759087]
 z_as_relative = false
+position = Vector2(0, 1)
 tile_map_data = PackedByteArray("AAAAAAMAAAAAAAIAAAD2/wMAAAAAAAIAAAD3/wMAAAAAAAIAAAD4/wMAAAAAAAIAAAD5/wMAAAAAAAIAAAD6/wMAAAAAAAIAAAD7/wMAAAAAAAIAAAD8/wMAAAAAAAIAAAD9/wMAAAAAAAIAAAD+/wMAAAAAAAIAAAD//wMAAAAAAAIAAAAAAPf/AAAAAAIAAAAAAPj/AAAAAAIAAAAAAPn/AAAAAAIAAAAAAPr/AAAAAAIAAAAAAPv/AAAAAAIAAAAAAPz/AAAAAAIAAAAAAP3/AAAAAAIAAAAAAP7/AAAAAAIAAAAAAP//AAAAAAIAAAAAAAAAAAAAAAIAAAAAAAEAAAAAAAIAAAAAAAIAAAAAAAIAAAAAAOv/AAAAAAIAAAAAAOz/AAAAAAIAAAAAAO3/AAAAAAIAAAAAAO7/AAAAAAIAAAAAAO//AAAAAAIAAAAAAPD/AAAAAAIAAAAAAPH/AAAAAAIAAAAAAPL/AAAAAAIAAAAAAPP/AAAAAAIAAAAAAPT/AAAAAAIAAAAAAPX/AAAAAAIAAAAAAPb/AAAAAAIAAAAAAOj/AAAAAAIAAAAAAOn/AAAAAAIAAAAAAOr/AAAAAAIAAAA=")
 tile_set = ExtResource("4_68j0i")
 

@@ -30,11 +30,11 @@ var turn: int = -1
 var _grid: BattleGrid = null
 var _camera: BattleCamera = null
 var _unit_mover: UnitMover = null
-var _unit_ability_executor: Node = null
+var _unit_ability_executor: UnitAbilityExecutor = null
 var _current_ability: AbilityData = null
 
 # initializes battle manager with required system references
-func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: Node) -> void:
+func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor) -> void:
 	_grid = grid
 	_camera = camera
 	_unit_mover = unit_mover
@@ -50,6 +50,7 @@ func reset() -> void:
 
 # transitions to a new state and notifies all listeners
 func change_state(new_state: BattleState) -> void:
+	print("change state...")
 	current_state = new_state
 	emit_signal("state_changed", new_state)
 	print("BattleManager state: ", BattleState.keys()[new_state])
@@ -58,7 +59,7 @@ func change_state(new_state: BattleState) -> void:
 func start_battle(p_units: Array[Unit], e_units: Array[Unit]) -> void:
 	player_units = p_units
 	enemy_units = e_units
-	_start_next_turn()
+	call_deferred("_start_next_turn")
 
 # transitions to MOVE_SELECT if the active unit hasn't moved yet
 func select_action_move() -> void:
@@ -164,6 +165,7 @@ func _start_next_turn() -> void:
 	active_unit.reset_turn()
 	emit_signal("active_unit_changed", active_unit)
 	if player_units.has(active_unit):
+		print("action select prompted")
 		change_state(BattleState.ACTION_SELECT)
 	else:
 		change_state(BattleState.ENEMY_TURN)

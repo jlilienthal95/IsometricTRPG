@@ -10,5 +10,5 @@ current_hp = 20
 move_range = 4
 equipped_weapon_id = 1
 equipped_armor_id = 1001
-ability_ids = Array[int]([3])
+ability_ids = Array[int]([3, 100])
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

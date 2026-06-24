@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cbn17ml2s7oxl"]
+
+[ext_resource type="Script" uid="uid://g71evj4clivd" path="res://Scenes/UI/BattleUI.gd" id="1_31gad"]
+[ext_resource type="PackedScene" uid="uid://c7d6etrr2nsvd" path="res://Scenes/UI/CharacterInfoWindow.tscn" id="2_tr5vc"]
+[ext_resource type="PackedScene" uid="uid://daj4wua81wwpi" path="res://Scenes/UI/BattleHUD.tscn" id="4_h4kvj"]
+
+[node name="BattleUI" type="Control" unique_id=1979739976]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_31gad")
+
+[node name="BattleHUD" parent="." unique_id=1260164239 instance=ExtResource("4_h4kvj")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -256.0
+offset_right = -16.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_behavior_recursive = 2
+
+[node name="CharacterInfo" parent="." unique_id=161366874 instance=ExtResource("2_tr5vc")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -224.0
+offset_bottom = 56.0
+grow_vertical = 0
+scale = Vector2(0.8, 0.8)

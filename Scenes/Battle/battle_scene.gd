@@ -4,10 +4,12 @@ extends Node2D
 @onready var _battle_grid: BattleGrid = $BattleGrid
 @onready var _action_resolver: ActionResolver = $ActionResolver
 @onready var _input_handler: InputHandler = $InputHandler
-@onready var _battle_hud: BattleHUD = $CanvasLayer/BattleHUD
-@onready var _character_info = $CanvasLayer/CharacterInfo
+@onready var _battle_ui: BattleUI = $CanvasLayer/BattleUI
+@onready var _battle_hud: BattleHUD = $CanvasLayer/BattleUI/BattleHUD
+@onready var _cinematic_bars: CinematicBars = $CanvasLayer/CinematicBars
+@onready var _character_info: CharacterInfo = $CanvasLayer/BattleUI/CharacterInfo
 @onready var _pathfinder = $Pathfinder
-@onready var _cursor = $Cursor
+@onready var _cursor: Node2D = $Cursor
 @onready var _unit_mover = $UnitMover
 @onready var _unit_ability_executor = $UnitAbilityExecutor
 @onready var _highlight_manager = $HighlightManager
@@ -52,14 +54,14 @@ func _setup_systems() -> void:
 	_input_handler.cell_cancelled.connect(_on_cell_cancelled)
 
 	# hud
-	_battle_hud.setup(BattleManager)
+	_battle_ui.setup(BattleManager)
 	_character_info.setup(null)
 
 	# pathfinder
 	_pathfinder.setup(_battle_grid)
 
 	# cursor
-	_cursor.setup(_cursor.get_node("CursorSprite"))
+	_cursor.setup()
 
 	# battle manager
 	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor)
@@ -96,9 +98,8 @@ func _spawn_units() -> void:
 	# resolve equipment and ability references so equipped_items[] and abilties[] is populated on each unit
 	for unit in all_units:
 		unit.data.resolve_equipment()
-		print("resolving abilities...")
 		unit.data.resolve_abilities()
-
+	
 	BattleManager.start_battle(player_units, enemy_units)
 
 # instantiates a Unit scene, places it on the grid, and sets up its data
@@ -198,9 +199,11 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			_reachable_cells.erase(_current_unit.grid_position)
 			_highlight_manager.show_move_range(_reachable_cells, grid_to_world)
 		BattleManager.BattleState.ACTION_SELECT:
+			print("on battle state changed")
 			_highlight_manager.clear()
 			_current_move_query = null
 			_current_ability = null
+			print("battle state changed done")
 		BattleManager.BattleState.ABILITIES_SELECT:
 			pass
 		BattleManager.BattleState.TARGET_SELECT:
@@ -214,16 +217,14 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 
 # connects the new active unit's signals to the HUD and updates camera and turn state
 func _on_active_unit_changed(unit: Unit) -> void:
-	# disconnect previous unit's signals from HUD
 	if _previous_unit != null:
-		if _previous_unit.move_consumed.is_connected(_battle_hud.move_consumed):
-			_previous_unit.move_consumed.disconnect(_battle_hud.move_consumed)
-		if _previous_unit.action_consumed.is_connected(_battle_hud.ability_consumed):
-			_previous_unit.action_consumed.disconnect(_battle_hud.ability_consumed)
-	# connect new unit's signals
-	unit.move_consumed.connect(_battle_hud.move_consumed)
-	unit.action_consumed.connect(_battle_hud.ability_consumed)
-	_battle_hud.on_turn_changed(unit)
+		if _previous_unit.move_consumed.is_connected(_battle_ui.refresh_hud):
+			_previous_unit.move_consumed.disconnect(_battle_ui.refresh_hud)
+		if _previous_unit.action_consumed.is_connected(_battle_ui.refresh_hud):
+			_previous_unit.action_consumed.disconnect(_battle_ui.refresh_hud)
+	unit.move_consumed.connect(_battle_ui.refresh_hud)
+	unit.action_consumed.connect(_battle_ui.refresh_hud)
+	_battle_ui.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
 
@@ -233,13 +234,10 @@ func _on_active_unit_changed(unit: Unit) -> void:
 
 # stores the selected ability for use when TARGET_SELECT state is entered
 func _on_ability_selected(unit: Unit, ability: AbilityData) -> void:
-	print("on ability selected")
-	print("unit: ", unit.data.unit_name, "ability: ", ability.ability_name)
 	_current_ability = ability
 
 # resolves ability damage via ActionResolver and refreshes the character info panel
 func _on_ability_impact() -> void:
-	_unit_ability_executor.resolve_ability(_action_resolver)
 	_character_info.refresh()
 
 # kicks off unit movement animation via UnitMover using the cached move query
@@ -250,7 +248,7 @@ func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 
 # kicks off ability execution via UnitAbilityExecutor
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
-	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera)
+	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _cinematic_bars)
 	caster.consume_action()
 
 func _on_movement_complete(unit: Unit) -> void:
