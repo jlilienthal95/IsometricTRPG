@@ -100,7 +100,7 @@ func _spawn_units() -> void:
 		unit.data.resolve_equipment()
 		unit.data.resolve_abilities()
 	
-	BattleManager.start_battle(player_units, enemy_units)
+	BattleManager.call_deferred("start_battle", player_units, enemy_units)
 
 # instantiates a Unit scene, places it on the grid, and sets up its data
 func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> Unit:

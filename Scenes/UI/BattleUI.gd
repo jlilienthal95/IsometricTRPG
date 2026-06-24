@@ -28,11 +28,14 @@ func _on_menu_requested(menu) -> void:
 	await fade_in(0.1)
 
 func fade_out(duration: float = 0.5) -> void:
+	print("fade out")
 	var tween = get_tree().create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, duration)
 	await tween.finished
 
 func fade_in(duration: float = 0.5) -> void:
+	print("fade in")
 	var tween = get_tree().create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, duration)
 	await tween.finished
+	print("fade in done")
