@@ -51,6 +51,7 @@ grow_vertical = 2
 theme = ExtResource("1_hcak5")
 
 [node name="EquipmentScroll" type="ScrollContainer" parent="EquipmentMenu" unique_id=2023976590]
+clip_contents = false
 layout_mode = 2
 theme = ExtResource("1_ioexv")
 

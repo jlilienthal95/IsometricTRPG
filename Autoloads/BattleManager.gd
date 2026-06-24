@@ -143,7 +143,6 @@ func end_turn() -> void:
 		return
 	active_unit = null
 	# TODO: apply status effect ticks and turn countdowns here before advancing
-	#change_state(BattleState.RESOLVING)
 	call_deferred("_start_next_turn")	# temporary — TurnQueue will replace this
 
 # emits a push_error with context about which state was expected vs actual
