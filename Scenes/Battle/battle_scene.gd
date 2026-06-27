@@ -6,7 +6,6 @@ extends Node2D
 @onready var _input_handler: InputHandler = $InputHandler
 @onready var _battle_ui: BattleUI = $CanvasLayer/BattleUI
 @onready var _battle_hud: BattleHUD = $CanvasLayer/BattleUI/BattleHUD
-@onready var _cinematic_bars: CinematicBars = $CanvasLayer/CinematicBars
 @onready var _character_info: CharacterInfo = $CanvasLayer/BattleUI/CharacterInfo
 @onready var _pathfinder = $Pathfinder
 @onready var _cursor: Node2D = $Cursor
@@ -38,11 +37,20 @@ func _ready() -> void:
 
 # builds the logical grid from all elevation layers and sets their z indices
 func _build_grid() -> void:
-	for i in range(15):
-		var layer = _terrain_layers.get_node("Elevation" + str(i))
-		if layer:
-			_battle_grid.build_from_tilemap(layer, i)
-			layer.z_index = i * 4
+	for layer in _terrain_layers.get_children():
+		var layer_name = str(layer.name)
+		var num_str = ""
+		for c in layer_name:
+			if c.is_valid_int():
+				num_str += c
+			elif num_str != "":
+				break
+		if num_str == "":
+			continue
+		var elevation = num_str.to_int()
+		var z_offset = layer.get_meta("z_offset", 0)
+		layer.z_index = elevation * 4 + z_offset
+		_battle_grid.build_from_tilemap(layer, elevation)
 	_battle_grid.build_occlusion_map()
 
 # wires up all system references and signal connections
@@ -64,7 +72,7 @@ func _setup_systems() -> void:
 	_cursor.setup()
 
 	# battle manager
-	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor)
+	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _battle_ui)
 	BattleManager.state_changed.connect(_on_battle_state_changed)
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleManager.unit_moved.connect(_on_unit_moved)
@@ -80,8 +88,8 @@ func _setup_systems() -> void:
 
 # TODO: replace with proper spawn system driven by battle/GameState configuration
 func _spawn_units() -> void:
-	var marta = _spawn_unit(Vector3i(-6, 0, 1), load("res://Data/Units/Marta.tres"))
-	var theo = _spawn_unit(Vector3i(-6, -3, 1), load("res://Data/Units/Theo.tres"))
+	var marta = _spawn_unit(Vector3i(-8, 0, 1), load("res://Data/Units/Marta.tres"))
+	var theo = _spawn_unit(Vector3i(-8, -1, 1), load("res://Data/Units/Theo.tres"))
 	var player_units: Array[Unit] = [marta]
 	var enemy_units: Array[Unit] = [theo]
 
@@ -123,15 +131,19 @@ func grid_to_world(cell: Vector3i) -> Vector2:
 	if tile == null:
 		return Vector2.ZERO
 	var layer = _terrain_layers.get_node("Elevation" + str(cell.z))
-	return layer.to_global(layer.map_to_local(Vector2i(cell.x, cell.y)))
+	var world_pos = layer.to_global(layer.map_to_local(Vector2i(cell.x, cell.y)))
+	world_pos.y -= Constants.TILE_ORIGIN_OFFSET
+	return world_pos
 
 # finds the first valid reachable Vector3i cell matching the clicked Vector2i position
 # returns null if no valid cell is found
 func _find_reachable_cell(cell: Vector2i):
-	for reachable_cell in _reachable_cells:
-		if reachable_cell.x == cell.x and reachable_cell.y == cell.y:
-			if _reachable_cells[reachable_cell] == true:
-				return reachable_cell
+	var tile = _battle_grid.get_tile_at_highest_elevation(cell)
+	if tile == null:
+		return null
+	var target = Vector3i(cell.x, cell.y, tile.elevation)
+	if _reachable_cells.has(target) and _reachable_cells[target] == true:
+		return target
 	return null
 
 # =============================================================================
@@ -151,6 +163,7 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 	if not _cursor.is_visible:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
+	
 	var unit: Unit = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
 	if unit != null:
 		_character_info.setup(unit.data)
@@ -159,17 +172,17 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 
 # routes cell selection to the appropriate BattleManager action based on current state
 func _on_cell_selected(cell: Vector2i) -> void:
-	print("cell selected: ", cell)
+	#print("cell selected: ", "(", (cell.x - 1), ", ", (cell.y - 1), ")")
 	match BattleManager.current_state:
 		BattleManager.BattleState.MOVE_SELECT:
 			_previous_cell = _current_unit.grid_position
 			var target = _find_reachable_cell(cell)
 			if target != null:
-				BattleManager.confirm_move(target)
+				await BattleManager.confirm_move(target)
 		BattleManager.BattleState.TARGET_SELECT:
 			var target = _find_reachable_cell(cell)
 			if target != null:
-				BattleManager.confirm_target(target)
+				await BattleManager.confirm_target(target)
 
 # cancels the current sub-selection and returns to ACTION_SELECT
 func _on_cell_cancelled() -> void:
@@ -195,15 +208,14 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 		BattleManager.BattleState.MOVE_SELECT:
 			_current_unit = BattleManager.active_unit
 			_current_move_query = _pathfinder.build_move_query(_current_unit.data, true)
+			_pathfinder.debug_reachable(_current_unit.grid_position, _current_move_query, _current_unit)
 			_reachable_cells = _pathfinder.get_cells_in_range(_current_unit.grid_position, _current_move_query, _current_unit)
 			_reachable_cells.erase(_current_unit.grid_position)
 			_highlight_manager.show_move_range(_reachable_cells, grid_to_world)
 		BattleManager.BattleState.ACTION_SELECT:
-			print("on battle state changed")
 			_highlight_manager.clear()
 			_current_move_query = null
 			_current_ability = null
-			print("battle state changed done")
 		BattleManager.BattleState.ABILITIES_SELECT:
 			pass
 		BattleManager.BattleState.TARGET_SELECT:
@@ -227,6 +239,7 @@ func _on_active_unit_changed(unit: Unit) -> void:
 	_battle_ui.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
+	_previous_cell = Vector3i(999,999,999)
 
 # =============================================================================
 # ABILITY / MOVEMENT EXECUTION
@@ -248,7 +261,7 @@ func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 
 # kicks off ability execution via UnitAbilityExecutor
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
-	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _cinematic_bars)
+	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _battle_ui)
 	caster.consume_action()
 
 func _on_movement_complete(unit: Unit) -> void:

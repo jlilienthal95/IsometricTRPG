@@ -9,6 +9,7 @@ func setup() -> void:
 
 # moves the cursor to the given world position
 func move_cursor(destination: Vector2) -> void:
+	#destination.y -= Constants.TILE_ORIGIN_OFFSET
 	global_position = destination
 
 func hide_cursor() -> void:

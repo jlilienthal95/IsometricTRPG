@@ -11,11 +11,15 @@ signal move_consumed
 signal action_consumed
 signal ability_impact
 
+const WATER_SHADER = preload("res://Assets/Shaders/Unit_Water.gdshader")
+
 var data: UnitData = null
 var grid_position: Vector3i = Vector3i.ZERO
+var _default_material: Material = null
 
 func _ready() -> void:
-	unit_sprite.material = unit_sprite.material.duplicate(true)
+	#unit_sprite.material = unit_sprite.material.duplicate(true)
+	_default_material = unit_sprite.material
 	if data != null:
 		play_idle()
 
@@ -60,7 +64,6 @@ func play_attack() -> void:
 	if data.is_dead:
 		return
 	unit_sprite.play("attack")
-	print("playing attack anim")
 	await unit_animation_player.animation_finished
 	
 func play_cast_spell() -> void:
@@ -74,13 +77,9 @@ func play_attack_animation(cast_impact_delay: float, has_effect: bool) -> void:
 			#TODO unit animation should be custom - not just play spell. Special abilities will not always be spells. 
 			play_cast_spell()
 		else:
-			print("play attack")
 			play_attack()
-			print("attack complete")
 		
-		#print("await impact")
 		await get_tree().create_timer(cast_impact_delay / 1000).timeout
-		#print("impact!")
 		notify_ability_impact()
 
 # plays the hit reaction animation and returns to idle when finished
@@ -123,7 +122,6 @@ func play_death() -> void:
 		unit_sprite.play("death")
 		await unit_sprite.animation_finished
 	return
-
 # =============================================================================
 # APPEARANCE
 # =============================================================================
@@ -162,6 +160,22 @@ func update_z_index() -> void:
 	else:
 		var lowest_occluder = occluders[occluders.size() - 1]
 		z_index = lowest_occluder.z * 4 - 1
+		
+func on_terrain_changed(terrain_type: int) -> void:
+	if terrain_type == BattleTileData.TerrainType.WATER:
+		_apply_water_effect()
+	else:
+		_remove_water_effect()
+
+func _apply_water_effect() -> void:
+	unit_shadow.visible = false
+	#var mat = ShaderMaterial.new()
+	#mat.shader = WATER_SHADER
+	#unit_sprite.material = mat
+
+func _remove_water_effect() -> void:
+	unit_shadow.visible = true
+	unit_sprite.material = _default_material
 
 # =============================================================================
 # TURN STATE

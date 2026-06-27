@@ -32,13 +32,15 @@ var _camera: BattleCamera = null
 var _unit_mover: UnitMover = null
 var _unit_ability_executor: UnitAbilityExecutor = null
 var _current_ability: AbilityData = null
+var _battle_ui: BattleUI = null
 
 # initializes battle manager with required system references
-func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor) -> void:
+func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor, battle_ui: BattleUI) -> void:
 	_grid = grid
 	_camera = camera
 	_unit_mover = unit_mover
 	_unit_ability_executor = unit_ability_executor
+	_battle_ui = battle_ui
 
 # clears all battle state — call when leaving a battle scene
 func reset() -> void:
@@ -50,10 +52,10 @@ func reset() -> void:
 
 # transitions to a new state and notifies all listeners
 func change_state(new_state: BattleState) -> void:
-	print("change state...")
 	current_state = new_state
-	emit_signal("state_changed", new_state)
 	print("BattleManager state: ", BattleState.keys()[new_state])
+	emit_signal("state_changed", new_state)
+	_battle_ui.refresh(new_state)
 
 # begins the battle with the given player and enemy unit arrays
 func start_battle(p_units: Array[Unit], e_units: Array[Unit]) -> void:
@@ -96,6 +98,7 @@ func select_ability(ability: AbilityData) -> void:
 	current_state != BattleState.ABILITIES_SELECT:
 		_state_error("select_ability", BattleState.JOB_ABILITIES_SELECT)
 		return
+		
 	_current_ability = ability
 	emit_signal("ability_selected", active_unit, ability)
 	change_state(BattleState.TARGET_SELECT)
@@ -143,7 +146,9 @@ func end_turn() -> void:
 		return
 	active_unit = null
 	# TODO: apply status effect ticks and turn countdowns here before advancing
-	call_deferred("_start_next_turn")	# temporary — TurnQueue will replace this
+	_battle_ui.fade_out()
+	await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout
+	_start_next_turn()
 
 # emits a push_error with context about which state was expected vs actual
 func _state_error(func_name: String, expected: BattleState) -> void:
@@ -164,7 +169,6 @@ func _start_next_turn() -> void:
 	active_unit.reset_turn()
 	emit_signal("active_unit_changed", active_unit)
 	if player_units.has(active_unit):
-		print("action select prompted")
 		change_state(BattleState.ACTION_SELECT)
 	else:
 		change_state(BattleState.ENEMY_TURN)

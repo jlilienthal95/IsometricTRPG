@@ -2,6 +2,7 @@ class_name BattleCamera
 extends Camera2D
 
 @export var pan_speed: float = 0.3	# seconds to pan to target
+@export var follow_speed: float = 6.0
 @onready var cam_animation_player: AnimationPlayer = $AnimationPlayer
 
 var _follow_target: Node2D = null
@@ -9,9 +10,9 @@ var _follow_target: Node2D = null
 func _ready() -> void:
 	make_current()	# make this the active camera
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _follow_target != null:
-		position = _follow_target.global_position
+		position = position.lerp(_follow_target.global_position, follow_speed * delta)
 
 func follow(node: Node2D) -> void:
 	await pan_to(node.global_position)

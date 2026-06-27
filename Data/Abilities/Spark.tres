@@ -17,5 +17,6 @@ base_power = 12
 element = 4
 animation_id = "spark"
 impact_delay = 1700
+cast_impact_delay = 1000.0
 charge_delay = 500
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

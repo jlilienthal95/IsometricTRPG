@@ -24,23 +24,30 @@ func _execute_steps(unit: Unit, steps: Array[MovementStep], get_world_pos: Calla
 		var from = unit.grid_position
 		_grid.move_unit(from, step.cell)
 		unit.update_z_index()
-		# TODO: Z index flickers during tween as unit passes through cells with different
-		# occlusion rules. Fix by interpolating Z index based on actual world position.
 		unit.set_facing_toward(from, step.cell)
 
-		# play appropriate animation for step type
 		if step.is_jump:
 			unit.play_jump()
 		else:
 			unit.play_walk()
 
-		# tween unit to next world position
 		var target_pos = get_world_pos.call(step.cell)
 		var tween = unit.create_tween()
 		tween.tween_property(unit, "global_position", target_pos, 0.15)
 		await tween.finished
 		camera.pan_to(target_pos)
 
+		# check if unit is standing under a water tile
+		var above = Vector3i(step.cell.x - 1, step.cell.y - 1, step.cell.z + 1)
+		print("above: ", above)
+		var above_tile = _grid.get_tile(above)
+		if above_tile:
+			print("type: ", above_tile.terrain_type)
+		if above_tile != null and above_tile.terrain_type == BattleTileData.TerrainType.WATER:
+			print("water above!")
+			unit.on_terrain_changed(BattleTileData.TerrainType.WATER)
+		else:
+			unit.on_terrain_changed(BattleTileData.TerrainType.NORMAL)
 	unit.play_idle()
 	_is_moving = false
 	emit_signal("movement_complete", unit)

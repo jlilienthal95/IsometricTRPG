@@ -13,6 +13,9 @@ func build_from_tilemap(tilemap: TileMapLayer, elevation: int) -> void:
 			continue
 		if tile_data.get_custom_data("is_visual_only"):
 			continue
+		var terrain = tile_data.get_custom_data("terrain_type")
+		if terrain != 0:
+			print("non-normal terrain at: ", cell, " elevation: ", elevation, " type: ", terrain)
 		var tile = BattleTileData.new()
 		tile.elevation = elevation
 		tile.terrain_type = tile_data.get_custom_data("terrain_type")
@@ -133,5 +136,3 @@ func build_occlusion_map() -> void:
 
 	for cell in occlusion_map.keys():
 		occlusion_map[cell].sort_custom(func(a, b): return a.z > b.z)
-
-	print("occlusion map built: ", occlusion_map.size(), " occluded cells")

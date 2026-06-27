@@ -1,7 +1,6 @@
 class_name UnitAbilityExecutor
 extends Node
 
-#signal ability_cast(caster: Unit)
 signal ability_complete
 
 var _grid: BattleGrid = null
@@ -12,13 +11,14 @@ var _multi_target: Array[Unit] = []
 var _ability: AbilityData = null
 var _action_resolver: ActionResolver = null
 var _camera: BattleCamera = null
-var _bars: CinematicBars = null #cinematic bars that widen screen appearance during ability animations
+var _battle_ui: BattleUI = null
+
 # initializes the executor with a reference to the battle grid
 func setup(grid: BattleGrid) -> void:
 	_grid = grid
 
 # begins ability execution — guards against concurrent executions
-func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, bars: CinematicBars) -> void:
+func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, battle_ui: BattleUI) -> void:
 	if _is_executing:
 		push_error("UnitAbilityExecutor: ability execution already in progress")
 		return
@@ -28,7 +28,7 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 	_ability = ability
 	_camera = camera
 	_action_resolver = action_resolver
-	_bars = bars
+	_battle_ui = battle_ui
 	
 	# populate multi-target for AoE abilities
 	# TODO: expand to all cells within ability AoE range when AoE is implemented
@@ -42,53 +42,54 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 	_execute_sequence()
 
 func _execute_sequence() -> void:
-	# 1. caster plays attack animation
-	#y down, x up = face right
-	if _single_target != null:
-		if _caster.grid_position.y > _single_target.grid_position.y or \
-		_caster.grid_position.x < _single_target.grid_position.x:
-			_caster.set_facing(false)
-		else:
-			_caster.set_facing(true)
-
-	_bars.fade_in()
-	await _camera.zoom_in()
-	# start cast animation — waits cast_impact_delay then notifies impact
+	await _setup_cinematic()
+	_face_target()
 	await _caster.play_attack_animation(_ability.cast_impact_delay, _ability.animation_id != "")
-	# spawn effect after impact
-	if _ability.animation_id != "":
-		var effect: Node2D = preload("res://Scenes/Battle/SpellEffect.tscn").instantiate()
-		get_parent().add_child(effect)
-		effect.global_position = _caster.global_position
-		effect.z_index = _single_target.z_index + 1
-		effect.play(_ability.animation_id)
-		_camera.follow(effect)
-		# wait charge delay before tween begins
-		await get_tree().create_timer(_ability.charge_delay * .001).timeout
-		#var tween = create_tween()
-		#tween.tween_property(effect, "global_position", _single_target.global_position, 0.4)
-		#await tween.finished
-		# wait remaining impact time
-		_travel(effect)
+	await _execute_effect()
 	await get_tree().create_timer((_ability.impact_delay - _ability.charge_delay) * .001).timeout
 	await resolve_ability(_action_resolver)
-	
 	_caster.play_idle()
-	
-	await _camera.zoom_reset()
-	_bars.fade_out()
-	_camera.follow(_caster)
-	
-	#reset executor and notify ability complete
+	await _teardown_cinematic()
 	_is_executing = false
 	emit_signal("ability_complete")
 	_clear_context()
+
+func _setup_cinematic() -> void:
+	await _battle_ui.fade_bars_in()
+	await _camera.zoom_in()
+
+func _teardown_cinematic() -> void:
+	await _camera.zoom_reset()
+	await _battle_ui.fade_bars_out()
+	_camera.follow(_caster)
+
+func _face_target() -> void:
+	if _single_target == null:
+		return
+	if _caster.grid_position.y > _single_target.grid_position.y or \
+	_caster.grid_position.x < _single_target.grid_position.x:
+		_caster.set_facing(false)
+	else:
+		_caster.set_facing(true)
+
+func _execute_effect() -> void:
+	if _ability.animation_id == "":
+		return
+	var effect: Node2D = preload("res://Scenes/Battle/SpellEffect.tscn").instantiate()
+	get_parent().add_child(effect)
+	effect.global_position = _caster.global_position
+	effect.z_index = _single_target.z_index + 1
+	effect.play(_ability.animation_id)
+	_camera.follow(effect)
+	await get_tree().create_timer(_ability.charge_delay * .001).timeout
+	_travel(effect)
 	
 # battle_scene calls this after ability_impact fires
 # passes ActionResolver in so UnitAbilityExecutor can coordinate resolution internally
 func resolve_ability(action_resolver: ActionResolver) -> void:
 	if _single_target != null:
 		var result = action_resolver.resolve(_caster, _single_target, _ability)
+		_caster.adjust_mp(_ability.mp_cost)
 		if not result.is_miss:
 			_camera.play_shake()
 			_single_target.adjust_hp(result.damage)

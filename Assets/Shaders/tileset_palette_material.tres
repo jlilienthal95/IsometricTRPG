@@ -1,0 +1,6 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://hrv0k0hfxpi5"]
+
+[ext_resource type="Shader" uid="uid://c0qmvsv1dpgrl" path="res://Scenes/Battle/Tileset_Palette.gdshader" id="1_resyx"]
+
+[resource]
+shader = ExtResource("1_resyx")

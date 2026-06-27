@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://doomjghuld7tb"]
+
+[ext_resource type="Script" uid="uid://dqs1cbe4cjpdt" path="res://Scenes/Battle/CinematicBars.gd" id="1_v2sam"]
+
+[node name="CinematicBars" type="Control" unique_id=1216471631]
+modulate = Color(1, 1, 1, 0)
+z_index = -4096
+z_as_relative = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_v2sam")
+
+[node name="BlackBarTop" type="ColorRect" parent="." unique_id=1522066906]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 30.0
+grow_horizontal = 2
+size_flags_vertical = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BlackBarBottom" type="ColorRect" parent="." unique_id=1450500685]
+unique_name_in_owner = true
+modulate = Color(0, 0, 0, 1)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

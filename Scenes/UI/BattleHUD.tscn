@@ -9,6 +9,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 400.0
 offset_bottom = 256.0
+scale = Vector2(0.25, 0.25)
 theme = ExtResource("1_hcak5")
 script = ExtResource("1_xilco")
 
@@ -42,6 +43,7 @@ layout_mode = 2
 text = "Wait"
 
 [node name="EquipmentMenu" type="PanelContainer" parent="." unique_id=25345652]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 offset_right = 384.0
@@ -80,6 +82,7 @@ size_flags_vertical = 6
 theme = ExtResource("1_ioexv")
 
 [node name="AbilitiesMenu" type="PanelContainer" parent="." unique_id=156690001]
+visible = false
 layout_mode = 0
 offset_right = 384.0
 offset_bottom = 256.0

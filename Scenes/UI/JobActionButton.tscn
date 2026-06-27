@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://cucb031pgglan"]
+
+[ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_5aq16"]
+
+[node name="JobActionButton" type="Button" unique_id=724742878]
+offset_right = 328.0
+offset_bottom = 60.0
+theme = ExtResource("1_5aq16")
+theme_override_font_sizes/font_size = 20
+
+[node name="ActionLabel" type="Label" parent="." unique_id=697674529]
+layout_mode = 0
+offset_left = 62.0
+offset_top = -2.0
+offset_right = 310.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 20
+text = "ACTION NAME"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MpLabel" type="Label" parent="." unique_id=811211000]
+layout_mode = 0
+offset_left = 16.0
+offset_top = -2.0
+offset_right = 72.0
+offset_bottom = 62.0
+theme_override_colors/font_color = Color(0.047058824, 0.9019608, 0.9490196, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1

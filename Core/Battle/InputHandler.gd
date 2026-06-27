@@ -28,4 +28,5 @@ func _unhandled_input(event: InputEvent) -> void:
 func _get_cell_under_mouse() -> Vector2i:
 	var mouse_pos = _reference_layer.get_global_mouse_position()
 	var local_pos = _reference_layer.to_local(mouse_pos)
+	local_pos.y += Constants.TILE_ORIGIN_OFFSET  # offset upward to account for bottom origin
 	return _reference_layer.local_to_map(local_pos)

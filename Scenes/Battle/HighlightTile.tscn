@@ -1,9 +1,10 @@
 [gd_scene format=3 uid="uid://d1w2dfv4j01lq"]
 
-[ext_resource type="Texture2D" uid="uid://clgcs8nsa8k75" path="res://Assets/Sprites/Tilesets/DiamondTile.png" id="1_sq1ed"]
+[ext_resource type="Texture2D" uid="uid://cq2uhrlxtwa68" path="res://Assets/Sprites/Tilesets/DiamondHighlight_Blue.png" id="1_sq1ed"]
 
 [node name="Node2D" type="Node2D" unique_id=1129059742]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1162875455]
 modulate = Color(1, 1, 1, 0.47058824)
 texture = ExtResource("1_sq1ed")
+offset = Vector2(0, 8)

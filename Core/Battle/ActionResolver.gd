@@ -17,7 +17,6 @@ func resolve(caster: Unit, target: Unit, ability: AbilityData) -> ActionResult:
 	result.damage = damage_result[0]
 	result.is_critical = damage_result[1]
 	result.element = ability.element
-	print("ability resolve complete")
 	return result
 	
 func _check_miss(result: ActionResult, hit_chance: float) -> ActionResult:

@@ -15,7 +15,7 @@ signal hide_requested
 
 @onready var abilities_menu = $AbilitiesMenu
 @onready var fight_button = $AbilitiesMenu/VBoxContainer/FightButton
-@onready var job_ability_button = $AbilitiesMenu/VBoxContainer/JobActionButton
+@onready var job_action_button = $AbilitiesMenu/VBoxContainer/JobActionButton
 @onready var items_button: Button = $AbilitiesMenu/VBoxContainer/ItemsButton
 
 @onready var job_ability_menu = $JobAbilityMenu
@@ -24,23 +24,26 @@ signal hide_requested
 var _active_unit: Unit = null
 var _fight_ability: AbilityData = null
 
+var job_ability_button =  preload("res://Scenes/UI/JobActionButton.tscn")
+
 func setup(battle_manager: BattleManager) -> void:
-	battle_manager.state_changed.connect(_on_state_changed)
 	move_button.pressed.connect(battle_manager.select_action_move)
 	abilities_button.pressed.connect(battle_manager.select_action_abilities)
 	equipment_button.pressed.connect(battle_manager.select_action_equipment)
 	wait_button.pressed.connect(battle_manager.end_turn)
 	fight_button.pressed.connect(_on_fight_pressed)
-	job_ability_button.pressed.connect(battle_manager.select_job_ability)
+	job_action_button.pressed.connect(battle_manager.select_job_ability)
 	_hide_all()
 
 func refresh() -> void:
 	if _active_unit == null:
 		return
 	move_button.disabled = _active_unit.data.has_moved
-	move_button.modulate = Color(1, 1, 1, 0.4) if _active_unit.data.has_moved else Color.WHITE
 	abilities_button.disabled = _active_unit.data.has_acted
-	abilities_button.modulate = Color(1, 1, 1, 0.4) if _active_unit.data.has_acted else Color.WHITE
+	_equipment_reset()
+	_abilities_reset()
+	_generate_equipment_buttons(_active_unit.data.equipped_items)
+	_generate_job_ability_buttons(_active_unit.data.abilities)
 
 func on_turn_changed(unit: Unit) -> void:
 	_active_unit = unit
@@ -53,41 +56,26 @@ func _generate_equipment_buttons(items: Array[ItemData]) -> void:
 	for item in items:
 		var button = Button.new()
 		button.text = item.item_name
-		button.custom_minimum_size.x = 335
-		button.custom_minimum_size.y = 60
+		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
+		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
 		equipment_vbox.add_child(button)
 
 func _generate_job_ability_buttons(abilities: Array[AbilityData]) -> void:
 	for ability in abilities:
-		var button = Button.new()
-		button.text = ability.ability_name.replace("_", " ")
-		button.custom_minimum_size.x = 335
-		button.custom_minimum_size.y = 33
-		button.pressed.connect(BattleManager.select_ability.bind(ability))
+		var button = job_ability_button.instantiate()
+		var mp_cost = ability.mp_cost
+		button.get_node("./ActionLabel").text = ability.ability_name.replace("_", " ")
+		if mp_cost > 0:
+			button.get_node("./MpLabel").text = str(ability.mp_cost)
+		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
+		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
+		if _active_unit.data.current_mp >= ability.mp_cost:
+			button.pressed.connect(BattleManager.select_ability.bind(ability))
+		else:
+			button.disabled = true
 		job_ability_vbox.add_child(button)
 
-func _on_state_changed(new_state: BattleManager.BattleState) -> void:
-	print("HUD state changed: ", new_state)
-	match new_state:
-		BattleManager.BattleState.ACTION_SELECT:
-			print("emitting menu_requested with action_menu")
-			menu_requested.emit(action_menu)
-		BattleManager.BattleState.MOVE_SELECT:
-			hide_requested.emit()
-		BattleManager.BattleState.EQUIPMENT_SELECT:
-			menu_requested.emit(equipment_menu)
-		BattleManager.BattleState.ABILITIES_SELECT:
-			menu_requested.emit(abilities_menu)
-		BattleManager.BattleState.JOB_ABILITIES_SELECT:
-			menu_requested.emit(job_ability_menu)
-		BattleManager.BattleState.RESOLVING:
-			hide_requested.emit()
-			
-		_:
-			menu_requested.emit(null)
-
 func show_menu(menu) -> void:
-	print("show_menu called with: ", menu)
 	_hide_all()
 	if menu != null:
 		menu.show()

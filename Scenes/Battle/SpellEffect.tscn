@@ -134,7 +134,6 @@ animations = [{
 script = ExtResource("1_cg877")
 
 [node name="SpellSprite" type="AnimatedSprite2D" parent="." unique_id=1100759619]
-position = Vector2(0, -30)
-scale = Vector2(3, 3)
+position = Vector2(0, -16)
 sprite_frames = SubResource("SpriteFrames_0jsg4")
 animation = &"spark"

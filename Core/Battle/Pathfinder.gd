@@ -16,6 +16,8 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 		var cost = visited[cell]
 		if cost < query.min_range:
 			continue
+		if cost > query.max_range:
+			continue
 		if cell == origin:
 			continue
 			
@@ -63,6 +65,8 @@ func get_movement_path(origin: Vector3i, destination: Vector3i, query: RangeQuer
 		raw_path.append(current)
 		current = came_from[current]
 	raw_path.reverse()
+	
+	print("PATH: ", raw_path)
 	
 	# convert to MovementSteps
 	var steps: Array[MovementStep] = []
@@ -219,3 +223,28 @@ func build_ability_query(ability_data: AbilityData) -> RangeQuery:
 					   ability_data.target_type == AbilityData.TargetType.AREA_ENEMY or \
 					   ability_data.target_type == AbilityData.TargetType.AREA_ALL
 	return query
+	
+func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = null) -> void:
+	var result = _run_dijkstra(origin, query, acting_unit)
+	var visited = result[0]
+	print("=== PATHFINDER DEBUG ===")
+	print("Origin: ", origin)
+	print("Max range: ", query.max_range)
+	print("Jump height: ", query.jump_height)
+	print("Total visited cells: ", visited.size())
+	
+	var by_elevation: Dictionary = {}
+	for cell in visited.keys():
+		var cost = visited[cell]
+		if not by_elevation.has(cell.z):
+			by_elevation[cell.z] = []
+		by_elevation[cell.z].append([cell, cost])
+	
+	for elev in by_elevation.keys():
+		print("  Elevation ", elev, ": ", by_elevation[elev].size(), " cells")
+		for entry in by_elevation[elev]:
+			print("    ", entry[0], " cost: ", entry[1])
+			
+	var result2 = _run_dijkstra(origin, query, acting_unit)
+	var visited2 = result2[0]
+	print("=== END DEBUG ===")

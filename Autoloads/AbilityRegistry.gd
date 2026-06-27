@@ -26,7 +26,6 @@ func get_ability(ability_id: int) -> AbilityData:
 	
 func get_ability_by_name(ability_name: String) -> AbilityData:
 	for ability: AbilityData in _abilities.values():
-		print("ability name: ", ability.ability_name)
 		if ability.ability_name == ability_name:
 			return ability
 	return null
