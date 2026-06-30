@@ -5,6 +5,7 @@ extends Camera2D
 @export var follow_speed: float = 6.0
 @onready var cam_animation_player: AnimationPlayer = $AnimationPlayer
 
+var _cursor: Node2D = null
 var _follow_target: Node2D = null
 
 func _ready() -> void:
@@ -14,12 +15,16 @@ func _process(delta: float) -> void:
 	if _follow_target != null:
 		position = position.lerp(_follow_target.global_position, follow_speed * delta)
 
+func setup(cursor: Node2D) -> void:
+	_cursor = cursor
+	#follow(_cursor)
+
 func follow(node: Node2D) -> void:
 	await pan_to(node.global_position)
 	_follow_target = node
 
-func stop_following(active_unit: Unit) -> void:
-	_follow_target = active_unit
+#func stop_following() -> void:
+	#_follow_target = null
 
 func pan_to(target_pos: Vector2) -> void:
 	var tween = create_tween()

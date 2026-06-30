@@ -41,18 +41,19 @@ func refresh() -> void:
 	move_button.disabled = _active_unit.data.has_moved
 	abilities_button.disabled = _active_unit.data.has_acted
 	_equipment_reset()
-	_abilities_reset()
+	#_abilities_reset()
 	_generate_equipment_buttons(_active_unit.data.equipped_items)
 	_generate_job_ability_buttons(_active_unit.data.abilities)
 
 func on_turn_changed(unit: Unit) -> void:
 	_active_unit = unit
-	_reset_turn()
-	_generate_equipment_buttons(_active_unit.data.equipped_items)
-	_generate_job_ability_buttons(_active_unit.data.abilities)
+	refresh()
+	#_generate_equipment_buttons(_active_unit.data.equipped_items)
+	#_generate_job_ability_buttons(_active_unit.data.abilities)
 	_update_fight_ability()
 
 func _generate_equipment_buttons(items: Array[ItemData]) -> void:
+	_equipment_reset()
 	for item in items:
 		var button = Button.new()
 		button.text = item.item_name
@@ -61,6 +62,8 @@ func _generate_equipment_buttons(items: Array[ItemData]) -> void:
 		equipment_vbox.add_child(button)
 
 func _generate_job_ability_buttons(abilities: Array[AbilityData]) -> void:
+	print("generating job abilities")
+	_job_ability_reset()
 	for ability in abilities:
 		var button = job_ability_button.instantiate()
 		var mp_cost = ability.mp_cost
@@ -93,19 +96,19 @@ func _update_fight_ability() -> void:
 		return
 	_fight_ability = AbilityRegistry.get_ability_by_name("Fight_" + job.job_name)
 
-func _reset_turn() -> void:
-	_move_reset()
-	_abilities_reset()
-	_equipment_reset()
-	_job_ability_reset()
+#func _reset_turn() -> void:
+	#_move_reset()
+	#_abilities_reset()
+	#_equipment_reset()
+	#_job_ability_reset()
 
-func _abilities_reset() -> void:
-	abilities_button.disabled = false
-	abilities_button.modulate = Color.WHITE
-
-func _move_reset() -> void:
-	move_button.disabled = false
-	move_button.modulate = Color.WHITE
+#func _abilities_reset() -> void:
+	#abilities_button.disabled = false
+	#abilities_button.modulate = Color.WHITE
+#
+#func _move_reset() -> void:
+	#move_button.disabled = false
+	#move_button.modulate = Color.WHITE
 
 func _equipment_reset() -> void:
 	for child in equipment_vbox.get_children():

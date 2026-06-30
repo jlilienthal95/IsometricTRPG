@@ -16,8 +16,8 @@ enum BattleState {
 signal state_changed(new_state: BattleState)
 signal active_unit_changed(unit: Unit)
 signal unit_moved(unit: Unit, to_cell: Vector3i)
-signal move_consumed
-signal ability_consumed
+#signal move_consumed
+#signal ability_consumed
 signal ability_selected(unit: Unit, ability: AbilityData)
 signal unit_executed_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera)
 
@@ -123,7 +123,7 @@ func confirm_move(target_cell: Vector3i) -> void:
 		_state_error("confirm_move", BattleState.MOVE_SELECT)
 		return
 	emit_signal("unit_moved", active_unit, target_cell)
-	emit_signal("move_consumed")
+	active_unit.consume_move()
 	await _enter_resolving(_unit_mover.movement_complete, BattleState.ACTION_SELECT)
 
 # executes an ability against target_cell and awaits completion before returning to ACTION_SELECT
@@ -136,7 +136,7 @@ func confirm_target(target_cell: Vector3i) -> void:
 		return
 	# TODO: display target unit's info, expected damage, elemental effects, and hit chance
 	emit_signal("unit_executed_ability", active_unit, target_cell, _current_ability, _camera)
-	emit_signal("ability_consumed")
+	active_unit.consume_ability()
 	await _enter_resolving(_unit_ability_executor.ability_complete, BattleState.ACTION_SELECT)
 
 # ends the active unit's turn and advances to the next

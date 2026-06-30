@@ -68,8 +68,11 @@ func _setup_systems() -> void:
 	# pathfinder
 	_pathfinder.setup(_battle_grid)
 
-	# cursor
-	_cursor.setup()
+	## cursor
+	#_cursor.setup()
+	
+	# battle camara
+	_battle_camera.setup(_cursor)
 
 	# battle manager
 	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _battle_ui)
@@ -232,10 +235,10 @@ func _on_active_unit_changed(unit: Unit) -> void:
 	if _previous_unit != null:
 		if _previous_unit.move_consumed.is_connected(_battle_ui.refresh_hud):
 			_previous_unit.move_consumed.disconnect(_battle_ui.refresh_hud)
-		if _previous_unit.action_consumed.is_connected(_battle_ui.refresh_hud):
-			_previous_unit.action_consumed.disconnect(_battle_ui.refresh_hud)
+		if _previous_unit.ability_consumed.is_connected(_battle_ui.refresh_hud):
+			_previous_unit.ability_consumed.disconnect(_battle_ui.refresh_hud)
 	unit.move_consumed.connect(_battle_ui.refresh_hud)
-	unit.action_consumed.connect(_battle_ui.refresh_hud)
+	unit.ability_consumed.connect(_battle_ui.refresh_hud)
 	_battle_ui.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
@@ -262,7 +265,7 @@ func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 # kicks off ability execution via UnitAbilityExecutor
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
 	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _battle_ui)
-	caster.consume_action()
+	caster.consume_ability()
 
 func _on_movement_complete(unit: Unit) -> void:
 	print("movement complete: ", unit.data.unit_name)

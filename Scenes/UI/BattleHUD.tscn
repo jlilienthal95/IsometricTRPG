@@ -30,6 +30,7 @@ text = "Move"
 [node name="AbilitiesButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1459068095]
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
+theme = ExtResource("1_hcak5")
 text = "Abilities"
 
 [node name="EquipmentButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1843631511]

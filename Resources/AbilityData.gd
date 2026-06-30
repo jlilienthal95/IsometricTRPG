@@ -10,7 +10,7 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 @export var ability_id: = 0		# permanent, never reuse
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
-@export var status_effect: Dictionary[StatusEffect.StatusEffect, int] = {StatusEffect.StatusEffect.NONE: 0}
+@export var status_effect: Dictionary[StatusEffect.StatusEffect, int] = {} # Effect: Turns
 @export var target_type: TargetType = TargetType.SINGLE_ENEMY
 
 # Cost
@@ -34,7 +34,7 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 # Effects
 @export var base_power: int = 0         # damage or healing amount before modifiers
 @export var element: ElementData.Element = ElementData.Element.NONE
-@export var status_effect_ids: Array[int] = []  # statuses this ability can apply
+#@export var status_effect_ids: Array[StatusEffect.StatusEffect] = []  # statuses this ability can apply
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play

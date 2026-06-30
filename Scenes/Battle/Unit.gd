@@ -8,7 +8,7 @@ extends Node2D
 @onready var damage_count: Control = $DamageCount/DamageLabel
 
 signal move_consumed
-signal action_consumed
+signal ability_consumed
 signal ability_impact
 
 const WATER_SHADER = preload("res://Assets/Shaders/Unit_Water.gdshader")
@@ -189,11 +189,12 @@ func consume_move() -> void:
 	emit_signal("move_consumed")
 
 # marks the unit's action as used and notifies listeners
-func consume_action() -> void:
+func consume_ability() -> void:
+	print("ability consumed")
 	if data.is_dead:
 		return
 	data.has_acted = true
-	emit_signal("action_consumed")
+	emit_signal("ability_consumed")
 
 # resets move and action availability at the start of the unit's turn
 func reset_turn() -> void:
