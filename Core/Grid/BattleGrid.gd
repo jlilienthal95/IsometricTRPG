@@ -1,105 +1,39 @@
 class_name BattleGrid
 extends Node
 
-var _grid: Dictionary = {}	# Vector3i -> BattleTileData
-var occlusion_map: Dictionary = {}	# Vector3i -> Array[Vector3i] of occluding tiles
+signal tile_occupancy_changed(tile: BattleTileData)
+
+# =============================================================================
+# STATE
+# =============================================================================
+var _grid: Dictionary = {}					# Vector3i -> BattleTileData
+var occlusion_map: Dictionary = {}			# Vector3i -> Array[Vector3i] of occluding tiles
+var active_effect_cells: Dictionary = {}	# EffectId.Id -> Array[Vector3i] (terrain)
+var active_effect_units: Dictionary = {}	# EffectId.Id -> Array[Unit]
+
+# =============================================================================
+# GRID CONSTRUCTION
+# =============================================================================
 
 # reads all tiles from a TileMapLayer and adds them to the logical grid at the given elevation
 # skips tiles marked as visual-only since they have no gameplay significance
 func build_from_tilemap(tilemap: TileMapLayer, elevation: int) -> void:
-	for cell in tilemap.get_used_cells():
-		var tile_data = tilemap.get_cell_tile_data(cell)
+	for c in tilemap.get_used_cells():
+		var tile_data = tilemap.get_cell_tile_data(c)
 		if tile_data == null:
 			continue
 		if tile_data.get_custom_data("is_visual_only"):
 			continue
-		var terrain = tile_data.get_custom_data("terrain_type")
-		if terrain != 0:
-			print("non-normal terrain at: ", cell, " elevation: ", elevation, " type: ", terrain)
 		var tile = BattleTileData.new()
 		tile.elevation = elevation
 		tile.terrain_type = tile_data.get_custom_data("terrain_type")
 		tile.is_walkable = tile_data.get_custom_data("is_walkable")
-		_grid[Vector3i(cell.x, cell.y, elevation)] = tile
-
-# --- query interface — all other systems call these ---
-
-# returns the BattleTileData at the given grid cell, or null if the cell doesn't exist
-func get_tile(cell: Vector3i) -> BattleTileData:
-	return _grid.get(cell, null)
-
-# returns true if the cell exists and is marked walkable
-func is_walkable(cell: Vector3i) -> bool:
-	var tile = get_tile(cell)
-	return tile != null and tile.is_walkable
-
-# returns the elevation of the given cell, or 0 if it doesn't exist
-func get_elevation(cell: Vector3i) -> int:
-	var tile = get_tile(cell)
-	return tile.elevation if tile else 0
-
-# returns all cell coordinates currently in the grid
-func get_all_cells() -> Array[Vector3i]:
-	var cells: Array[Vector3i] = []
-	for key in _grid.keys():
-		cells.append(key)
-	return cells
-
-# places a unit on the given cell and updates the unit's grid_position
-func place_unit(unit: Unit, cell: Vector3i) -> void:
-	var tile = get_tile(cell)
-	if tile == null:
-		push_error("Tried to place unit on invalid cell: " + str(cell))
-		return
-	tile.unit_ref = unit
-	unit.grid_position = cell
-
-# removes the unit reference from the given cell
-func remove_unit(cell: Vector3i) -> void:
-	var tile = get_tile(cell)
-	if tile == null:
-		return
-	tile.unit_ref = null
-
-# moves a unit from one cell to another, updating grid references and the unit's position
-func move_unit(from: Vector3i, to: Vector3i) -> void:
-	var from_tile = get_tile(from)
-	var to_tile = get_tile(to)
-	if from_tile == null or to_tile == null:
-		push_error("Invalid move from " + str(from) + " to " + str(to))
-		return
-	if to_tile.unit_ref != null:
-		push_error("Tried to move unit to occupied cell: " + str(to))
-		return
-	to_tile.unit_ref = from_tile.unit_ref
-	to_tile.unit_ref.grid_position = to
-	from_tile.unit_ref = null
-
-# returns the Unit on the given cell, or null if unoccupied
-func get_unit_at(cell: Vector3i) -> Unit:
-	var tile = get_tile(cell)
-	if tile == null:
-		return null
-	return tile.unit_ref
-
-# returns true if a unit is currently on the given cell
-func is_cell_occupied(cell: Vector3i) -> bool:
-	var tile = get_tile(cell)
-	if tile == null:
-		return false
-	return tile.unit_ref != null
-
-# returns the highest-elevation tile at the given XY position, or null if none exist
-func get_tile_at_highest_elevation(xy: Vector2i) -> BattleTileData:
-	var highest_tile: BattleTileData = null
-	var highest_elevation: int = -1
-	for key in _grid.keys():
-		if key.x == xy.x and key.y == xy.y:
-			var tile = _grid[key]
-			if tile.elevation > highest_elevation:
-				highest_elevation = tile.elevation
-				highest_tile = tile
-	return highest_tile
+		tile.atlas_source_id = tilemap.get_cell_source_id(c)
+		tile.atlas_coords = tilemap.get_cell_atlas_coords(c)
+		var key = Vector3i(c.x, c.y, elevation)
+		tile.cell = key
+		tile._grid_ref = self
+		_grid[key] = tile
 
 # precomputes which cells are visually occluded by elevated tiles
 # for each elevated tile, calculates its visual footprint at lower elevations
@@ -136,3 +70,157 @@ func build_occlusion_map() -> void:
 
 	for cell in occlusion_map.keys():
 		occlusion_map[cell].sort_custom(func(a, b): return a.z > b.z)
+
+# =============================================================================
+# TILE QUERIES
+# =============================================================================
+
+# returns the BattleTileData at the given grid cell, or null if the cell doesn't exist
+func get_tile(cell: Vector3i) -> BattleTileData:
+	return _grid.get(cell, null)
+
+# returns true if the cell exists and is marked walkable
+func is_walkable(cell: Vector3i) -> bool:
+	var tile = get_tile(cell)
+	return tile != null and tile.is_walkable
+
+# returns the elevation of the given cell, or 0 if it doesn't exist
+func get_elevation(cell: Vector3i) -> int:
+	var tile = get_tile(cell)
+	return tile.elevation if tile else 0
+
+# returns all cell coordinates currently in the grid
+func get_all_cells() -> Array[Vector3i]:
+	var cells: Array[Vector3i] = []
+	for key in _grid.keys():
+		cells.append(key)
+	return cells
+
+# returns the highest-elevation tile at the given XY position, or null if none exist
+func get_tile_at_highest_elevation(xy: Vector2i) -> BattleTileData:
+	#print("looking for tile at xy: ", xy)
+	var highest_tile: BattleTileData = null
+	var highest_elevation: int = -1
+	for key in _grid.keys():
+		if key.x == xy.x and key.y == xy.y:
+			#print("found match at: ", key)
+			var tile = _grid[key]
+			if tile.elevation > highest_elevation:
+				highest_elevation = tile.elevation
+				highest_tile = tile
+	#print("result: ", highest_tile)
+	return highest_tile
+
+# =============================================================================
+# UNIT PLACEMENT & MOVEMENT
+# =============================================================================
+
+# places a unit on the given cell and updates the unit's grid_position
+func place_unit(unit: Unit, cell: Vector3i) -> void:
+	var tile = get_tile(cell)
+	if tile == null:
+		push_error("Tried to place unit on invalid cell: " + str(cell))
+		return
+	tile.unit_ref = unit
+	unit.grid_position = cell
+	tile_occupancy_changed.emit(tile)
+
+func remove_unit(cell: Vector3i) -> void:
+	var tile = get_tile(cell)
+	if tile == null:
+		return
+	tile.unit_ref = null
+	tile_occupancy_changed.emit(tile)
+
+func move_unit(from: Vector3i, to: Vector3i) -> void:
+	var from_tile = get_tile(from)
+	var to_tile = get_tile(to)
+	if from_tile == null or to_tile == null:
+		push_error("Invalid move from " + str(from) + " to " + str(to))
+		return
+	if to_tile.unit_ref != null:
+		push_error("Tried to move unit to occupied cell: " + str(to))
+		return
+	to_tile.unit_ref = from_tile.unit_ref
+	to_tile.unit_ref.grid_position = to
+	from_tile.unit_ref = null
+	tile_occupancy_changed.emit(from_tile)
+	tile_occupancy_changed.emit(to_tile)
+	
+# returns the Unit on the given cell, or null if unoccupied
+func get_unit_at(cell: Vector3i) -> Unit:
+	var tile = get_tile(cell)
+	if tile == null:
+		return null
+	return tile.unit_ref
+
+# returns true if a unit is currently on the given cell
+func is_cell_occupied(cell: Vector3i) -> bool:
+	var tile = get_tile(cell)
+	if tile == null:
+		return false
+	return tile.unit_ref != null
+
+# =============================================================================
+# EFFECT PROPAGATION SUPPORT
+# =============================================================================
+
+# returns same-elevation cardinal neighbors plus one elevation up and down
+# handlers filter the result based on their own directional rules (e.g. fire ignores "down")
+func get_effect_neighbors(cell: Vector3i, include_elevation: bool = true) -> Array[Vector3i]:
+	var neighbors: Array[Vector3i] = []
+	neighbors.append(Vector3i(cell.x + 1, cell.y, cell.z))
+	neighbors.append(Vector3i(cell.x - 1, cell.y, cell.z))
+	neighbors.append(Vector3i(cell.x, cell.y + 1, cell.z))
+	neighbors.append(Vector3i(cell.x, cell.y - 1, cell.z))
+	if include_elevation:
+		neighbors.append_array(Constants.get_elevation_neighbors_up(cell, 1))
+		neighbors.append_array(Constants.get_elevation_neighbors_down(cell, 1))
+	return neighbors
+
+# --- terrain effect index — only call from BattleTileData.apply_effect/remove_effect ---
+
+func register_effect_cell(effect_id: EffectId.Id, cell: Vector3i) -> void:
+	if not active_effect_cells.has(effect_id):
+		active_effect_cells[effect_id] = []
+	if not active_effect_cells[effect_id].has(cell):
+		active_effect_cells[effect_id].append(cell)
+
+func unregister_effect_cell(effect_id: EffectId.Id, cell: Vector3i) -> void:
+	if active_effect_cells.has(effect_id):
+		active_effect_cells[effect_id].erase(cell)
+
+func get_cells_with_effect(effect_id: EffectId.Id) -> Array[Vector3i]:
+	var result: Array[Vector3i] = []
+	var found = active_effect_cells.get(effect_id, [])
+	for cell in found:
+		result.append(cell)
+	return result
+
+# --- unit effect index — only call from Unit.apply_effect/remove_effect ---
+
+func register_effect_unit(effect_id: EffectId.Id, unit: Unit) -> void:
+	if not active_effect_units.has(effect_id):
+		active_effect_units[effect_id] = []
+	if not active_effect_units[effect_id].has(unit):
+		active_effect_units[effect_id].append(unit)
+
+func unregister_effect_unit(effect_id: EffectId.Id, unit: Unit) -> void:
+	if active_effect_units.has(effect_id):
+		active_effect_units[effect_id].erase(unit)
+
+func get_units_with_effect(effect_id: EffectId.Id) -> Array[Unit]:
+	var result: Array[Unit] = []
+	var found = active_effect_units.get(effect_id, [])
+	for unit in found:
+		result.append(unit)
+	return result
+
+# --- combined query ---
+
+# returns both terrain cells and units currently affected by the given effect
+func get_all_affected_with_effect(effect_id: EffectId.Id) -> Dictionary:
+	return {
+		"cells": get_cells_with_effect(effect_id),
+		"units": get_units_with_effect(effect_id),
+	}

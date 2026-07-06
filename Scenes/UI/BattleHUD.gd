@@ -42,7 +42,7 @@ func refresh() -> void:
 	abilities_button.disabled = _active_unit.data.has_acted
 	_equipment_reset()
 	#_abilities_reset()
-	_generate_equipment_buttons(_active_unit.data.equipped_items)
+	_generate_equipment_buttons(_active_unit.data.equipment)
 	_generate_job_ability_buttons(_active_unit.data.abilities)
 
 func on_turn_changed(unit: Unit) -> void:
@@ -52,17 +52,16 @@ func on_turn_changed(unit: Unit) -> void:
 	#_generate_job_ability_buttons(_active_unit.data.abilities)
 	_update_fight_ability()
 
-func _generate_equipment_buttons(items: Array[ItemData]) -> void:
+func _generate_equipment_buttons(equipment: Array[EquipmentData]) -> void:
 	_equipment_reset()
-	for item in items:
+	for item in equipment:
 		var button = Button.new()
-		button.text = item.item_name
+		button.text = item.equipment_name
 		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
 		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
 		equipment_vbox.add_child(button)
 
 func _generate_job_ability_buttons(abilities: Array[AbilityData]) -> void:
-	print("generating job abilities")
 	_job_ability_reset()
 	for ability in abilities:
 		var button = job_ability_button.instantiate()

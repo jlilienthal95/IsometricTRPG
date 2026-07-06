@@ -21,3 +21,15 @@ var requires_empty: bool = false
 var requires_enemy: bool = false
 var requires_ally: bool = false
 var requires_dead: bool = false
+
+static func for_movement(unit_data: UnitData) -> RangeQuery:
+	var query = RangeQuery.new()
+	query.max_range = unit_data.move_range
+	query.jump_height = unit_data.jump_height
+	query.respect_terrain_cost = true
+	query.blocked_by_enemies = true
+	query.blocked_by_allies = false
+	query.can_end_on_ally = false
+	query.blocked_by_unwalkable = true
+	query.requires_empty = true
+	return query

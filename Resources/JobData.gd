@@ -8,6 +8,7 @@ extends Resource
 @export var sprite_offset: Vector2 = Vector2.ZERO
 @export var flip_offset: Vector2 = Vector2.ZERO
 @export var shadow_scale: Vector2 = Vector2.ONE
+@export var cast_impact_delay: float = 0.0 #time from caster anim start until ability anim start
 
 # Stat modifiers this job applies to base stats
 @export var hp_modifier: float = 1.0      # multiplier

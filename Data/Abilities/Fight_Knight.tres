@@ -9,5 +9,4 @@ ability_id = 1
 description = "A basic attack. Hits anything in a one tile range."
 max_elevation_difference = 1
 base_power = 10
-impact_delay = 733
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

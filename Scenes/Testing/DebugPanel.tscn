@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://chiled6p4i1l6"]
+
+[ext_resource type="Script" uid="uid://4oninltdw2mf" path="res://DebugPanel.gd" id="1_6plpk"]
+
+[node name="DebugPanel" type="PanelContainer" unique_id=591785918]
+scale = Vector2(0.25, 0.25)
+script = ExtResource("1_6plpk")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=802254372]
+layout_mode = 2
+
+[node name="TileInfo" type="RichTextLabel" parent="VBox" unique_id=956231689]
+layout_mode = 2
+
+[node name="TickButton" type="Button" parent="VBox" unique_id=1514587381]
+layout_mode = 2
+text = "TICK"
+
+[node name="WalkableCheck" type="CheckBox" parent="VBox" unique_id=844294240]
+layout_mode = 2
+
+[node name="Sections" type="HBoxContainer" parent="VBox" unique_id=1363031046]
+layout_mode = 2
+
+[node name="TerrainSection" type="VBoxContainer" parent="VBox/Sections" unique_id=1864068259]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/Sections/TerrainSection" unique_id=490625594]
+layout_mode = 2
+text = "TERRAIN"
+
+[node name="TerrainButtons" type="VBoxContainer" parent="VBox/Sections/TerrainSection" unique_id=242982050]
+layout_mode = 2
+
+[node name="EffectSection" type="VBoxContainer" parent="VBox/Sections" unique_id=2080883497]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/Sections/EffectSection" unique_id=1202031971]
+layout_mode = 2
+text = "EFFECTS"
+
+[node name="EffectCheckboxes" type="VBoxContainer" parent="VBox/Sections/EffectSection" unique_id=731288787]
+layout_mode = 2

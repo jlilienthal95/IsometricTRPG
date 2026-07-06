@@ -189,25 +189,16 @@ func _is_ally(unit_a: Unit, unit_b: Unit) -> bool:
 func _get_move_cost(tile: BattleTileData) -> int:
 	match tile.terrain_type:
 		BattleTileData.TerrainType.NORMAL:	return 1
-		BattleTileData.TerrainType.SAND:	return 2
-		BattleTileData.TerrainType.FOREST:	return 3
-		BattleTileData.TerrainType.WATER:	return 2
-		BattleTileData.TerrainType.ICE:		return 1
-		BattleTileData.TerrainType.LAVA:	return 2
-		BattleTileData.TerrainType.ROCK:	return 3
+		#BattleTileData.TerrainType.SAND:	return 2
+		#BattleTileData.TerrainType.FOREST:	return 3
+		#BattleTileData.TerrainType.WATER:	return 2
+		#BattleTileData.TerrainType.ICE:		return 1
+		#BattleTileData.TerrainType.LAVA:	return 2
+		#BattleTileData.TerrainType.ROCK:	return 3
 		_:									return 1
 
 func build_move_query(unit_data: UnitData, is_player: bool) -> RangeQuery:
-	var query = RangeQuery.new()
-	query.max_range = unit_data.move_range
-	query.jump_height = unit_data.jump_height
-	query.respect_terrain_cost = true
-	query.blocked_by_enemies = true
-	query.blocked_by_allies = false
-	query.can_end_on_ally = false
-	query.blocked_by_unwalkable = true
-	query.requires_empty = true
-	return query
+	return RangeQuery.for_movement(unit_data)
 
 func build_ability_query(ability_data: AbilityData) -> RangeQuery:
 	var query = RangeQuery.new()
@@ -216,22 +207,20 @@ func build_ability_query(ability_data: AbilityData) -> RangeQuery:
 	query.min_range = ability_data.min_range
 	query.ignore_elevation = ability_data.ignores_elevation
 	query.jump_height = ability_data.max_elevation_difference
-	query.requires_unit = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY
-	query.requires_ally = ability_data.target_type == AbilityData.TargetType.SINGLE_ALLY or \
-							ability_data.target_type == AbilityData.TargetType.AREA_ALLY
-	query.requires_enemy = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY or \
-					   ability_data.target_type == AbilityData.TargetType.AREA_ENEMY or \
-					   ability_data.target_type == AbilityData.TargetType.AREA_ALL
+	query.requires_unit = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY or \
+		ability_data.target_type == AbilityData.TargetType.SINGLE_ALLY
+	query.requires_enemy = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY
+	query.requires_ally = ability_data.target_type == AbilityData.TargetType.SINGLE_ALLY
 	return query
 	
 func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = null) -> void:
 	var result = _run_dijkstra(origin, query, acting_unit)
 	var visited = result[0]
-	print("=== PATHFINDER DEBUG ===")
-	print("Origin: ", origin)
-	print("Max range: ", query.max_range)
-	print("Jump height: ", query.jump_height)
-	print("Total visited cells: ", visited.size())
+	#print("=== PATHFINDER DEBUG ===")
+	#print("Origin: ", origin)
+	#print("Max range: ", query.max_range)
+	#print("Jump height: ", query.jump_height)
+	#print("Total visited cells: ", visited.size())
 	
 	var by_elevation: Dictionary = {}
 	for cell in visited.keys():
@@ -240,11 +229,11 @@ func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = nu
 			by_elevation[cell.z] = []
 		by_elevation[cell.z].append([cell, cost])
 	
-	for elev in by_elevation.keys():
-		print("  Elevation ", elev, ": ", by_elevation[elev].size(), " cells")
-		for entry in by_elevation[elev]:
-			print("    ", entry[0], " cost: ", entry[1])
+	#for elev in by_elevation.keys():
+		#print("  Elevation ", elev, ": ", by_elevation[elev].size(), " cells")
+		#for entry in by_elevation[elev]:
+			#print("    ", entry[0], " cost: ", entry[1])
 			
 	var result2 = _run_dijkstra(origin, query, acting_unit)
 	var visited2 = result2[0]
-	print("=== END DEBUG ===")
+	#print("=== END DEBUG ===")

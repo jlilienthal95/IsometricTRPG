@@ -1,0 +1,16 @@
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0000.png = 0 0 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0001.png = 128 0 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0002.png = 256 0 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0003.png = 384 0 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0004.png = 0 128 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0005.png = 128 128 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0006.png = 256 128 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0007.png = 384 128 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0008.png = 0 256 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0009.png = 128 256 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0010.png = 256 256 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0011.png = 384 256 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0012.png = 0 384 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0013.png = 128 384 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0014.png = 256 384 128 128
+PNG/Sci-fi/scifi_charge_up_003/scifi_charge_up_003_large_green/frame0015.png = 384 384 128 128

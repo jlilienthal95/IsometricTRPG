@@ -10,7 +10,7 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 @export var ability_id: = 0		# permanent, never reuse
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
-@export var status_effect: Dictionary[StatusEffect.StatusEffect, int] = {} # Effect: Turns
+@export var effects: Dictionary[EffectId.Id, int] = {} # Effect: Turns
 @export var target_type: TargetType = TargetType.SINGLE_ENEMY
 
 # Cost
@@ -39,6 +39,5 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
 @export var impact_delay: int = 0 #time from ability anim start until ability impact
-@export var cast_impact_delay: float = 0 #time from caster anim start until ability anim start
 @export var charge_delay: int = 0  #if any, time from ability anim start until tween start
 @export var animation_path: AnimationPath = AnimationPath.PROJECTILE #path ability anim tweens through

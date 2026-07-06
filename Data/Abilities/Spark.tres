@@ -8,6 +8,9 @@ ability_name = "Spark"
 ability_id = 100
 description = "An arcane spell granting the power to call forth lightning and shock your foes."
 ability_type = 1
+effects = Dictionary[int, int]({
+9: 3
+})
 mp_cost = 10
 min_range = 2
 max_range = 5
@@ -17,6 +20,5 @@ base_power = 12
 element = 4
 animation_id = "spark"
 impact_delay = 1700
-cast_impact_delay = 1000.0
 charge_delay = 500
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

@@ -4,7 +4,9 @@
 [ext_resource type="Script" uid="uid://bxa0s5gon4uee" path="res://Core/Grid/BattleGrid.gd" id="2_c3aki"]
 [ext_resource type="Script" uid="uid://cl5j70hkqepge" path="res://Core/Battle/ActionResolver.gd" id="2_ik5sk"]
 [ext_resource type="Script" uid="uid://bvcboe225kcx0" path="res://Scenes/Battle/battle_camera.gd" id="3_4nlbu"]
+[ext_resource type="Script" uid="uid://bbc2igq8pf07j" path="res://Core/Battle/TileVisualManager.gd" id="6_6tvrj"]
 [ext_resource type="Script" uid="uid://bmju1mbepa1a" path="res://Core/Battle/InputHandler.gd" id="6_jp0ri"]
+[ext_resource type="Script" uid="uid://si8wah1cwvpy" path="res://Resources/Effects/EffectExecutor.gd" id="7_ik5sk"]
 [ext_resource type="Script" uid="uid://db1exqfvfisy" path="res://Core/Battle/UnitAbilityExecutor.gd" id="8_68j0i"]
 [ext_resource type="Script" uid="uid://crsa6b6lekfyu" path="res://Core/Battle/Pathfinder.gd" id="8_imn02"]
 [ext_resource type="Script" uid="uid://db6ignfw75cjq" path="res://Core/Battle/HighlightManager.gd" id="10_5mge4"]
@@ -12,7 +14,9 @@
 [ext_resource type="Script" uid="uid://cqw56ibuwgshn" path="res://Core/Battle/UnitMover.gd" id="11_hopcy"]
 [ext_resource type="Script" uid="uid://bogca4prbel7l" path="res://Scenes/Battle/debug.gd" id="12_68j0i"]
 [ext_resource type="PackedScene" uid="uid://djcnqynklsoer" path="res://Scenes/Battle/Cursor.tscn" id="13_36cr5"]
+[ext_resource type="PackedScene" uid="uid://chiled6p4i1l6" path="res://Scenes/Testing/DebugPanel.tscn" id="13_sufya"]
 [ext_resource type="TileSet" uid="uid://dksjpj2u6gwt8" path="res://Assets/Sprites/Tilesets/Jumpstart/Jumpstart.tres" id="14_6tvrj"]
+[ext_resource type="Script" uid="uid://b42v0b2e3owgr" path="res://Core/Battle/TurnQueue.gd" id="17_n1ain"]
 
 [sub_resource type="Animation" id="Animation_ik5sk"]
 length = 0.001
@@ -63,6 +67,14 @@ metadata/_custom_type_script = "uid://cl5j70hkqepge"
 script = ExtResource("2_c3aki")
 metadata/_custom_type_script = "uid://bxa0s5gon4uee"
 
+[node name="EffectExecutor" type="Node" parent="." unique_id=1980469410]
+script = ExtResource("7_ik5sk")
+metadata/_custom_type_script = "uid://si8wah1cwvpy"
+
+[node name="HighlightManager" type="Node" parent="." unique_id=386221053]
+script = ExtResource("10_5mge4")
+metadata/_custom_type_script = "uid://db6ignfw75cjq"
+
 [node name="InputHandler" type="Node" parent="." unique_id=2138718227]
 script = ExtResource("6_jp0ri")
 metadata/_custom_type_script = "uid://bmju1mbepa1a"
@@ -71,16 +83,20 @@ metadata/_custom_type_script = "uid://bmju1mbepa1a"
 script = ExtResource("8_imn02")
 metadata/_custom_type_script = "uid://crsa6b6lekfyu"
 
-[node name="HighlightManager" type="Node" parent="." unique_id=386221053]
-script = ExtResource("10_5mge4")
-metadata/_custom_type_script = "uid://db6ignfw75cjq"
+[node name="TileVisualManager" type="Node" parent="." unique_id=980941750]
+script = ExtResource("6_6tvrj")
+metadata/_custom_type_script = "uid://bbc2igq8pf07j"
+
+[node name="TurnQueue" type="Node" parent="." unique_id=148391895]
+script = ExtResource("17_n1ain")
+metadata/_custom_type_script = "uid://b42v0b2e3owgr"
+
+[node name="UnitAbilityExecutor" type="Node" parent="." unique_id=691203692]
+script = ExtResource("8_68j0i")
 
 [node name="UnitMover" type="Node" parent="." unique_id=881522414]
 script = ExtResource("11_hopcy")
 metadata/_custom_type_script = "uid://cqw56ibuwgshn"
-
-[node name="UnitAbilityExecutor" type="Node" parent="." unique_id=691203692]
-script = ExtResource("8_68j0i")
 
 [node name="BattleCamera" type="Camera2D" parent="." unique_id=636914002]
 position = Vector2(160, 90)
@@ -92,6 +108,8 @@ libraries/ = SubResource("AnimationLibrary_n1ain")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=645934609]
 
 [node name="BattleUI" parent="CanvasLayer" unique_id=1979739976 instance=ExtResource("10_n1ain")]
+
+[node name="DebugPanel" parent="CanvasLayer" unique_id=591785918 instance=ExtResource("13_sufya")]
 
 [node name="Debug" type="Node2D" parent="." unique_id=1058149904]
 z_index = 100
@@ -114,13 +132,13 @@ tile_set = ExtResource("14_6tvrj")
 [node name="Elevation1" type="TileMapLayer" parent="TerrainLayers" unique_id=1589813831]
 z_index = 4
 z_as_relative = false
-tile_map_data = PackedByteArray("AAD7/wIAAAAEAAMAAAD9/wIAAAAEAAMAAAD8/wIAAAAEAAMAAAD+/wIAAAAEAAMAAAD//wIAAAAEAAMAAAD///7/AAAEAAMAAAD/////AAAEAAMAAAD//wEAAAAEAAMAAAD2/wIAAAAEAAMAAAD3/wIAAAAEAAMAAAD4/wIAAAAEAAMAAAD5/wIAAAAEAAMAAAD6/wIAAAAEAAMAAAD1/wIAAAAEAAMAAAD//wAAAAAEAAMAAAD+/wEAAAAIAAEAAAD9/wEAAAAIAAEAAAD8/wEAAAAIAAEAAAD7/wEAAAAIAAEAAAD7/wAAAAAIAAEAAAD6/wAAAAAIAAEAAAD5/wAAAAAIAAEAAAD4/wAAAAAIAAEAAAD3/wAAAAAIAAEAAAD2/wAAAAAIAAEAAAD1/wAAAAAIAAEAAAD1/wEAAAAIAAEAAAD2/wEAAAAIAAEAAAD3/wEAAAAIAAEAAAD4/wEAAAAIAAEAAAD8/wAAAAAIAAEAAAD8////AAAIAAEAAAD9////AAAIAAEAAAD9/wAAAAAIAAEAAAD5/wEAAAAIAAEAAAD+////AAAIAAEAAAD+/wAAAAAIAAEAAAD6/wEAAAAIAAEAAAD7////AAAIAAEAAAD6////AAAIAAEAAAD5////AAAIAAEAAAD4////AAAIAAEAAAD3////AAAIAAEAAAD2////AAAIAAEAAAD1////AAAIAAEAAAD1//7/AAAIAAEAAAD2//7/AAAIAAEAAAD3//7/AAAIAAEAAAD4//7/AAAIAAEAAAD5//7/AAAIAAEAAAD9//7/AAAIAAEAAAD8//7/AAAIAAEAAAD7//7/AAAIAAEAAAD6//7/AAAIAAEAAAD+//7/AAAIAAEAAAD///3/AgAAAAMAAAD///z/AgAAAAMAAAA=")
+tile_map_data = PackedByteArray("AAD7/wIAAAAEAAMAAAD9/wIAAAAEAAMAAAD8/wIAAAAEAAMAAAD+/wIAAAAEAAMAAAD//wIAAAAEAAMAAAD///7/AAAEAAMAAAD/////AAAEAAMAAAD//wEAAAAEAAMAAAD2/wIAAAAEAAMAAAD3/wIAAAAEAAMAAAD4/wIAAAAEAAMAAAD5/wIAAAAEAAMAAAD6/wIAAAAEAAMAAAD1/wIAAAAEAAMAAAD//wAAAAAEAAMAAAD+/wEAAAAIAAEAAAD9/wEAAAAIAAEAAAD8/wEAAAAIAAEAAAD7/wEAAAAIAAEAAAD7/wAAAAAIAAEAAAD6/wAAAAAIAAEAAAD5/wAAAAAIAAEAAAD4/wAAAAAIAAEAAAD3/wAAAAAIAAEAAAD2/wAAAAAIAAEAAAD1/wAAAAAIAAEAAAD1/wEAAAAIAAEAAAD2/wEAAAAIAAEAAAD3/wEAAAAIAAEAAAD4/wEAAAAIAAEAAAD8/wAAAAAIAAEAAAD8////AAAIAAEAAAD9////AAAIAAEAAAD9/wAAAAAIAAEAAAD5/wEAAAAIAAEAAAD+////AAAIAAEAAAD+/wAAAAAIAAEAAAD6/wEAAAAIAAEAAAD7////AAAIAAEAAAD6////AAAIAAEAAAD5////AAAIAAEAAAD4////AAAIAAEAAAD3////AAAIAAEAAAD2////AAAIAAEAAAD1////AAAIAAEAAAD1//7/AAAIAAEAAAD2//7/AAAIAAEAAAD3//7/AAAIAAEAAAD4//7/AAAIAAEAAAD5//7/AAAIAAEAAAD9//7/AAAIAAEAAAD8//7/AAAIAAEAAAD7//7/AAAIAAEAAAD6//7/AAAIAAEAAAD+//7/AAAIAAEAAAD///3/AgAAAAMAAAD///z/AgAAAAMAAAD0/wEAAAALAAUAAAD0/wAAAAALAAUAAAD0////AAALAAUAAAD0//7/AAALAAUAAADz/wEABgAGAAQAAADz/wAABgAGAAQAAADz////BgAGAAQAAADz//7/BgAGAAQAAAD0/wIAAAAEAAMAAAD0//3/AAAEAAMAAADz//3/AAAEAAMAAADz/wIAAAAEAAMAAAA=")
 tile_set = ExtResource("14_6tvrj")
 
 [node name="Elevation2" type="TileMapLayer" parent="TerrainLayers" unique_id=357509507]
 z_index = 8
 z_as_relative = false
-tile_map_data = PackedByteArray("AAD0//z/AAADAAMAAAD1//z/AAADAAMAAAD2//z/AAADAAMAAAD3//z/AAADAAMAAAD4//z/AAADAAMAAAD7//z/AAADAAMAAAD8//z/AAADAAMAAAD9//z/AAADAAMAAAD6//z/AAADAAMAAAD5//z/AAADAAMAAAD+//z/AAAEAAMAAAD+//v/AgAAAAMAAAD+//r/AgAAAAMAAAA=")
+tile_map_data = PackedByteArray("AAD0//z/AAADAAMAAAD1//z/AAADAAMAAAD2//z/AAADAAMAAAD3//z/AAADAAMAAAD4//z/AAADAAMAAAD7//z/AAADAAMAAAD8//z/AAADAAMAAAD9//z/AAADAAMAAAD6//z/AAADAAMAAAD5//z/AAADAAMAAAD+//z/AAAEAAMAAAD+//v/AgAAAAMAAAD+//r/AgAAAAMAAADx//3/BgAGAAQAAADx////BgAGAAQAAADx/wAABgAGAAQAAADx//7/AAAKAAUAAAA=")
 tile_set = ExtResource("14_6tvrj")
 
 [node name="Elevation3" type="TileMapLayer" parent="TerrainLayers" unique_id=1569428010]

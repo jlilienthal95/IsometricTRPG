@@ -10,6 +10,7 @@ var _single_target: Unit = null
 var _multi_target: Array[Unit] = []
 var _ability: AbilityData = null
 var _action_resolver: ActionResolver = null
+var _effect_executor: EffectExecutor = null
 var _camera: BattleCamera = null
 var _battle_ui: BattleUI = null
 
@@ -18,7 +19,7 @@ func setup(grid: BattleGrid) -> void:
 	_grid = grid
 
 # begins ability execution — guards against concurrent executions
-func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, battle_ui: BattleUI) -> void:
+func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, battle_ui: BattleUI, effect_executor) -> void:
 	if _is_executing:
 		push_error("UnitAbilityExecutor: ability execution already in progress")
 		return
@@ -29,6 +30,7 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 	_camera = camera
 	_action_resolver = action_resolver
 	_battle_ui = battle_ui
+	_effect_executor = effect_executor
 	
 	# populate multi-target for AoE abilities
 	# TODO: expand to all cells within ability AoE range when AoE is implemented
@@ -44,7 +46,9 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 func _execute_sequence() -> void:
 	await _setup_cinematic()
 	_face_target()
-	await _caster.play_attack_animation(_ability.cast_impact_delay, _ability.animation_id != "")
+	var job = JobRegistry.get_job(_caster.data.job_id)
+	var cast_impact_delay = job.cast_impact_delay if job != null else 0.0
+	await _caster.play_attack_animation(cast_impact_delay, _ability.animation_id != "")
 	await _execute_effect()
 	await get_tree().create_timer((_ability.impact_delay - _ability.charge_delay) * .001).timeout
 	await resolve_ability(_action_resolver)
@@ -75,14 +79,15 @@ func _face_target() -> void:
 func _execute_effect() -> void:
 	if _ability.animation_id == "":
 		return
-	var effect: Node2D = preload("res://Scenes/Battle/SpellEffect.tscn").instantiate()
-	get_parent().add_child(effect)
-	effect.global_position = _caster.global_position
-	effect.z_index = _single_target.z_index + 1
-	effect.play(_ability.animation_id)
-	_camera.follow(effect)
-	await get_tree().create_timer(_ability.charge_delay * .001).timeout
-	_travel(effect)
+	if AbilitySceneRegistry.SCENES.has(_ability.animation_id):
+		var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
+		get_parent().add_child(effect)
+		effect.global_position = _caster.global_position
+		effect.z_index = _single_target.z_index + 1
+		effect.play(_ability.animation_id)
+		_camera.follow(effect)
+		await get_tree().create_timer(_ability.charge_delay * .001).timeout
+		_travel(effect)
 	
 # battle_scene calls this after ability_impact fires
 # passes ActionResolver in so UnitAbilityExecutor can coordinate resolution internally
@@ -96,11 +101,18 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 			_single_target.take_hit(result.damage)
 			print("dealt ", result.damage, " damage. target HP: ", _single_target.data.current_hp)
 			await get_tree().create_timer(1).timeout
+			
+			# apply effects from result
+			print("checking for effect apply")
+			if not _ability.effects.is_empty():
+				print("applying effects")
+				for effect in _ability.effects:
+					var context = EffectContext.create(_grid, _effect_executor)
+					await _effect_executor.apply_effect_to_unit_and_tile(_single_target, effect, context)
 		else:
 			_single_target.set_facing_toward(_single_target.grid_position, _caster.grid_position)
 			_single_target.play_missed()
 		# TODO: handle multi_target resolution
-		# TODO: apply status effects from result
 
 func _travel(effect: Node2D) -> void:
 	match _ability.animation_path:

@@ -11,15 +11,18 @@ extends Node2D
 @onready var _cursor: Node2D = $Cursor
 @onready var _unit_mover = $UnitMover
 @onready var _unit_ability_executor = $UnitAbilityExecutor
-@onready var _highlight_manager = $HighlightManager
+@onready var _tile_visual_manager = $TileVisualManager
 @onready var _battle_camera = $BattleCamera
 @onready var _terrain_layers = $TerrainLayers
+@onready var _effect_executor = $EffectExecutor
+@onready var _turn_queue = $TurnQueue
 
 # --- state ---
-var _reachable_cells: Dictionary = {}
-var _current_move_query: RangeQuery = null
-var _current_ability: AbilityData = null
-var _current_unit: Unit = null
+# _turn_context is the single source of truth for "who's acting" plus all pathfinding
+# data derived from them. It's built atomically in _on_active_unit_changed, the one signal
+# BattleManager fires whenever the active unit changes — nothing else may assign to it,
+# so there is no second cached unit reference that can desync from BattleManager.active_unit.
+var _turn_context: TurnContext = null
 var _previous_unit: Unit = null
 var _previous_cell: Vector3i = Vector3i(999,999,999)
 
@@ -34,6 +37,10 @@ func _ready() -> void:
 	_setup_systems()
 	_spawn_units()
 	print("setup complete")
+	
+	#var test = EffectSystemTest.new()
+	#add_child(test)
+	#await test.run_tests(_battle_grid, _battle_camera, _tile_visual_manager, _turn_context.unit)
 
 # builds the logical grid from all elevation layers and sets their z indices
 func _build_grid() -> void:
@@ -67,7 +74,10 @@ func _setup_systems() -> void:
 
 	# pathfinder
 	_pathfinder.setup(_battle_grid)
-
+	
+	#tile visuals and effects
+	_tile_visual_manager.setup(_battle_grid, _terrain_layers)
+	
 	## cursor
 	#_cursor.setup()
 	
@@ -75,7 +85,7 @@ func _setup_systems() -> void:
 	_battle_camera.setup(_cursor)
 
 	# battle manager
-	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _battle_ui)
+	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _battle_ui, _effect_executor, _turn_queue)
 	BattleManager.state_changed.connect(_on_battle_state_changed)
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleManager.unit_moved.connect(_on_unit_moved)
@@ -88,6 +98,11 @@ func _setup_systems() -> void:
 
 	# unit ability executor
 	_unit_ability_executor.setup(_battle_grid)
+	
+	#effect executor
+	_effect_executor.setup(_battle_grid, _battle_camera, _tile_visual_manager)
+	
+	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
 
 # TODO: replace with proper spawn system driven by battle/GameState configuration
 func _spawn_units() -> void:
@@ -95,18 +110,20 @@ func _spawn_units() -> void:
 	var theo = _spawn_unit(Vector3i(-8, -1, 1), load("res://Data/Units/Theo.tres"))
 	var player_units: Array[Unit] = [marta]
 	var enemy_units: Array[Unit] = [theo]
+	
+	print("setting up turn queue")
+	_turn_queue.setup(player_units, enemy_units)
+	# load only equipment relevant to this battle into EquipmentRegistry
 
-	# load only items relevant to this battle into ItemRegistry
-	var all_units: Array[Unit] = []
-	all_units.append_array(player_units)
-	all_units.append_array(enemy_units)
+	# NOTE: intentionally not peeking the turn queue here to pick a "current unit" —
+	# get_next_unit() mutates the queue (pops front, pushes to back), which silently shifted
+	# the turn order by one slot before the battle officially started. get_all_units() below
+	# is non-mutating. Who's actually acting is established later, once, via
+	# BattleManager.active_unit_changed -> _on_active_unit_changed.
+	var all_units: Array[Unit] = _turn_queue.get_all_units()
+	EquipmentRegistry.load_equipment_for_battle(all_units, PartyManager.inventory)
 
-	_current_unit = player_units[0]
-	_current_unit.ability_impact.connect(_on_ability_impact)
-
-	ItemRegistry.load_items_for_battle(all_units, PartyManager.inventory)
-
-	# resolve equipment and ability references so equipped_items[] and abilties[] is populated on each unit
+	# resolve equipment and ability references so equipped_equipment[] and abilties[] is populated on each unit
 	for unit in all_units:
 		unit.data.resolve_equipment()
 		unit.data.resolve_abilities()
@@ -139,13 +156,17 @@ func grid_to_world(cell: Vector3i) -> Vector2:
 	return world_pos
 
 # finds the first valid reachable Vector3i cell matching the clicked Vector2i position
-# returns null if no valid cell is found
+# returns null if no valid cell is found — always reads from _turn_context, so the check
+# is always against whichever unit is actually active, never a stale reference
 func _find_reachable_cell(cell: Vector2i):
+	if _turn_context == null:
+		return null
 	var tile = _battle_grid.get_tile_at_highest_elevation(cell)
 	if tile == null:
 		return null
 	var target = Vector3i(cell.x, cell.y, tile.elevation)
-	if _reachable_cells.has(target) and _reachable_cells[target] == true:
+	var targeting = BattleManager.current_state == BattleManager.BattleState.TARGET_SELECT
+	if _turn_context.is_reachable(target, targeting):
 		return target
 	return null
 
@@ -178,7 +199,7 @@ func _on_cell_selected(cell: Vector2i) -> void:
 	#print("cell selected: ", "(", (cell.x - 1), ", ", (cell.y - 1), ")")
 	match BattleManager.current_state:
 		BattleManager.BattleState.MOVE_SELECT:
-			_previous_cell = _current_unit.grid_position
+			_previous_cell = _turn_context.unit.grid_position
 			var target = _find_reachable_cell(cell)
 			if target != null:
 				await BattleManager.confirm_move(target)
@@ -191,11 +212,11 @@ func _on_cell_selected(cell: Vector2i) -> void:
 func _on_cell_cancelled() -> void:
 	if (BattleManager.current_state == BattleManager.BattleState.ACTION_SELECT and
 		_previous_cell != Vector3i(999,999,999)) and \
-		not _current_unit.data.has_acted:
-		_battle_grid.move_unit(_current_unit.grid_position, _previous_cell)
-		_current_unit.global_position = grid_to_world(_previous_cell)
+		not _turn_context.unit.data.has_acted:
+		_battle_grid.move_unit(_turn_context.unit.grid_position, _previous_cell)
+		_turn_context.unit.global_position = grid_to_world(_previous_cell)
 		_battle_camera.pan_to(grid_to_world(_previous_cell))
-		_current_unit.reset_move()
+		_turn_context.unit.reset_move()
 		_battle_hud.refresh()
 		_previous_cell = Vector3i(999, 999, 999)
 	else:
@@ -209,36 +230,51 @@ func _on_cell_cancelled() -> void:
 func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 	match new_state:
 		BattleManager.BattleState.MOVE_SELECT:
-			_current_unit = BattleManager.active_unit
-			_current_move_query = _pathfinder.build_move_query(_current_unit.data, true)
-			_pathfinder.debug_reachable(_current_unit.grid_position, _current_move_query, _current_unit)
-			_reachable_cells = _pathfinder.get_cells_in_range(_current_unit.grid_position, _current_move_query, _current_unit)
-			_reachable_cells.erase(_current_unit.grid_position)
-			_highlight_manager.show_move_range(_reachable_cells, grid_to_world)
+			# move range was already computed atomically in _turn_context when the unit
+			# became active — just display it, never recompute against a separate variable
+			_pathfinder.debug_reachable(_turn_context.unit.grid_position, _turn_context.move_query, _turn_context.unit)
+			_tile_visual_manager.show_move_range(_turn_context.reachable_move_cells, grid_to_world)
 		BattleManager.BattleState.ACTION_SELECT:
-			_highlight_manager.clear()
-			_current_move_query = null
-			_current_ability = null
+			_tile_visual_manager.clear()
+			if _turn_context != null:
+				_turn_context.clear_ability()
 		BattleManager.BattleState.ABILITIES_SELECT:
 			pass
 		BattleManager.BattleState.TARGET_SELECT:
-			var query: RangeQuery = _pathfinder.build_ability_query(_current_ability)
-			_reachable_cells = _pathfinder.get_cells_in_range(_current_unit.grid_position, query, _current_unit)
-			_highlight_manager.show_move_range(_reachable_cells, grid_to_world)
+			_tile_visual_manager.show_move_range(_turn_context.reachable_target_cells, grid_to_world)
 		BattleManager.BattleState.RESOLVING:
-			_highlight_manager.clear()
-			if _current_unit.data.has_moved && _current_unit.data.has_acted:
+			_tile_visual_manager.clear()
+			if _turn_context.unit.data.has_moved && _turn_context.unit.data.has_acted:
 				_previous_cell = Vector3i(999,999,999)
+		BattleManager.BattleState.ENEMY_TURN:
+			await get_tree().create_timer(2).timeout
+			_turn_queue.start_next_turn()
+		BattleManager.BattleState.TERRAIN_TURN:
+			var processor = TerrainTurnProcessor.new()
+			await processor.process_terrain_turn(_battle_grid, _effect_executor, _battle_camera, get_tree(), grid_to_world)
+			await get_tree().create_timer(2).timeout
+			_turn_queue.start_next_turn()
+			
 
-# connects the new active unit's signals to the HUD and updates camera and turn state
+# connects the new active unit's signals to the HUD and updates camera and turn state.
+# this is the single authoritative point where "who's acting" is established for the scene —
+# _turn_context is built here, atomically, from the same unit reference BattleManager just set
+# as active_unit. No other function may assign _turn_context, so there is nowhere for a stale
+# unit reference to leak in and desync from BattleManager.active_unit.
 func _on_active_unit_changed(unit: Unit) -> void:
 	if _previous_unit != null:
 		if _previous_unit.move_consumed.is_connected(_battle_ui.refresh_hud):
 			_previous_unit.move_consumed.disconnect(_battle_ui.refresh_hud)
 		if _previous_unit.ability_consumed.is_connected(_battle_ui.refresh_hud):
 			_previous_unit.ability_consumed.disconnect(_battle_ui.refresh_hud)
+		if _previous_unit.ability_impact.is_connected(_on_ability_impact):
+			_previous_unit.ability_impact.disconnect(_on_ability_impact)
 	unit.move_consumed.connect(_battle_ui.refresh_hud)
 	unit.ability_consumed.connect(_battle_ui.refresh_hud)
+	unit.ability_impact.connect(_on_ability_impact)
+
+	_turn_context = TurnContext.for_unit(unit, _pathfinder)
+
 	_battle_ui.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
@@ -248,23 +284,29 @@ func _on_active_unit_changed(unit: Unit) -> void:
 # ABILITY / MOVEMENT EXECUTION
 # =============================================================================
 
-# stores the selected ability for use when TARGET_SELECT state is entered
+# stores the selected ability for use when TARGET_SELECT state is entered.
+# guards against desync: if this ever fires for a unit other than _turn_context's own,
+# that's a bug upstream — fail loudly here rather than silently computing a target range
+# for the wrong unit (which is exactly how the original self-targeting bug slipped through).
 func _on_ability_selected(unit: Unit, ability: AbilityData) -> void:
-	_current_ability = ability
+	if _turn_context == null or unit != _turn_context.unit:
+		push_error("Ability selected for a unit that doesn't match the active turn context")
+		return
+	_turn_context.select_ability(ability, _pathfinder)
 
 # resolves ability damage via ActionResolver and refreshes the character info panel
 func _on_ability_impact() -> void:
 	_character_info.refresh()
 
-# kicks off unit movement animation via UnitMover using the cached move query
+# kicks off unit movement animation via UnitMover using the turn context's move query
 func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
-	var steps = _pathfinder.get_movement_path(unit.grid_position, to_cell, _current_move_query, unit)
+	var steps = _pathfinder.get_movement_path(unit.grid_position, to_cell, _turn_context.move_query, unit)
 	_unit_mover.execute_movement(unit, steps, grid_to_world, _battle_camera)
 	unit.consume_move()
 
 # kicks off ability execution via UnitAbilityExecutor
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
-	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _battle_ui)
+	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _battle_ui, _effect_executor)
 	caster.consume_ability()
 
 func _on_movement_complete(unit: Unit) -> void:

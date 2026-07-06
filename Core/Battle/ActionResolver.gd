@@ -6,18 +6,14 @@ const CRIT_MULTIPLIER: float = 2.0
 const VARIANCE_PERCENT: float = 0.2
 
 func resolve(caster: Unit, target: Unit, ability: AbilityData) -> ActionResult:
-	var result = ActionResult.new()
-	
-	#check if ability hits at all
+	# early return if ability misses
+	var hit_roll = randf()
+	if hit_roll > ability.base_hit_chance:
+		return ActionResult.create(0, true)
+
 	#TODO: incorperate unit speed/appropriate stat base mods
-	if _check_miss(result, ability.base_hit_chance).is_miss:
-		return result
-	
 	var damage_result = _calc_damage(caster, target, ability)
-	result.damage = damage_result[0]
-	result.is_critical = damage_result[1]
-	result.element = ability.element
-	return result
+	return ActionResult.create(damage_result[0], false, damage_result[1], ability.element)
 	
 func _check_miss(result: ActionResult, hit_chance: float) -> ActionResult:
 	#TODO: incorperate unit speed/appropriate stat base mods
@@ -33,18 +29,19 @@ func _calc_damage(caster: Unit, target: Unit, ability: AbilityData) -> Array:
 	var variance = int(base * VARIANCE_PERCENT)
 	var raw = randi_range(base - variance, base)
 	var is_critical = false
-	
+
 	if job != null:
 		raw = int(raw * job.attack_modifier)
-	
+
 	if randf() < (BASE_CRIT_CHANCE + ability.base_crit_chance):
-		raw = int(raw * 2.0)
+		raw = int(raw * CRIT_MULTIPLIER)
 		is_critical = true
-	
+
 	var mitigated = max(0, raw - target.data.base_defense)
-	
+
 	if target.data.elemental_affinities.has(ability.element):
 		mitigated = int(mitigated * target.data.elemental_affinities[ability.element])
+
 	print("base: ", base, " raw: ", raw, " defense: ", target.data.base_defense, " mitigated: ", mitigated)
 	return [mitigated, is_critical]
 

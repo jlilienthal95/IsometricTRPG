@@ -1,0 +1,8 @@
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0000.png = 0 0 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0001.png = 96 0 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0002.png = 192 0 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0003.png = 288 0 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0004.png = 384 0 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0005.png = 0 96 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0006.png = 96 96 96 96
+PNG/Splatters/burst_splatter_002/burst_splatter_002_large_yellow/frame0007.png = 192 96 96 96

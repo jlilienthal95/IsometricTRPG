@@ -25,7 +25,7 @@ var has_moved: bool = false
 var has_acted: bool = false
 var is_dead: bool = false
 
-# equipment slots — stored as IDs for saving, resolved to ItemData at battle start
+# equipment slots — stored as IDs for saving, resolved to EquipmentData at battle start
 @export var equipped_weapon_id: int = -1
 @export var equipped_armor_id: int = -1
 @export var equipped_shield_id: int = -1
@@ -33,7 +33,7 @@ var is_dead: bool = false
 @export var equipped_accessory_id: int = -1
 
 # resolved equipment references — populated at battle start via resolve_equipment()
-var equipped_items: Array[ItemData] = []
+var equipment: Array[EquipmentData] = []
 
 # abilities available
 @export var ability_ids: Array[int] = []
@@ -41,30 +41,66 @@ var equipped_items: Array[ItemData] = []
 # resolve ability references
 var abilities: Array[AbilityData] = []
 
-# active status effects — key is StatusEffect enum value, value is turns remaining
-var active_status_effects: Dictionary[StatusEffect.StatusEffect, int] = {}
+# active  effects — key is StatusEffect enum value, value is turns remaining
+var active_effects: Array[EffectInstance] = []
+
+# precomputed from equipment — refreshed via refresh_material_resistances()
+var immunities: Array[EffectId.Id] = []
+var weaknesses: Array[EffectId.Id] = []
+
+func has_effect(effect_id: EffectId.Id) -> bool:
+	return EffectStore.has_effect(active_effects, effect_id)
+
+func get_effect(effect_id: EffectId.Id) -> EffectInstance:
+	return EffectStore.get_effect(active_effects, effect_id)
+
+func apply_effect(effect_id: EffectId.Id, ticks: int = -1) -> void:
+	var actual_ticks = ticks
+	if actual_ticks == -1:
+		actual_ticks = EffectRules.DURATION_THRESHOLD_TICKS.get(effect_id, 1)
+	EffectStore.apply_effect(active_effects, effect_id, actual_ticks)
+
+func remove_effect(effect_id: EffectId.Id) -> void:
+	EffectStore.remove_effect(active_effects, effect_id)
+	
+# recalculates immunities and weaknesses based on currently equipped gear materials
+func refresh_material_resistances() -> void:
+	immunities.clear()
+	weaknesses.clear()
+	var material_counts: Dictionary = {}
+	for piece in equipment:
+		var mat = piece.equipment_material
+		if mat == EquipmentData.EquipmentMaterial.NONE:
+			continue
+		material_counts[mat] = material_counts.get(mat, 0) + 1
+	for mat in material_counts:
+		if material_counts[mat] >= 3:
+			if MaterialRules.IMMUNITIES.has(mat):
+				immunities.append_array(MaterialRules.IMMUNITIES[mat])
+			if MaterialRules.WEAKNESSES.has(mat):
+				weaknesses.append_array(MaterialRules.WEAKNESSES[mat])
 
 # returns all equipped item IDs as an array, including empty slots as -1
 func get_equipped_ids() -> Array[int]:
 	return [equipped_weapon_id, equipped_armor_id, equipped_shield_id, equipped_boots_id, equipped_accessory_id]
 
-# returns the currently equipped ItemData for the given slot type, or null if empty
-func get_equipped_by_type(item_type: ItemData.ItemType) -> ItemData:
-	for item in equipped_items:
-		if item.item_type == item_type:
-			return item
+# returns the currently equipped EquipmentData for the given slot type, or null if empty
+func get_equipped_by_type(equipment_type: EquipmentData.Type) -> EquipmentData:
+	for piece in equipment:
+		if piece.type == equipment_type:
+			return piece
 	return null
 
-# populates equipped_items from the registry using stored IDs — called at battle start
+# populates equipment from the registry using stored IDs — called at battle start
 func resolve_equipment() -> void:
-	equipped_items.clear()
+	equipment.clear()
 	for id in get_equipped_ids():
 		if id == -1:
 			continue
-		var item = ItemRegistry.get_item(id)
-		if item != null:
-			equipped_items.append(item)
-			
+		var piece = EquipmentRegistry.get_equipment(id)
+		if piece != null:
+			equipment.append(piece)
+
 func resolve_abilities() -> void:
 	abilities.clear()
 	for id in ability_ids:
@@ -72,28 +108,28 @@ func resolve_abilities() -> void:
 		if ability != null:
 			abilities.append(ability)
 
-# equips an item by ID — updates the correct slot and refreshes equipped_items
-func equip(item_id: int) -> void:
-	var item = ItemRegistry.get_item(item_id)
-	if item == null:
-		push_error("Tried to equip unknown item: " + str(item_id))
+# equips an item by ID — updates the correct slot and refreshes equipment
+func equip(equipment_id: int) -> void:
+	var piece = EquipmentRegistry.get_equipment(equipment_id)
+	if piece == null:
+		push_error("Tried to equip unknown item: " + str(equipment_id))
 		return
-	match item.item_type:
-		ItemData.ItemType.WEAPON:	equipped_weapon_id = item_id
-		ItemData.ItemType.ARMOR:	equipped_armor_id = item_id
-		ItemData.ItemType.SHIELD:	equipped_shield_id = item_id
-		ItemData.ItemType.BOOTS:	equipped_boots_id = item_id
-		ItemData.ItemType.ACCESSORY: equipped_accessory_id = item_id
+	match piece.type:
+		EquipmentData.Type.WEAPON:		equipped_weapon_id = equipment_id
+		EquipmentData.Type.ARMOR:		equipped_armor_id = equipment_id
+		EquipmentData.Type.SHIELD:		equipped_shield_id = equipment_id
+		EquipmentData.Type.BOOTS:		equipped_boots_id = equipment_id
+		EquipmentData.Type.ACCESSORY:	equipped_accessory_id = equipment_id
 	# remove any existing item of the same type and add the new one
-	equipped_items = equipped_items.filter(func(i): return i.item_type != item.item_type)
-	equipped_items.append(item)
+	equipment = equipment.filter(func(i): return i.type != piece.type)
+	equipment.append(piece)
 
-# unequips the item in the given slot and removes it from equipped_items
-func unequip(item_type: ItemData.ItemType) -> void:
-	match item_type:
-		ItemData.ItemType.WEAPON:	equipped_weapon_id = -1
-		ItemData.ItemType.ARMOR:	equipped_armor_id = -1
-		ItemData.ItemType.SHIELD:	equipped_shield_id = -1
-		ItemData.ItemType.BOOTS:	equipped_boots_id = -1
-		ItemData.ItemType.ACCESSORY: equipped_accessory_id = -1
-	equipped_items = equipped_items.filter(func(i): return i.item_type != item_type)
+# unequips the item in the given slot and removes it from equipment
+func unequip(equipment_type: EquipmentData.Type) -> void:
+	match equipment_type:
+		EquipmentData.Type.WEAPON:		equipped_weapon_id = -1
+		EquipmentData.Type.ARMOR:		equipped_armor_id = -1
+		EquipmentData.Type.SHIELD:		equipped_shield_id = -1
+		EquipmentData.Type.BOOTS:		equipped_boots_id = -1
+		EquipmentData.Type.ACCESSORY:	equipped_accessory_id = -1
+	equipment = equipment.filter(func(i): return i.type != equipment_type)

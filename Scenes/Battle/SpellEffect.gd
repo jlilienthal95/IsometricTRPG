@@ -1,8 +1,8 @@
 extends Node2D
 
-@onready var spell_sprite: AnimatedSprite2D = $SpellSprite
+@onready var _ability_sprite: AnimatedSprite2D = $AbilitySprite
 
 func play(effect_name: String) -> void:
-	spell_sprite.play(effect_name)
-	await spell_sprite.animation_finished
+	_ability_sprite.play(effect_name)
+	await _ability_sprite.animation_finished
 	queue_free()

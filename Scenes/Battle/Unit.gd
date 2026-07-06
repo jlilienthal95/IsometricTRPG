@@ -122,6 +122,7 @@ func play_death() -> void:
 		unit_sprite.play("death")
 		await unit_sprite.animation_finished
 	return
+	
 # =============================================================================
 # APPEARANCE
 # =============================================================================
@@ -167,6 +168,29 @@ func on_terrain_changed(terrain_type: int) -> void:
 	else:
 		_remove_water_effect()
 
+func refresh_visuals() -> void:
+	pass
+	
+#func _apply_effect_visuals() -> void:
+	#if not data.active_effects.is_empty():
+		
+func play_effect_apply_animation(effect_id: EffectId.Id) -> void:
+	print("spawning ", EffectId.Id.keys()[effect_id])
+	var scene_file: PackedScene = EffectSceneRegistry.get_scene(effect_id)
+	if not scene_file:
+		return
+	var scene: Node2D = scene_file.instantiate()
+	unit_visual_root.add_child(scene)
+	scene.modulate.a = 0
+	scene.play(str(EffectId.Id.keys()[effect_id]).to_lower() + "_unit")
+	scene.global_position = global_position
+	scene.global_position.y -= Constants.UNIT_EFFECT_OFFSET
+	var tween = create_tween()
+	tween.tween_property(scene, "modulate:a", 1, 0.2)
+	await tween.finished
+	scene.z_as_relative = true
+	scene.z_index = unit_visual_root.z_index - 1
+
 func _apply_water_effect() -> void:
 	unit_shadow.visible = false
 	#var mat = ShaderMaterial.new()
@@ -176,6 +200,10 @@ func _apply_water_effect() -> void:
 func _remove_water_effect() -> void:
 	unit_shadow.visible = true
 	unit_sprite.material = _default_material
+
+func set_effect_alpha(alpha: float) -> void:
+	var tween = create_tween()
+	await tween.tween_property(unit_visual_root, "modulate:a", alpha, 0.2)
 
 # =============================================================================
 # TURN STATE
@@ -190,7 +218,6 @@ func consume_move() -> void:
 
 # marks the unit's action as used and notifies listeners
 func consume_ability() -> void:
-	print("ability consumed")
 	if data.is_dead:
 		return
 	data.has_acted = true
@@ -242,12 +269,12 @@ func take_hit(damage: int) -> void:
 	else:
 		await play_hit()
 
-# applies a status effect for the given number of turns, overwriting any existing duration
-func apply_status(effect: StatusEffect.StatusEffect, turns: int) -> void:
-	if data.is_dead:
-		return
-	data.active_status_effects[effect] = turns
-
 # fires the ability_impact signal — called by AnimationPlayer at the impact frame
 func notify_ability_impact() -> void:
 	emit_signal("ability_impact")
+	
+func apply_effect(effect_id: EffectId.Id, rounds: int) -> void:
+
+	if data.is_dead:
+		return
+	data.apply_effect(effect_id, rounds)
