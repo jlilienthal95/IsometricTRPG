@@ -1,0 +1,10 @@
+[gd_resource type="StyleBoxTexture" format=3 uid="uid://c6fwk857yelre"]
+
+[sub_resource type="Gradient" id="Gradient_ocwqu"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_qlr01"]
+gradient = SubResource("Gradient_ocwqu")
+
+[resource]
+texture = SubResource("GradientTexture2D_qlr01")
+modulate_color = Color(0, 1, 1, 1)

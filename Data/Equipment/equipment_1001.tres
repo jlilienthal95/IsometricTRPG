@@ -4,6 +4,9 @@
 
 [resource]
 script = ExtResource("1_gdxo1")
+equipment_name = "Bronze Sword"
+equipment_id = 1001
+equipment_type = 0
 description = "No knight worth their salt would be caught off guard without their trusty, if a bit basic, sword."
 attack_bonus = 12
 metadata/_custom_type_script = "uid://bu3xhcb3er48r"

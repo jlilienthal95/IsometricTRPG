@@ -23,7 +23,6 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 			
 		reachable[cell] = true
 			
-		#if not query.show_full_range:
 		if query.requires_unit and not _grid.is_cell_occupied(cell):
 			reachable[cell] = false
 			continue
@@ -31,8 +30,13 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 			reachable[cell] = false
 			continue
 		if _grid.is_cell_occupied(cell):
-			var occupant = _grid.get_unit_at(cell)
-			if occupant != null:
+			var occupant = _grid.get_actor_at(cell)
+			# blocking objects are targetable like enemies but never allies
+			if occupant is BattleObject:
+				if query.requires_ally:
+					reachable[cell] = false
+				continue
+			if occupant is Unit:
 				# skip dead units unless ability explicitly allows targeting them
 				if occupant.data.is_dead and not query.requires_dead:
 					reachable[cell] = false
@@ -65,8 +69,6 @@ func get_movement_path(origin: Vector3i, destination: Vector3i, query: RangeQuer
 		raw_path.append(current)
 		current = came_from[current]
 	raw_path.reverse()
-	
-	print("PATH: ", raw_path)
 	
 	# convert to MovementSteps
 	var steps: Array[MovementStep] = []
@@ -129,7 +131,9 @@ func _run_dijkstra(origin: Vector3i, query: RangeQuery, acting_unit: Unit = null
 
 func _passes_filters(neighbor: Vector3i, cell: Vector3i, query: RangeQuery, acting_unit: Unit) -> bool:
 	var tile = _grid.get_tile(neighbor)
-	if query.blocked_by_unwalkable and not tile.is_walkable:
+	# _grid.is_walkable folds in non-walkable objects (a barrel blocks the tile
+	# it sits on; a crate does not) — never read tile.is_walkable directly here
+	if query.blocked_by_unwalkable and not _grid.is_walkable(neighbor):
 		return false
 	if query.blocked_by_enemies and _grid.is_cell_occupied(neighbor):
 		var occupant = _grid.get_unit_at(neighbor)
@@ -231,9 +235,3 @@ func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = nu
 	
 	#for elev in by_elevation.keys():
 		#print("  Elevation ", elev, ": ", by_elevation[elev].size(), " cells")
-		#for entry in by_elevation[elev]:
-			#print("    ", entry[0], " cost: ", entry[1])
-			
-	var result2 = _run_dijkstra(origin, query, acting_unit)
-	var visited2 = result2[0]
-	#print("=== END DEBUG ===")

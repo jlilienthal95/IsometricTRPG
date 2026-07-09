@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://bqsdqpkh4tf64" path="res://Assets/Sprites/Jobs/Pirate/PiratePortrait-no-bg-475.png" id="1_2iqb3"]
 [ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="1_7y265"]
 [ext_resource type="SpriteFrames" uid="uid://bb46sjy5ybxus" path="res://Data/Jobs/PirateFrames.tres" id="2_0fccw"]
+[ext_resource type="Resource" uid="uid://dwbmft28hcwbx" path="res://Data/Abilities/Fight_Pirate.tres" id="3_fight"]
 
 [resource]
 script = ExtResource("1_7y265")
@@ -14,7 +15,8 @@ sprite_offset = Vector2(0, -2)
 flip_offset = Vector2(-30, 14)
 hp_modifier = 0.9
 attack_modifier = 1.2
-speed_modifier = 1.4
-move_range = 5
-jump_height = 2
+move_range_bonus = 2
+jump_height_bonus = 1
+speed_rank = 2
+fight_ability = ExtResource("3_fight")
 metadata/_custom_type_script = "uid://ct2virpcpm7ny"

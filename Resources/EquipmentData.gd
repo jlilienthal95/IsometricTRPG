@@ -24,8 +24,8 @@ enum EquipmentMaterial {
 @export var attack_bonus: int = 0
 @export var defense_bonus: int = 0
 
-# Abilities this equipment grants while equipped
-@export var granted_ability_ids: Array[int] = []
+# Abilities this equipment grants while equipped — direct resource references
+@export var granted_abilities: Array[AbilityData] = []
 
 # Weapons can deal elemental damage, armor can grant resistances
 @export var element: ElementData.Element = ElementData.Element.NONE

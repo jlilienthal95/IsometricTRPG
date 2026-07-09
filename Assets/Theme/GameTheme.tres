@@ -5,11 +5,17 @@
 [ext_resource type="StyleBox" uid="uid://dmj62yay0yfpe" path="res://Assets/Theme/UI_Button_Hovered.tres" id="3_sml3a"]
 [ext_resource type="StyleBox" uid="uid://d0x4xgoo3l2nr" path="res://Assets/Theme/UI_Button_Normal.tres" id="4_12ofx"]
 [ext_resource type="Texture2D" uid="uid://b57831ifn3gkv" path="res://Assets/UI/Windows/UI_Window.png" id="5_wfr7n"]
+[ext_resource type="Texture2D" uid="uid://db50ig6qalwqu" path="res://Assets/UI/HealthBarGradient.tres" id="6_1prd6"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3xgds"]
 texture = ExtResource("5_wfr7n")
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_sg5qf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1prd6"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sml3a"]
+texture = ExtResource("6_1prd6")
 
 [resource]
 default_font = ExtResource("1_sg5qf")
@@ -25,8 +31,12 @@ Button/styles/hover_pressed = ExtResource("2_1prd6")
 Button/styles/normal = ExtResource("4_12ofx")
 Button/styles/pressed = ExtResource("2_1prd6")
 Label/colors/font_color = Color(0.8509804, 0.9019608, 0.9490196, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 1)
 Label/font_sizes/font_size = 50
 Panel/styles/panel = SubResource("StyleBoxTexture_3xgds")
 PanelContainer/styles/panel = SubResource("StyleBoxEmpty_sg5qf")
+ProgressBar/fonts/font = ExtResource("1_sg5qf")
+ProgressBar/styles/background = SubResource("StyleBoxEmpty_1prd6")
+ProgressBar/styles/fill = SubResource("StyleBoxTexture_sml3a")
 ScrollContainer/colors/scroll_hint_horizontal_color = Color(0.14509805, 0.14117648, 0.27450982, 1)
 ScrollContainer/colors/scroll_hint_vertical_color = Color(0.14509805, 0.14117648, 0.27450982, 1)

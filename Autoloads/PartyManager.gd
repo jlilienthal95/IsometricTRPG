@@ -44,11 +44,12 @@ func equip_item(unit_data: UnitData, equipment_id: int) -> void:
 		push_error("PartyManager: equipment not found in registry: " + str(equipment_id))
 		return
 	# return currently equipped gear of the same type to the pool
-	var current = unit_data.get_equipped_by_type(piece.type)
+	# (property is equipment_type — the old .type access crashed at runtime)
+	var current = unit_data.get_equipped_by_type(piece.equipment_type)
 	if current != null:
 		add_equipment(current.equipment_id)
 	remove_equipment(equipment_id)
-	unit_data.equip(equipment_id)
+	unit_data.equip(piece)
 
 # unequips the gear in the given slot and returns it to the shared pool
 func unequip_item(unit_data: UnitData, equipment_type: EquipmentData.Type) -> void:

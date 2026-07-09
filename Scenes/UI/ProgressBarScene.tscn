@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://dvyehpu24usyo"]
+
+[ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_snaus"]
+[ext_resource type="Script" uid="uid://bqcfvqp102e73" path="res://Scenes/UI/ProgressBarScene.gd" id="2_jltis"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bn3bn"]
+bg_color = Color(0.29219002, 0.29219005, 0.29218993, 1)
+expand_margin_left = 1.0
+expand_margin_top = 1.0
+expand_margin_right = 1.0
+expand_margin_bottom = 1.0
+shadow_color = Color(0, 0, 0, 0.27450982)
+shadow_offset = Vector2(0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lp4x5"]
+bg_color = Color(1, 1, 1, 1)
+
+[node name="ProgressBarScene" type="ProgressBar" unique_id=1752225313]
+z_index = 1
+offset_right = 430.0
+offset_bottom = 50.0
+theme = ExtResource("1_snaus")
+max_value = 0.0
+show_percentage = false
+script = ExtResource("2_jltis")
+
+[node name="DamageBar" type="ProgressBar" parent="." unique_id=1994368407]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_bn3bn")
+theme_override_styles/fill = SubResource("StyleBoxFlat_lp4x5")
+max_value = 0.0
+show_percentage = false
+
+[node name="Timer" type="Timer" parent="." unique_id=894434339]
+wait_time = 0.4
+one_shot = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

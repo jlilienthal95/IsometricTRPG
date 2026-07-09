@@ -8,5 +8,4 @@ ability_name = "Fight_Knight"
 ability_id = 1
 description = "A basic attack. Hits anything in a one tile range."
 max_elevation_difference = 1
-base_power = 10
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

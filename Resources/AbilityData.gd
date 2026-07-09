@@ -7,7 +7,7 @@ enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 enum AnimationPath { PROJECTILE, INSTANT, PATH }
 
 @export var ability_name: String = ""
-@export var ability_id: = 0		# permanent, never reuse
+@export var ability_id: int = 0		# permanent, never reuse — used only for save serialization
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
 @export var effects: Dictionary[EffectId.Id, int] = {} # Effect: Turns
@@ -32,9 +32,8 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 @export var max_elevation_difference: int = 2
 
 # Effects
-@export var base_power: int = 0         # damage or healing amount before modifiers
+@export var base_power: float = 1	# damage or healing amount before modifiers
 @export var element: ElementData.Element = ElementData.Element.NONE
-#@export var status_effect_ids: Array[StatusEffect.StatusEffect] = []  # statuses this ability can apply
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play

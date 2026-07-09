@@ -2,51 +2,122 @@ class_name UnitData
 extends Resource
 
 @export var unit_name: String = ""
-@export var job_id: int = 0
 
-# base stats — modified by job and equipment at runtime
-@export var current_lvl: int = 1
-@export var exp_to_lvl: int = 999
-@export var max_hp: int = 100
-@export var current_hp: int = 100
-@export var max_mp: int = 15
-@export var current_mp: int = 15
-@export var move_range: int = 3
-@export var jump_height: int = 2
-@export var base_attack: int = 10
-@export var base_defense: int = 5
+# direct resource reference — drag the job .tres in the inspector.
+# job.job_id is still available for save serialization.
+@export var job: JobData = null
 
-# elemental affinities — values are multipliers applied to incoming elemental damage
+# =============================================================================
+# BASE STATS — authored in the inspector, NEVER touched at runtime
+# =============================================================================
+@export var base_max_hp: int = Constants.UNIT_BASE_HP
+@export var base_max_mp: int = Constants.UNIT_BASE_MP
+@export var base_attack: int = Constants.UNIT_BASE_ATTACK
+@export var base_defense: int = Constants.UNIT_BASE_DEFENSE
+@export var base_move_range: int = Constants.UNIT_BASE_MOVE_RANGE
+@export var base_jump_height: int = Constants.UNIT_BASE_JUMP_HEIGHT
+
+@export var current_exp: int = Constants.BASE_EXP_PER_LEVEL
+
+# elemental affinities — multipliers applied to incoming elemental damage
 # 1.0 = normal, 0.5 = resistant, 2.0 = weak, 0.0 = immune, -1.0 = absorbs
 @export var elemental_affinities: Dictionary = {}
 
-# runtime turn state — not exported, reset each turn
+# =============================================================================
+# EQUIPMENT — direct resource references (authoring); IDs derived for saves
+# =============================================================================
+@export var equipped_weapon: EquipmentData = null
+@export var equipped_armor: EquipmentData = null
+@export var equipped_shield: EquipmentData = null
+@export var equipped_boots: EquipmentData = null
+@export var equipped_accessory: EquipmentData = null
+
+# abilities this specific unit knows beyond its job's list
+@export var granted_abilities: Array[AbilityData] = []
+
+# =============================================================================
+# COMPUTED STATS — populated by resolve() at battle start; read during battle
+# =============================================================================
+var current_lvl: int = 1	# derived from current_exp
+var max_hp: int = 0
+var current_hp: int = 0
+var max_mp: int = 0
+var current_mp: int = 0
+var attack: int = 0
+var defense: int = 0
+var move_range: int = 0
+var jump_height: int = 0
+var speed: JobData.SpeedRank = JobData.SpeedRank.NORMAL
+
+# =============================================================================
+# RUNTIME STATE — never exported
+# =============================================================================
 var has_moved: bool = false
 var has_acted: bool = false
 var is_dead: bool = false
 
-# equipment slots — stored as IDs for saving, resolved to EquipmentData at battle start
-@export var equipped_weapon_id: int = -1
-@export var equipped_armor_id: int = -1
-@export var equipped_shield_id: int = -1
-@export var equipped_boots_id: int = -1
-@export var equipped_accessory_id: int = -1
-
-# resolved equipment references — populated at battle start via resolve_equipment()
-var equipment: Array[EquipmentData] = []
-
-# abilities available
-@export var ability_ids: Array[int] = []
-
-# resolve ability references
-var abilities: Array[AbilityData] = []
-
-# active  effects — key is StatusEffect enum value, value is turns remaining
+var equipment: Array[EquipmentData] = []		# resolved flat list of equipped pieces
+var abilities: Array[AbilityData] = []			# resolved: granted + job abilities
 var active_effects: Array[EffectInstance] = []
-
-# precomputed from equipment — refreshed via refresh_material_resistances()
-var immunities: Array[EffectId.Id] = []
+var immunities: Array[EffectId.Id] = []			# precomputed from equipment materials
 var weaknesses: Array[EffectId.Id] = []
+
+# =============================================================================
+# RESOLUTION — the single pipeline that turns authored data into battle stats.
+# Call resolve() once at battle start. Order matters: equipment first (stats
+# may later read bonuses), then abilities, then stats.
+# =============================================================================
+
+func resolve() -> void:
+	resolve_equipment()
+	resolve_abilities()
+	resolve_stats()
+
+# flattens equipped slot references into the equipment array and refreshes
+# material-based immunities/weaknesses
+func resolve_equipment() -> void:
+	equipment.clear()
+	for piece in _get_equipped_pieces():
+		if piece != null:
+			equipment.append(piece)
+	refresh_material_resistances()
+
+# combines unit-specific and job abilities into the runtime ability list
+func resolve_abilities() -> void:
+	abilities.clear()
+	for ability in granted_abilities:
+		if ability != null and not abilities.has(ability):
+			abilities.append(ability)
+	if job != null:
+		for ability in job.abilities:
+			if ability != null and not abilities.has(ability):
+				abilities.append(ability)
+
+# computes all battle stats from base stats + job modifiers.
+# base_* fields are read-only inputs here — resolve_stats() is idempotent and
+# safe to call repeatedly (e.g. after a mid-battle job change).
+func resolve_stats() -> void:
+	current_lvl = Constants.level_from_xp(current_exp)
+
+	var hp_mod: float = job.hp_modifier if job else 1.0
+	var mp_mod: float = job.mp_modifier if job else 1.0
+	var atk_mod: float = job.attack_modifier if job else 1.0
+	var def_mod: float = job.defense_modifier if job else 1.0
+
+	max_hp = int(base_max_hp * hp_mod)
+	max_mp = int(base_max_mp * mp_mod)
+	attack = int((base_attack * atk_mod) + (current_lvl * 1.3))
+	defense = int(base_defense * def_mod)
+	current_hp = max_hp
+	current_mp = max_mp
+
+	move_range = base_move_range + (job.move_range_bonus if job else 0)
+	jump_height = base_jump_height + (job.jump_height_bonus if job else 0)
+	speed = job.speed_rank if job else JobData.SpeedRank.NORMAL
+
+# =============================================================================
+# EFFECTS
+# =============================================================================
 
 func has_effect(effect_id: EffectId.Id) -> bool:
 	return EffectStore.has_effect(active_effects, effect_id)
@@ -62,7 +133,7 @@ func apply_effect(effect_id: EffectId.Id, ticks: int = -1) -> void:
 
 func remove_effect(effect_id: EffectId.Id) -> void:
 	EffectStore.remove_effect(active_effects, effect_id)
-	
+
 # recalculates immunities and weaknesses based on currently equipped gear materials
 func refresh_material_resistances() -> void:
 	immunities.clear()
@@ -80,56 +151,46 @@ func refresh_material_resistances() -> void:
 			if MaterialRules.WEAKNESSES.has(mat):
 				weaknesses.append_array(MaterialRules.WEAKNESSES[mat])
 
-# returns all equipped item IDs as an array, including empty slots as -1
+# =============================================================================
+# EQUIPMENT MANAGEMENT
+# =============================================================================
+
+func _get_equipped_pieces() -> Array[EquipmentData]:
+	return [equipped_weapon, equipped_armor, equipped_shield, equipped_boots, equipped_accessory]
+
+# returns equipped item IDs (for save serialization) — empty slots are -1
 func get_equipped_ids() -> Array[int]:
-	return [equipped_weapon_id, equipped_armor_id, equipped_shield_id, equipped_boots_id, equipped_accessory_id]
+	var ids: Array[int] = []
+	for piece in _get_equipped_pieces():
+		ids.append(piece.equipment_id if piece != null else -1)
+	return ids
 
 # returns the currently equipped EquipmentData for the given slot type, or null if empty
 func get_equipped_by_type(equipment_type: EquipmentData.Type) -> EquipmentData:
 	for piece in equipment:
-		if piece.type == equipment_type:
+		if piece.equipment_type == equipment_type:
 			return piece
 	return null
 
-# populates equipment from the registry using stored IDs — called at battle start
-func resolve_equipment() -> void:
-	equipment.clear()
-	for id in get_equipped_ids():
-		if id == -1:
-			continue
-		var piece = EquipmentRegistry.get_equipment(id)
-		if piece != null:
-			equipment.append(piece)
-
-func resolve_abilities() -> void:
-	abilities.clear()
-	for id in ability_ids:
-		var ability = AbilityRegistry.get_ability(id)
-		if ability != null:
-			abilities.append(ability)
-
-# equips an item by ID — updates the correct slot and refreshes equipment
-func equip(equipment_id: int) -> void:
-	var piece = EquipmentRegistry.get_equipment(equipment_id)
+# equips a piece — updates the correct slot and refreshes the resolved list
+func equip(piece: EquipmentData) -> void:
 	if piece == null:
-		push_error("Tried to equip unknown item: " + str(equipment_id))
+		push_error("UnitData: tried to equip null equipment")
 		return
-	match piece.type:
-		EquipmentData.Type.WEAPON:		equipped_weapon_id = equipment_id
-		EquipmentData.Type.ARMOR:		equipped_armor_id = equipment_id
-		EquipmentData.Type.SHIELD:		equipped_shield_id = equipment_id
-		EquipmentData.Type.BOOTS:		equipped_boots_id = equipment_id
-		EquipmentData.Type.ACCESSORY:	equipped_accessory_id = equipment_id
-	# remove any existing item of the same type and add the new one
-	equipment = equipment.filter(func(i): return i.type != piece.type)
-	equipment.append(piece)
+	match piece.equipment_type:
+		EquipmentData.Type.WEAPON:		equipped_weapon = piece
+		EquipmentData.Type.ARMOR:		equipped_armor = piece
+		EquipmentData.Type.SHIELD:		equipped_shield = piece
+		EquipmentData.Type.BOOTS:		equipped_boots = piece
+		EquipmentData.Type.ACCESSORY:	equipped_accessory = piece
+	resolve_equipment()
 
-# unequips the item in the given slot and removes it from equipment
+# unequips the piece in the given slot and refreshes the resolved list
 func unequip(equipment_type: EquipmentData.Type) -> void:
 	match equipment_type:
-		EquipmentData.Type.WEAPON:		equipped_weapon_id = -1
-		EquipmentData.Type.ARMOR:		equipped_armor_id = -1
-		EquipmentData.Type.SHIELD:		equipped_shield_id = -1
-		EquipmentData.Type.BOOTS:		equipped_boots_id = -1
-		EquipmentData.Type.ACCESSORY:	equipped_accessory_id = -1
-	equipment = equipment.filter(func(i): return i.type != equipment_type)
+		EquipmentData.Type.WEAPON:		equipped_weapon = null
+		EquipmentData.Type.ARMOR:		equipped_armor = null
+		EquipmentData.Type.SHIELD:		equipped_shield = null
+		EquipmentData.Type.BOOTS:		equipped_boots = null
+		EquipmentData.Type.ACCESSORY:	equipped_accessory = null
+	resolve_equipment()

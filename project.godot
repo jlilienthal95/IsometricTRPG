@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+BattleEvents="*res://Autoloads/BattleEvents.gd"
 JobRegistry="*uid://c3excdk88ly3e"
 EquipmentRegistry="*uid://umubdlftfovg"
 PartyManager="*uid://dnj12n1aeu24x"

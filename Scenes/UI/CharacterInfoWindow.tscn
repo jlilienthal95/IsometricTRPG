@@ -4,6 +4,8 @@
 [ext_resource type="Texture2D" uid="uid://dqdq5cimollg5" path="res://Assets/UI/Windows/Character_Info_Window.png" id="1_tronk"]
 [ext_resource type="Texture2D" uid="uid://dv8p1kemk34o3" path="res://Assets/Sprites/Jobs/Knight/Knight-Portrait-no-bg-475.png" id="2_fv5t1"]
 [ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="3_fv5t1"]
+[ext_resource type="PackedScene" uid="uid://dvyehpu24usyo" path="res://Scenes/UI/ProgressBarScene.tscn" id="5_4jfqx"]
+[ext_resource type="StyleBox" uid="uid://c6fwk857yelre" path="res://Scenes/UI/MpGradient.tres" id="6_tfiqo"]
 
 [node name="CharacterInfo" type="Control" unique_id=161366874]
 layout_mode = 3
@@ -41,39 +43,57 @@ offset_bottom = 78.0
 theme = ExtResource("3_fv5t1")
 text = "Name"
 
+[node name="HpBar" parent="." unique_id=1752225313 instance=ExtResource("5_4jfqx")]
+z_index = 0
+layout_mode = 0
+offset_left = 325.0
+offset_top = 95.0
+offset_right = 755.0
+offset_bottom = 145.0
+
 [node name="HpCount" type="Label" parent="." unique_id=437343400]
 layout_mode = 0
-offset_left = 448.0
-offset_top = 88.0
-offset_right = 526.0
-offset_bottom = 150.0
+offset_left = 450.0
+offset_top = 90.0
+offset_right = 528.0
+offset_bottom = 152.0
 theme = ExtResource("3_fv5t1")
 text = "HP"
 
 [node name="HpMaxCount" type="Label" parent="." unique_id=887604335]
 layout_mode = 0
-offset_left = 616.0
-offset_top = 88.0
-offset_right = 694.0
-offset_bottom = 150.0
+offset_left = 620.0
+offset_top = 90.0
+offset_right = 698.0
+offset_bottom = 152.0
 theme = ExtResource("3_fv5t1")
 text = "HP"
 
+[node name="MpBar" parent="." unique_id=206121888 instance=ExtResource("5_4jfqx")]
+z_index = 0
+layout_mode = 0
+offset_left = 324.99997
+offset_top = 184.99998
+offset_right = 755.0
+offset_bottom = 234.99998
+theme_override_colors/font_color = Color(0, 0, 0.9490196, 1)
+theme_override_styles/fill = ExtResource("6_tfiqo")
+
 [node name="MpCount" type="Label" parent="." unique_id=602279082]
 layout_mode = 0
-offset_left = 448.0
-offset_top = 176.0
-offset_right = 537.0
-offset_bottom = 238.0
+offset_left = 450.0
+offset_top = 180.0
+offset_right = 539.0
+offset_bottom = 242.0
 theme = ExtResource("3_fv5t1")
 text = "MP"
 
 [node name="MpMaxCount" type="Label" parent="." unique_id=655346427]
 layout_mode = 0
-offset_left = 619.0
-offset_top = 176.0
-offset_right = 708.0
-offset_bottom = 238.0
+offset_left = 620.0
+offset_top = 180.0
+offset_right = 709.0
+offset_bottom = 242.0
 theme = ExtResource("3_fv5t1")
 text = "MP"
 
@@ -99,10 +119,10 @@ text = "/"
 
 [node name="HpAccent" type="Label" parent="." unique_id=1494291021]
 layout_mode = 0
-offset_left = 344.0
-offset_top = 88.0
-offset_right = 437.0
-offset_bottom = 162.0
+offset_left = 335.0
+offset_top = 90.0
+offset_right = 428.0
+offset_bottom = 164.0
 theme = ExtResource("3_fv5t1")
 theme_override_colors/font_color = Color(1, 0.61960787, 0.61960787, 1)
 theme_override_colors/font_outline_color = Color(0.37254903, 0, 0, 1)
@@ -112,10 +132,10 @@ text = "HP"
 
 [node name="MpAccent" type="Label" parent="." unique_id=245829073]
 layout_mode = 0
-offset_left = 336.0
-offset_top = 176.0
-offset_right = 443.0
-offset_bottom = 250.0
+offset_left = 334.99997
+offset_top = 180.0
+offset_right = 441.99997
+offset_bottom = 254.0
 theme = ExtResource("3_fv5t1")
 theme_override_colors/font_color = Color(0.8117647, 0.5647059, 1, 1)
 theme_override_colors/font_outline_color = Color(0.29803923, 0.007843138, 0.5176471, 1)

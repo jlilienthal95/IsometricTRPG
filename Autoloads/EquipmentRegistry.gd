@@ -1,29 +1,23 @@
 extends Node
 
-var _equipment: Dictionary = {} # job_id: JobData
-	
-func load_equipment_for_battle(units: Array[Unit], inventory: Array[int]) -> void:
-	_equipment.clear()
-	var ids_to_load: Array[int] = []
-	
-	#collect equipped items to load
-	for unit in units:
-		for id in unit.data.get_equipped_ids():
-			if id != -1 and not ids_to_load.has(id):
-				ids_to_load.append(id)
-	
-	#collect inventory items to load
-	for id in inventory:
-		if not ids_to_load.has(id):
-			ids_to_load.append(id)
-	#load necessary items
-	for id in ids_to_load:
-		var path = "res://Data/Equipment/equipment_" + str(id) + ".tres"
-		var equipment = load(path)
-		if equipment != null:
-			_equipment[id] = equipment
-		else:
-			push_error("ItemRegistry: failed to load equipment: " + str(id))
+# Full equipment catalog, preloaded at compile time. Same export-safety rule as
+# every other registry: no runtime path construction, no directory scanning.
+# The registry exists for ID -> resource resolution (save files); authoring
+# uses direct resource references on UnitData and never touches IDs.
+const EQUIPMENT: Array[EquipmentData] = [
+	preload("res://Data/Equipment/equipment_1.tres"),
+	preload("res://Data/Equipment/equipment_1001.tres"),
+]
+
+var _equipment: Dictionary = {}	# equipment_id -> EquipmentData
+
+func _ready() -> void:
+	for piece in EQUIPMENT:
+		if piece != null:
+			if _equipment.has(piece.equipment_id):
+				push_error("EquipmentRegistry: duplicate equipment_id %d ('%s' vs '%s')" % [
+					piece.equipment_id, piece.equipment_name, _equipment[piece.equipment_id].equipment_name])
+			_equipment[piece.equipment_id] = piece
 
 func get_equipment(equipment_id: int) -> EquipmentData:
 	return _equipment.get(equipment_id, null)

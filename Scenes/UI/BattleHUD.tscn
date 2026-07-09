@@ -13,6 +13,25 @@ scale = Vector2(0.25, 0.25)
 theme = ExtResource("1_hcak5")
 script = ExtResource("1_xilco")
 
+[node name="EquipmentMenu" type="PanelContainer" parent="." unique_id=25345652]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 384.0
+offset_bottom = 256.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_hcak5")
+
+[node name="EquipmentScroll" type="ScrollContainer" parent="EquipmentMenu" unique_id=2023976590]
+clip_contents = false
+layout_mode = 2
+theme = ExtResource("1_ioexv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="EquipmentMenu/EquipmentScroll" unique_id=727246058]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
 [node name="ActionMenu" type="PanelContainer" parent="." unique_id=1146287213]
 layout_mode = 1
 offset_right = 384.0
@@ -42,26 +61,6 @@ text = "Equipment"
 custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 text = "Wait"
-
-[node name="EquipmentMenu" type="PanelContainer" parent="." unique_id=25345652]
-visible = false
-layout_mode = 1
-anchors_preset = -1
-offset_right = 384.0
-offset_bottom = 256.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("1_hcak5")
-
-[node name="EquipmentScroll" type="ScrollContainer" parent="EquipmentMenu" unique_id=2023976590]
-clip_contents = false
-layout_mode = 2
-theme = ExtResource("1_ioexv")
-
-[node name="VBoxContainer" type="VBoxContainer" parent="EquipmentMenu/EquipmentScroll" unique_id=727246058]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
 [node name="JobAbilityMenu" type="PanelContainer" parent="." unique_id=345067622]
 layout_mode = 1

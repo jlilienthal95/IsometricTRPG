@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dv8p1kemk34o3" path="res://Assets/Sprites/Jobs/Knight/Knight-Portrait-no-bg-475.png" id="1_jn4e3"]
 [ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_byrk4"]
 [ext_resource type="SpriteFrames" uid="uid://cb0sg4wgbbtyi" path="res://Data/Jobs/KnightFrames.tres" id="2_jn4e3"]
+[ext_resource type="Resource" uid="uid://cm5rldk0hhdsl" path="res://Data/Abilities/Fight_Knight.tres" id="3_fight"]
 
 [resource]
 script = ExtResource("2_byrk4")
@@ -15,6 +16,8 @@ cast_impact_delay = 1000.0
 hp_modifier = 1.2
 mp_modifier = 0.8
 attack_modifier = 1.2
-speed_modifier = 0.8
-move_range = 6
+move_range_bonus = 1
+jump_height_bonus = 0
+speed_rank = 0
+fight_ability = ExtResource("3_fight")
 metadata/_custom_type_script = "uid://ct2virpcpm7ny"

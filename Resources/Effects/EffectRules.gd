@@ -21,5 +21,5 @@ const SUSCEPTIBLE_TERRAIN: Dictionary = {
 const DURATION_THRESHOLD_TICKS: Dictionary = {
 	EffectId.Id.BURNING: 3,
 	EffectId.Id.SOAKED: 2,
-	EffectId.Id.REDHOT: 1,
+	EffectId.Id.REDHOT: 2,
 }

@@ -6,32 +6,32 @@ signal ability_complete
 var _grid: BattleGrid = null
 var _is_executing: bool = false
 var _caster: Unit = null
-var _single_target: Unit = null
-var _multi_target: Array[Unit] = []
+var _single_target = null				# Unit or BattleObject
+var _multi_target: Array = []
 var _ability: AbilityData = null
 var _action_resolver: ActionResolver = null
 var _effect_executor: EffectExecutor = null
 var _camera: BattleCamera = null
-var _battle_ui: BattleUI = null
+var _director: CinematicDirector = null
 
-# initializes the executor with a reference to the battle grid
-func setup(grid: BattleGrid) -> void:
+# initializes the executor with references it needs every battle
+func setup(grid: BattleGrid, director: CinematicDirector) -> void:
 	_grid = grid
+	_director = director
 
 # begins ability execution — guards against concurrent executions
-func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, battle_ui: BattleUI, effect_executor) -> void:
+func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera, action_resolver: ActionResolver, effect_executor: EffectExecutor) -> void:
 	if _is_executing:
 		push_error("UnitAbilityExecutor: ability execution already in progress")
 		return
 	_is_executing = true
 	_caster = caster
-	_single_target = _grid.get_unit_at(target_cell)
+	_single_target = _grid.get_actor_at(target_cell)	# units and objects are both valid targets
 	_ability = ability
 	_camera = camera
 	_action_resolver = action_resolver
-	_battle_ui = battle_ui
 	_effect_executor = effect_executor
-	
+
 	# populate multi-target for AoE abilities
 	# TODO: expand to all cells within ability AoE range when AoE is implemented
 	_multi_target.clear()
@@ -44,28 +44,22 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 	_execute_sequence()
 
 func _execute_sequence() -> void:
-	await _setup_cinematic()
+	# all cinematic presentation is owned by the director — this executor only
+	# choreographs the ability itself (animations, projectiles, resolution)
+	await _director.begin_sequence(_caster)
 	_face_target()
-	var job = JobRegistry.get_job(_caster.data.job_id)
-	var cast_impact_delay = job.cast_impact_delay if job != null else 0.0
+	var cast_impact_delay = _caster.data.job.cast_impact_delay if _caster.data.job != null else 0.0
 	await _caster.play_attack_animation(cast_impact_delay, _ability.animation_id != "")
 	await _execute_effect()
 	await get_tree().create_timer((_ability.impact_delay - _ability.charge_delay) * .001).timeout
 	await resolve_ability(_action_resolver)
 	_caster.play_idle()
-	await _teardown_cinematic()
+	# let every queued impact beat land inside the sequence before tearing down
+	await _director.wait_until_idle()
+	await _director.end_sequence()
 	_is_executing = false
 	emit_signal("ability_complete")
 	_clear_context()
-
-func _setup_cinematic() -> void:
-	await _battle_ui.fade_bars_in()
-	await _camera.zoom_in()
-
-func _teardown_cinematic() -> void:
-	await _camera.zoom_reset()
-	await _battle_ui.fade_bars_out()
-	_camera.follow(_caster)
 
 func _face_target() -> void:
 	if _single_target == null:
@@ -83,36 +77,43 @@ func _execute_effect() -> void:
 		var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
 		get_parent().add_child(effect)
 		effect.global_position = _caster.global_position
-		effect.z_index = _single_target.z_index + 1
+		if _single_target != null:
+			effect.z_index = _single_target.z_index + 1
 		effect.play(_ability.animation_id)
 		_camera.follow(effect)
 		await get_tree().create_timer(_ability.charge_delay * .001).timeout
 		_travel(effect)
-	
-# battle_scene calls this after ability_impact fires
-# passes ActionResolver in so UnitAbilityExecutor can coordinate resolution internally
+
+# resolves the ability against its target(s).
+# Damage flows exclusively through target.apply_damage — that single call
+# mutates HP, announces the event (which the CinematicDirector turns into the
+# camera shake), and plays the target's hit feedback. No separate shake /
+# take_hit / HP bookkeeping calls to keep in sync.
 func resolve_ability(action_resolver: ActionResolver) -> void:
-	if _single_target != null:
-		var result = action_resolver.resolve(_caster, _single_target, _ability)
-		_caster.adjust_mp(_ability.mp_cost)
-		if not result.is_miss:
-			_camera.play_shake()
-			_single_target.adjust_hp(result.damage)
-			_single_target.take_hit(result.damage)
-			print("dealt ", result.damage, " damage. target HP: ", _single_target.data.current_hp)
-			await get_tree().create_timer(1).timeout
-			
-			# apply effects from result
-			print("checking for effect apply")
-			if not _ability.effects.is_empty():
-				print("applying effects")
-				for effect in _ability.effects:
-					var context = EffectContext.create(_grid, _effect_executor)
-					await _effect_executor.apply_effect_to_unit_and_tile(_single_target, effect, context)
+	if _single_target == null:
+		return
+	var result = action_resolver.resolve(_caster, _single_target, _ability)
+	_caster.spend_mp(_ability.mp_cost)
+	if not result.is_miss:
+		if _ability.ability_type == AbilityData.AbilityType.HEALING:
+			await _single_target.apply_heal(result.damage)
 		else:
+			await _single_target.apply_damage(result.damage)
+		await get_tree().create_timer(1).timeout
+
+		# apply the ability's rider effects to the target and its tile
+		if not _ability.effects.is_empty():
+			for effect in _ability.effects:
+				var context = EffectContext.create(_grid, _effect_executor)
+				if _single_target is Unit:
+					await _effect_executor.apply_effect_to_unit_and_tile(_single_target, effect, context)
+				else:
+					await _effect_executor.apply_effect(_single_target, effect)
+	else:
+		if _single_target is Unit:
 			_single_target.set_facing_toward(_single_target.grid_position, _caster.grid_position)
 			_single_target.play_missed()
-		# TODO: handle multi_target resolution
+	# TODO: handle multi_target resolution
 
 func _travel(effect: Node2D) -> void:
 	match _ability.animation_path:

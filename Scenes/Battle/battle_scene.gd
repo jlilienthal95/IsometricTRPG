@@ -7,15 +7,20 @@ extends Node2D
 @onready var _battle_ui: BattleUI = $CanvasLayer/BattleUI
 @onready var _battle_hud: BattleHUD = $CanvasLayer/BattleUI/BattleHUD
 @onready var _character_info: CharacterInfo = $CanvasLayer/BattleUI/CharacterInfo
-@onready var _pathfinder = $Pathfinder
+@onready var _pathfinder: Pathfinder = $Pathfinder
 @onready var _cursor: Node2D = $Cursor
-@onready var _unit_mover = $UnitMover
-@onready var _unit_ability_executor = $UnitAbilityExecutor
-@onready var _tile_visual_manager = $TileVisualManager
-@onready var _battle_camera = $BattleCamera
-@onready var _terrain_layers = $TerrainLayers
-@onready var _effect_executor = $EffectExecutor
-@onready var _turn_queue = $TurnQueue
+@onready var _unit_mover: UnitMover = $UnitMover
+@onready var _unit_ability_executor: UnitAbilityExecutor = $UnitAbilityExecutor
+@onready var _tile_visual_manager: TileVisualManager = $TileVisualManager
+@onready var _battle_camera: BattleCamera = $BattleCamera
+@onready var _terrain_layers: Node2D = $TerrainLayers
+@onready var _effect_executor: EffectExecutor = $EffectExecutor
+@onready var _turn_queue: TurnQueue = $TurnQueue
+
+# units to spawn — preloaded so exports can never fail to find them
+# TODO: replace with proper spawn system driven by battle/GameState configuration
+const MARTA_DATA = preload("res://Data/Units/Marta.tres")
+const THEO_DATA = preload("res://Data/Units/Theo.tres")
 
 # --- state ---
 # _turn_context is the single source of truth for "who's acting" plus all pathfinding
@@ -26,21 +31,19 @@ var _turn_context: TurnContext = null
 var _previous_unit: Unit = null
 var _previous_cell: Vector3i = Vector3i(999,999,999)
 
+# created in code (not the scene tree) so the scene file needs no edits;
+# owns all cinematic presentation, reacting to BattleEvents
+var _cinematic_director: CinematicDirector = null
+
 # =============================================================================
 # SETUP
 # =============================================================================
 
 func _ready() -> void:
-	print("getting ready...")
 	randomize()
 	_build_grid()
 	_setup_systems()
 	_spawn_units()
-	print("setup complete")
-	
-	#var test = EffectSystemTest.new()
-	#add_child(test)
-	#await test.run_tests(_battle_grid, _battle_camera, _tile_visual_manager, _turn_context.unit)
 
 # builds the logical grid from all elevation layers and sets their z indices
 func _build_grid() -> void:
@@ -68,24 +71,26 @@ func _setup_systems() -> void:
 	_input_handler.cell_hovered.connect(_on_cell_hovered)
 	_input_handler.cell_cancelled.connect(_on_cell_cancelled)
 
-	# hud
-	_battle_ui.setup(BattleManager)
+	# cinematic director — reacts to BattleEvents on its own once set up
+	_cinematic_director = CinematicDirector.new()
+	add_child(_cinematic_director)
+	_cinematic_director.setup(_battle_ui, _battle_camera)
+
+	# hud — subscribes itself to BattleManager/BattleEvents signals (reactive)
+	_battle_ui.setup()
 	_character_info.setup(null)
 
 	# pathfinder
 	_pathfinder.setup(_battle_grid)
-	
-	#tile visuals and effects
+
+	# tile visuals and effects
 	_tile_visual_manager.setup(_battle_grid, _terrain_layers)
-	
-	## cursor
-	#_cursor.setup()
-	
-	# battle camara
+
+	# battle camera
 	_battle_camera.setup(_cursor)
 
 	# battle manager
-	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _battle_ui, _effect_executor, _turn_queue)
+	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _effect_executor, _turn_queue)
 	BattleManager.state_changed.connect(_on_battle_state_changed)
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleManager.unit_moved.connect(_on_unit_moved)
@@ -94,52 +99,53 @@ func _setup_systems() -> void:
 
 	# unit mover
 	_unit_mover.setup(_battle_grid)
-	_unit_mover.movement_complete.connect(_on_movement_complete)
 
 	# unit ability executor
-	_unit_ability_executor.setup(_battle_grid)
-	
-	#effect executor
+	_unit_ability_executor.setup(_battle_grid, _cinematic_director)
+
+	# effect executor
 	_effect_executor.setup(_battle_grid, _battle_camera, _tile_visual_manager)
-	
+
 	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
+	
+	print("systems ready")
 
 # TODO: replace with proper spawn system driven by battle/GameState configuration
 func _spawn_units() -> void:
-	var marta = _spawn_unit(Vector3i(-8, 0, 1), load("res://Data/Units/Marta.tres"))
-	var theo = _spawn_unit(Vector3i(-8, -1, 1), load("res://Data/Units/Theo.tres"))
+	var marta = _spawn_unit(Vector3i(-8, 0, 1), MARTA_DATA)
+	var theo = _spawn_unit(Vector3i(-8, -1, 1), THEO_DATA)
 	var player_units: Array[Unit] = [marta]
 	var enemy_units: Array[Unit] = [theo]
-	
-	print("setting up turn queue")
+
+	# NOTE: units are resolved inside _spawn_unit, BEFORE the turn queue is
+	# built — the queue orders by resolved speed rank, so resolution must
+	# already have happened.
 	_turn_queue.setup(player_units, enemy_units)
-	# load only equipment relevant to this battle into EquipmentRegistry
-
-	# NOTE: intentionally not peeking the turn queue here to pick a "current unit" —
-	# get_next_unit() mutates the queue (pops front, pushes to back), which silently shifted
-	# the turn order by one slot before the battle officially started. get_all_units() below
-	# is non-mutating. Who's actually acting is established later, once, via
-	# BattleManager.active_unit_changed -> _on_active_unit_changed.
-	var all_units: Array[Unit] = _turn_queue.get_all_units()
-	EquipmentRegistry.load_equipment_for_battle(all_units, PartyManager.inventory)
-
-	# resolve equipment and ability references so equipped_equipment[] and abilties[] is populated on each unit
-	for unit in all_units:
-		unit.data.resolve_equipment()
-		unit.data.resolve_abilities()
 	
+	#TODO: Uncomment this before release/export
+	#await _battle_ui.on_battle_start()
 	BattleManager.call_deferred("start_battle", player_units, enemy_units)
 
-# instantiates a Unit scene, places it on the grid, and sets up its data
+# instantiates a Unit scene, resolves its stats, and places it on the grid
 func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> Unit:
 	var unit_scene = preload("res://Scenes/Battle/Unit.tscn")
 	var unit: Unit = unit_scene.instantiate()
+	unit_data.resolve()
 	unit.global_position = grid_to_world(cell)
 	add_child(unit)
 	unit.setup(unit_data, cell)
 	_battle_grid.place_unit(unit, cell)
 	_battle_camera.snap_to(unit.global_position)
 	return unit
+
+# instantiates a BattleObject and places it on the grid — mirror of _spawn_unit
+func spawn_object(cell: Vector3i, object_data: ObjectData, scene: PackedScene) -> BattleObject:
+	var object: BattleObject = scene.instantiate()
+	object.global_position = grid_to_world(cell)
+	add_child(object)
+	object.setup(object_data, cell)
+	_battle_grid.place_object(object, cell)
+	return object
 
 # =============================================================================
 # GRID / WORLD
@@ -187,7 +193,7 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 	if not _cursor.is_visible:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
-	
+
 	var unit: Unit = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
 	if unit != null:
 		_character_info.setup(unit.data)
@@ -196,7 +202,6 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 
 # routes cell selection to the appropriate BattleManager action based on current state
 func _on_cell_selected(cell: Vector2i) -> void:
-	#print("cell selected: ", "(", (cell.x - 1), ", ", (cell.y - 1), ")")
 	match BattleManager.current_state:
 		BattleManager.BattleState.MOVE_SELECT:
 			_previous_cell = _turn_context.unit.grid_position
@@ -213,7 +218,7 @@ func _on_cell_cancelled() -> void:
 	if (BattleManager.current_state == BattleManager.BattleState.ACTION_SELECT and
 		_previous_cell != Vector3i(999,999,999)) and \
 		not _turn_context.unit.data.has_acted:
-		_battle_grid.move_unit(_turn_context.unit.grid_position, _previous_cell)
+		_battle_grid.move_actor(_turn_context.unit, _turn_context.unit.grid_position, _previous_cell)
 		_turn_context.unit.global_position = grid_to_world(_previous_cell)
 		_battle_camera.pan_to(grid_to_world(_previous_cell))
 		_turn_context.unit.reset_move()
@@ -232,7 +237,6 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 		BattleManager.BattleState.MOVE_SELECT:
 			# move range was already computed atomically in _turn_context when the unit
 			# became active — just display it, never recompute against a separate variable
-			_pathfinder.debug_reachable(_turn_context.unit.grid_position, _turn_context.move_query, _turn_context.unit)
 			_tile_visual_manager.show_move_range(_turn_context.reachable_move_cells, grid_to_world)
 		BattleManager.BattleState.ACTION_SELECT:
 			_tile_visual_manager.clear()
@@ -251,10 +255,11 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			_turn_queue.start_next_turn()
 		BattleManager.BattleState.TERRAIN_TURN:
 			var processor = TerrainTurnProcessor.new()
-			await processor.process_terrain_turn(_battle_grid, _effect_executor, _battle_camera, get_tree(), grid_to_world)
+			await processor.process_terrain_turn(_battle_grid, _effect_executor, _battle_camera, get_tree(), grid_to_world, _cinematic_director)
 			await get_tree().create_timer(2).timeout
 			_turn_queue.start_next_turn()
-			
+		BattleManager.BattleState.BATTLE_END:
+			BattleManager.reset()
 
 # connects the new active unit's signals to the HUD and updates camera and turn state.
 # this is the single authoritative point where "who's acting" is established for the scene —
@@ -262,20 +267,8 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 # as active_unit. No other function may assign _turn_context, so there is nowhere for a stale
 # unit reference to leak in and desync from BattleManager.active_unit.
 func _on_active_unit_changed(unit: Unit) -> void:
-	if _previous_unit != null:
-		if _previous_unit.move_consumed.is_connected(_battle_ui.refresh_hud):
-			_previous_unit.move_consumed.disconnect(_battle_ui.refresh_hud)
-		if _previous_unit.ability_consumed.is_connected(_battle_ui.refresh_hud):
-			_previous_unit.ability_consumed.disconnect(_battle_ui.refresh_hud)
-		if _previous_unit.ability_impact.is_connected(_on_ability_impact):
-			_previous_unit.ability_impact.disconnect(_on_ability_impact)
-	unit.move_consumed.connect(_battle_ui.refresh_hud)
-	unit.ability_consumed.connect(_battle_ui.refresh_hud)
-	unit.ability_impact.connect(_on_ability_impact)
-
 	_turn_context = TurnContext.for_unit(unit, _pathfinder)
 
-	_battle_ui.on_turn_changed(unit)
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit
 	_previous_cell = Vector3i(999,999,999)
@@ -294,23 +287,17 @@ func _on_ability_selected(unit: Unit, ability: AbilityData) -> void:
 		return
 	_turn_context.select_ability(ability, _pathfinder)
 
-# resolves ability damage via ActionResolver and refreshes the character info panel
-func _on_ability_impact() -> void:
-	_character_info.refresh()
-
-# kicks off unit movement animation via UnitMover using the turn context's move query
+# kicks off unit movement animation via UnitMover using the turn context's move query.
+# NOTE: no consume_move here — BattleManager.confirm_move owns turn-resource
+# consumption; doing it in both places double-fired the move_consumed signal.
 func _on_unit_moved(unit: Unit, to_cell: Vector3i) -> void:
 	var steps = _pathfinder.get_movement_path(unit.grid_position, to_cell, _turn_context.move_query, unit)
 	_unit_mover.execute_movement(unit, steps, grid_to_world, _battle_camera)
-	unit.consume_move()
 
-# kicks off ability execution via UnitAbilityExecutor
+# kicks off ability execution via UnitAbilityExecutor.
+# NOTE: no consume_ability here — see note on _on_unit_moved.
 func _on_unit_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, camera: BattleCamera) -> void:
-	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _battle_ui, _effect_executor)
-	caster.consume_ability()
-
-func _on_movement_complete(unit: Unit) -> void:
-	print("movement complete: ", unit.data.unit_name)
+	_unit_ability_executor.execute_ability(caster, target_cell, ability, camera, _action_resolver, _effect_executor)
 
 # =============================================================================
 # DEBUG

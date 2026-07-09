@@ -153,10 +153,6 @@ _data = {
 &"missed_face_left": SubResource("Animation_dg72p")
 }
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_63c20"]
-radius = 5.2903533
-height = 23.884277
-
 [node name="Unit" type="Node2D" unique_id=1157963703]
 z_as_relative = false
 material = SubResource("ShaderMaterial_165ns")
@@ -180,13 +176,6 @@ z_index = -1
 position = Vector2(-50, -51)
 texture = ExtResource("3_3o6xq")
 centered = false
-
-[node name="Area2D" type="Area2D" parent="VisualRoot" unique_id=434591796]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="VisualRoot/Area2D" unique_id=1227826528]
-position = Vector2(0.99999994, 4)
-scale = Vector2(0.9451165, 0.3349484)
-shape = SubResource("CapsuleShape2D_63c20")
 
 [node name="DamageCount" parent="." unique_id=783185985 instance=ExtResource("4_63c20")]
 modulate = Color(1, 1, 1, 0)

@@ -73,7 +73,6 @@ metadata/_custom_type_script = "uid://si8wah1cwvpy"
 
 [node name="HighlightManager" type="Node" parent="." unique_id=386221053]
 script = ExtResource("10_5mge4")
-metadata/_custom_type_script = "uid://db6ignfw75cjq"
 
 [node name="InputHandler" type="Node" parent="." unique_id=2138718227]
 script = ExtResource("6_jp0ri")
@@ -110,6 +109,7 @@ libraries/ = SubResource("AnimationLibrary_n1ain")
 [node name="BattleUI" parent="CanvasLayer" unique_id=1979739976 instance=ExtResource("10_n1ain")]
 
 [node name="DebugPanel" parent="CanvasLayer" unique_id=591785918 instance=ExtResource("13_sufya")]
+metadata/_edit_use_anchors_ = true
 
 [node name="Debug" type="Node2D" parent="." unique_id=1058149904]
 z_index = 100

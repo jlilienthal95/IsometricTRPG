@@ -9,6 +9,5 @@ ability_id = 3
 description = "An all or nothing attack. Either fells your foe with a critical hit, or barely leaves a scratch."
 base_hit_chance = 0.4
 base_crit_chance = 1.0
-base_power = 10
 impact_delay = 733
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

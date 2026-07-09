@@ -1,18 +1,20 @@
 [gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://dqiupvinbmbkr"]
 
 [ext_resource type="Script" uid="uid://ldc6ph2g5wim" path="res://Resources/UnitData.gd" id="1_gw5mv"]
+[ext_resource type="Resource" uid="uid://cqer5nxdwki1w" path="res://Data/Jobs/Pirate.tres" id="2_job"]
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="3_c4jwn"]
+[ext_resource type="Resource" uid="uid://d2qtqrwc1ni64" path="res://Data/Equipment/equipment_1001.tres" id="3_weapon"]
+[ext_resource type="Resource" uid="uid://e5vgnlh20jjr" path="res://Data/Equipment/equipment_1.tres" id="4_armor"]
+[ext_resource type="Resource" uid="uid://c20dmhatwxj1w" path="res://Data/Abilities/Last_Ditch_Effort.tres" id="5_lde"]
 
 [resource]
 script = ExtResource("1_gw5mv")
 unit_name = "Theo"
-job_id = 1
-max_hp = 25
-current_hp = 25
-max_mp = 8
-current_mp = 8
-jump_height = 1
+job = ExtResource("2_job")
+base_max_mp = 10
 base_attack = 9
-equipped_weapon_id = 1
-equipped_armor_id = 1001
-ability_ids = Array[int]([3])
+base_jump_height = 1
+equipped_weapon = ExtResource("3_weapon")
+equipped_armor = ExtResource("4_armor")
+granted_abilities = Array[ExtResource("3_c4jwn")]([ExtResource("5_lde")])
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

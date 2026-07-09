@@ -1,9 +1,6 @@
 class_name BattleHUD
 extends Control
 
-signal menu_requested(menu)
-signal hide_requested
-
 @onready var action_menu = $ActionMenu
 @onready var move_button = $ActionMenu/VBoxContainer/MoveButton
 @onready var abilities_button = $ActionMenu/VBoxContainer/AbilitiesButton
@@ -22,11 +19,10 @@ signal hide_requested
 @onready var job_ability_vbox: VBoxContainer = $JobAbilityMenu/JobAbilityScroll/VBoxContainer
 
 var _active_unit: Unit = null
-var _fight_ability: AbilityData = null
 
-var job_ability_button =  preload("res://Scenes/UI/JobActionButton.tscn")
+var job_ability_button = preload("res://Scenes/UI/JobActionButton.tscn")
 
-func setup(battle_manager: BattleManager) -> void:
+func setup(battle_manager) -> void:
 	move_button.pressed.connect(battle_manager.select_action_move)
 	abilities_button.pressed.connect(battle_manager.select_action_abilities)
 	equipment_button.pressed.connect(battle_manager.select_action_equipment)
@@ -40,17 +36,22 @@ func refresh() -> void:
 		return
 	move_button.disabled = _active_unit.data.has_moved
 	abilities_button.disabled = _active_unit.data.has_acted
-	_equipment_reset()
-	#_abilities_reset()
 	_generate_equipment_buttons(_active_unit.data.equipment)
 	_generate_job_ability_buttons(_active_unit.data.abilities)
 
+# the HUD re-subscribes to each new active unit's turn-resource signals so
+# button states always mirror the data without manual refresh calls scattered
+# around the codebase
 func on_turn_changed(unit: Unit) -> void:
+	if _active_unit != null:
+		if _active_unit.move_consumed.is_connected(refresh):
+			_active_unit.move_consumed.disconnect(refresh)
+		if _active_unit.ability_consumed.is_connected(refresh):
+			_active_unit.ability_consumed.disconnect(refresh)
 	_active_unit = unit
+	unit.move_consumed.connect(refresh)
+	unit.ability_consumed.connect(refresh)
 	refresh()
-	#_generate_equipment_buttons(_active_unit.data.equipped_items)
-	#_generate_job_ability_buttons(_active_unit.data.abilities)
-	_update_fight_ability()
 
 func _generate_equipment_buttons(equipment: Array[EquipmentData]) -> void:
 	_equipment_reset()
@@ -82,32 +83,16 @@ func show_menu(menu) -> void:
 	if menu != null:
 		menu.show()
 
+# the fight ability is a direct resource reference on the unit's job — no more
+# name-string lookup ("Fight_" + job_name) that silently broke on rename
 func _on_fight_pressed() -> void:
-	if _fight_ability == null:
+	if _active_unit == null or _active_unit.data.job == null:
 		return
-	BattleManager.select_ability(_fight_ability)
-
-func _update_fight_ability() -> void:
-	if _active_unit == null:
+	var fight = _active_unit.data.job.fight_ability
+	if fight == null:
+		push_error("BattleHUD: job '%s' has no fight_ability assigned" % _active_unit.data.job.job_name)
 		return
-	var job = JobRegistry.get_job(_active_unit.data.job_id)
-	if job == null:
-		return
-	_fight_ability = AbilityRegistry.get_ability_by_name("Fight_" + job.job_name)
-
-#func _reset_turn() -> void:
-	#_move_reset()
-	#_abilities_reset()
-	#_equipment_reset()
-	#_job_ability_reset()
-
-#func _abilities_reset() -> void:
-	#abilities_button.disabled = false
-	#abilities_button.modulate = Color.WHITE
-#
-#func _move_reset() -> void:
-	#move_button.disabled = false
-	#move_button.modulate = Color.WHITE
+	BattleManager.select_ability(fight)
 
 func _equipment_reset() -> void:
 	for child in equipment_vbox.get_children():

@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_qbh5s")
 equipment_name = "Bronze Plate"
+equipment_id = 1
 equipment_type = 1
 description = "Basic garb for a knight, providing some defense against standard physical attacks."
 hp_bonus = 30

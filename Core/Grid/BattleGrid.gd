@@ -10,6 +10,7 @@ var _grid: Dictionary = {}					# Vector3i -> BattleTileData
 var occlusion_map: Dictionary = {}			# Vector3i -> Array[Vector3i] of occluding tiles
 var active_effect_cells: Dictionary = {}	# EffectId.Id -> Array[Vector3i] (terrain)
 var active_effect_units: Dictionary = {}	# EffectId.Id -> Array[Unit]
+var active_effect_objects: Dictionary = {}	# EffectId.Id -> Array[BattleObject]
 
 # =============================================================================
 # GRID CONSTRUCTION
@@ -30,10 +31,15 @@ func build_from_tilemap(tilemap: TileMapLayer, elevation: int) -> void:
 		tile.is_walkable = tile_data.get_custom_data("is_walkable")
 		tile.atlas_source_id = tilemap.get_cell_source_id(c)
 		tile.atlas_coords = tilemap.get_cell_atlas_coords(c)
-		var key = Vector3i(c.x, c.y, elevation)
-		tile.cell = key
-		tile._grid_ref = self
-		_grid[key] = tile
+		add_tile(Vector3i(c.x, c.y, elevation), tile)
+
+# registers a single tile in the logical grid. Public so tests and future
+# procedural maps can construct grids without a TileMapLayer.
+func add_tile(cell: Vector3i, tile: BattleTileData) -> void:
+	tile.cell = cell
+	tile.elevation = cell.z
+	tile._grid_ref = self
+	_grid[cell] = tile
 
 # precomputes which cells are visually occluded by elevated tiles
 # for each elevated tile, calculates its visual footprint at lower elevations
@@ -79,10 +85,16 @@ func build_occlusion_map() -> void:
 func get_tile(cell: Vector3i) -> BattleTileData:
 	return _grid.get(cell, null)
 
-# returns true if the cell exists and is marked walkable
+# returns true if the cell exists, its terrain is walkable, and no non-walkable
+# object is sitting on it (a barrel makes an otherwise walkable tile unwalkable;
+# a crate does not)
 func is_walkable(cell: Vector3i) -> bool:
 	var tile = get_tile(cell)
-	return tile != null and tile.is_walkable
+	if tile == null or not tile.is_walkable:
+		return false
+	if tile.object_ref != null and not tile.object_ref.data.is_walkable:
+		return false
+	return true
 
 # returns the elevation of the given cell, or 0 if it doesn't exist
 func get_elevation(cell: Vector3i) -> int:
@@ -98,21 +110,18 @@ func get_all_cells() -> Array[Vector3i]:
 
 # returns the highest-elevation tile at the given XY position, or null if none exist
 func get_tile_at_highest_elevation(xy: Vector2i) -> BattleTileData:
-	#print("looking for tile at xy: ", xy)
 	var highest_tile: BattleTileData = null
 	var highest_elevation: int = -1
 	for key in _grid.keys():
 		if key.x == xy.x and key.y == xy.y:
-			#print("found match at: ", key)
 			var tile = _grid[key]
 			if tile.elevation > highest_elevation:
 				highest_elevation = tile.elevation
 				highest_tile = tile
-	#print("result: ", highest_tile)
 	return highest_tile
 
 # =============================================================================
-# UNIT PLACEMENT & MOVEMENT
+# OCCUPANCY — units and objects
 # =============================================================================
 
 # places a unit on the given cell and updates the unit's grid_position
@@ -132,21 +141,52 @@ func remove_unit(cell: Vector3i) -> void:
 	tile.unit_ref = null
 	tile_occupancy_changed.emit(tile)
 
-func move_unit(from: Vector3i, to: Vector3i) -> void:
+# places an object on the given cell and updates the object's grid_position
+func place_object(object: BattleObject, cell: Vector3i) -> void:
+	var tile = get_tile(cell)
+	if tile == null:
+		push_error("Tried to place object on invalid cell: " + str(cell))
+		return
+	tile.object_ref = object
+	object.grid_position = cell
+	object._grid_ref = self
+	tile_occupancy_changed.emit(tile)
+
+func remove_object(cell: Vector3i) -> void:
+	var tile = get_tile(cell)
+	if tile == null:
+		return
+	tile.object_ref = null
+	tile_occupancy_changed.emit(tile)
+
+# moves whichever kind of actor (Unit or BattleObject) between cells.
+# The single movement mutation point — UnitMover and push/slide actions all
+# route through here so occupancy bookkeeping can never diverge by actor type.
+func move_actor(actor, from: Vector3i, to: Vector3i) -> void:
 	var from_tile = get_tile(from)
 	var to_tile = get_tile(to)
 	if from_tile == null or to_tile == null:
 		push_error("Invalid move from " + str(from) + " to " + str(to))
 		return
-	if to_tile.unit_ref != null:
-		push_error("Tried to move unit to occupied cell: " + str(to))
+	if actor is Unit:
+		if to_tile.unit_ref != null:
+			push_error("Tried to move unit to occupied cell: " + str(to))
+			return
+		to_tile.unit_ref = actor
+		from_tile.unit_ref = null
+	elif actor is BattleObject:
+		if to_tile.object_ref != null:
+			push_error("Tried to move object to object-occupied cell: " + str(to))
+			return
+		to_tile.object_ref = actor
+		from_tile.object_ref = null
+	else:
+		push_error("move_actor: unknown actor type")
 		return
-	to_tile.unit_ref = from_tile.unit_ref
-	to_tile.unit_ref.grid_position = to
-	from_tile.unit_ref = null
+	actor.grid_position = to
 	tile_occupancy_changed.emit(from_tile)
 	tile_occupancy_changed.emit(to_tile)
-	
+
 # returns the Unit on the given cell, or null if unoccupied
 func get_unit_at(cell: Vector3i) -> Unit:
 	var tile = get_tile(cell)
@@ -154,12 +194,32 @@ func get_unit_at(cell: Vector3i) -> Unit:
 		return null
 	return tile.unit_ref
 
-# returns true if a unit is currently on the given cell
+# returns the BattleObject on the given cell, or null
+func get_object_at(cell: Vector3i) -> BattleObject:
+	var tile = get_tile(cell)
+	if tile == null:
+		return null
+	return tile.object_ref
+
+# returns whichever actor occupies the cell — unit takes priority over object
+func get_actor_at(cell: Vector3i):
+	var tile = get_tile(cell)
+	if tile == null:
+		return null
+	if tile.unit_ref != null:
+		return tile.unit_ref
+	return tile.object_ref
+
+# returns true if the cell is occupied in a BLOCKING sense: a unit, or a
+# non-walkable object. A walkable object (crate) does not count as occupied —
+# units may stand on it.
 func is_cell_occupied(cell: Vector3i) -> bool:
 	var tile = get_tile(cell)
 	if tile == null:
 		return false
-	return tile.unit_ref != null
+	if tile.unit_ref != null:
+		return true
+	return tile.object_ref != null and not tile.object_ref.data.is_walkable
 
 # =============================================================================
 # EFFECT PROPAGATION SUPPORT
@@ -216,11 +276,31 @@ func get_units_with_effect(effect_id: EffectId.Id) -> Array[Unit]:
 		result.append(unit)
 	return result
 
+# --- object effect index — only call from BattleObject.apply_effect/remove_effect ---
+
+func register_effect_object(effect_id: EffectId.Id, object: BattleObject) -> void:
+	if not active_effect_objects.has(effect_id):
+		active_effect_objects[effect_id] = []
+	if not active_effect_objects[effect_id].has(object):
+		active_effect_objects[effect_id].append(object)
+
+func unregister_effect_object(effect_id: EffectId.Id, object: BattleObject) -> void:
+	if active_effect_objects.has(effect_id):
+		active_effect_objects[effect_id].erase(object)
+
+func get_objects_with_effect(effect_id: EffectId.Id) -> Array[BattleObject]:
+	var result: Array[BattleObject] = []
+	var found = active_effect_objects.get(effect_id, [])
+	for object in found:
+		result.append(object)
+	return result
+
 # --- combined query ---
 
-# returns both terrain cells and units currently affected by the given effect
+# returns terrain cells, units, and objects currently affected by the given effect
 func get_all_affected_with_effect(effect_id: EffectId.Id) -> Dictionary:
 	return {
 		"cells": get_cells_with_effect(effect_id),
 		"units": get_units_with_effect(effect_id),
+		"objects": get_objects_with_effect(effect_id),
 	}

@@ -1,8 +1,6 @@
 class_name TurnQueue
 extends Node
 
-const TURN_DRAFT_THRESHOLD: float = 0.5
-
 var _queue: Array = []
 var _player_units: Array[Unit] = []
 var _enemy_units: Array[Unit] = []
@@ -11,46 +9,77 @@ func setup(player_units: Array[Unit], enemy_units: Array[Unit]) -> void:
 	_player_units = player_units
 	_enemy_units = enemy_units
 	_queue = determine_turn_order()
-	
+
+func reset() -> void:
+	_queue.clear()
+	_player_units.clear()
+	_enemy_units.clear()
+
+# Speed-rank ordering: all FAST units act before all NORMAL units, which act
+# before all SLOW units. Order within a rank is randomized each battle.
+# Deliberately simple — speed has no combat math, just queue position.
+# The terrain sentinel always goes last so terrain effects resolve after every
+# unit has taken its turn in the round.
 func determine_turn_order() -> Array:
-	var units_to_queue: Array[Unit] = _player_units + _enemy_units
+	var buckets: Dictionary = {
+		JobData.SpeedRank.FAST: [],
+		JobData.SpeedRank.NORMAL: [],
+		JobData.SpeedRank.SLOW: [],
+	}
+	for unit in _player_units + _enemy_units:
+		buckets[unit.data.speed].append(unit)
+
 	var turn_queue: Array = []
-	while not units_to_queue.is_empty():
-		var unit = units_to_queue.pop_front()
-		var draft: float = randf()
-		if draft >= TURN_DRAFT_THRESHOLD:
-			turn_queue.push_front(unit)
-		else:
-			turn_queue.push_back(unit)
-	var terrain_sentinal = TerrainTurnParticipant.new()
-	print("terrain sentinal: ", terrain_sentinal)
-	turn_queue.push_back(terrain_sentinal)
+	for rank in [JobData.SpeedRank.FAST, JobData.SpeedRank.NORMAL, JobData.SpeedRank.SLOW]:
+		var bucket: Array = buckets[rank]
+		bucket.shuffle()
+		turn_queue.append_array(bucket)
+
+	turn_queue.push_back(TerrainTurnParticipant.new())
 	return turn_queue
-	
+
+# advances to the next living participant's turn.
+# Dead units stay in the queue (their bodies stay on the field) but are
+# skipped here — the terrain sentinel guarantees the loop always terminates.
 func start_next_turn() -> void:
-	var new_unit = get_next_unit()
-	print("starting turn: ", new_unit.data.unit_name)
-	BattleManager.set_active_unit(new_unit)
-	
-func _end_turn() -> void:
-	BattleManager.end_turn()
-	
-func get_next_unit():
+	var participant = get_next_participant()
+	while participant is Unit and participant.data.is_dead:
+		participant = get_next_participant()
+	BattleManager.set_active_unit(participant)
+
+# pops the front participant and cycles it to the back. MUTATES the queue —
+# never call this to "peek"; use get_all_units for non-mutating inspection.
+func get_next_participant():
 	var participant = _queue.pop_front()
 	_queue.push_back(participant)
 	return participant
-	
+
 func get_all_living_units() -> Array[Unit]:
 	var living_units: Array[Unit] = []
 	for unit in _queue:
-		if not unit is TerrainTurnParticipant:
-			if not unit.data.is_dead:
-				living_units.append(unit)
+		if unit is Unit and not unit.data.is_dead:
+			living_units.append(unit)
 	return living_units
 	
+func get_all_living_players() -> Array[Unit]:
+	var living_players: Array[Unit] = []
+	for unit in _queue:
+		if _player_units.has(unit):
+			if unit is Unit and not unit.data.is_dead:
+				living_players.append(unit)
+	return living_players
+	
+func get_all_living_enemies() -> Array[Unit]:
+	var living_enemies: Array[Unit] = []
+	for unit in _queue:
+		if _enemy_units.has(unit):
+			if unit is Unit and not unit.data.is_dead:
+				living_enemies.append(unit)
+	return living_enemies
+
 func get_all_units() -> Array[Unit]:
 	var units: Array[Unit] = []
 	for participant in _queue:
-		if not participant is TerrainTurnParticipant:
+		if participant is Unit:
 			units.append(participant)
 	return units
