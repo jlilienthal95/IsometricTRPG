@@ -6,10 +6,13 @@ extends Node
 # the "ends_with(.tres)" check here and left _jobs empty in exports while working
 # fine in-editor. Preloading resolves everything at compile time, so there's no
 # runtime discovery step left to fail.
+
+# --- AUTO-GENERATED JOBS LIST START ---
 const JOBS: Array[JobData] = [
 	preload("res://Data/Jobs/Knight.tres"),
 	preload("res://Data/Jobs/Pirate.tres"),
 ]
+# --- AUTO-GENERATED JOBS LIST END ---
 
 var _jobs: Dictionary = {} # job_id: JobData
 

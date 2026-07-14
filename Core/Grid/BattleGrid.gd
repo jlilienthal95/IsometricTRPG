@@ -125,7 +125,7 @@ func get_tile_at_highest_elevation(xy: Vector2i) -> BattleTileData:
 # =============================================================================
 
 # places a unit on the given cell and updates the unit's grid_position
-func place_unit(unit: Unit, cell: Vector3i) -> void:
+func place_unit(unit: BattleActor, cell: Vector3i) -> void:
 	var tile = get_tile(cell)
 	if tile == null:
 		push_error("Tried to place unit on invalid cell: " + str(cell))
@@ -188,7 +188,7 @@ func move_actor(actor, from: Vector3i, to: Vector3i) -> void:
 	tile_occupancy_changed.emit(to_tile)
 
 # returns the Unit on the given cell, or null if unoccupied
-func get_unit_at(cell: Vector3i) -> Unit:
+func get_unit_at(cell: Vector3i) -> BattleActor:
 	var tile = get_tile(cell)
 	if tile == null:
 		return null

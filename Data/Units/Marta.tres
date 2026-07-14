@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://ldc6ph2g5wim" path="res://Resources/UnitData.gd" id="1_s07lb"]
 [ext_resource type="Resource" uid="uid://dpbujg0ifjm1m" path="res://Data/Jobs/Knight.tres" id="2_job"]
 [ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="3_js5hq"]
-[ext_resource type="Resource" uid="uid://d2qtqrwc1ni64" path="res://Data/Equipment/equipment_1001.tres" id="3_weapon"]
-[ext_resource type="Resource" uid="uid://e5vgnlh20jjr" path="res://Data/Equipment/equipment_1.tres" id="4_armor"]
+[ext_resource type="Resource" uid="uid://d2qtqrwc1ni64" path="res://Data/Equipment/Weapons/Bronze_Sword.tres" id="3_weapon"]
+[ext_resource type="Resource" uid="uid://e5vgnlh20jjr" path="res://Data/Equipment/Armor/Bronze_Plate.tres" id="4_armor"]
 [ext_resource type="Resource" uid="uid://c20dmhatwxj1w" path="res://Data/Abilities/Last_Ditch_Effort.tres" id="5_lde"]
 [ext_resource type="Resource" uid="uid://cxeopt4v5rj1a" path="res://Data/Abilities/Spark.tres" id="6_spark"]
 [ext_resource type="Resource" uid="uid://djf78acv3ye0q" path="res://Data/Abilities/Flame.tres" id="7_flame"]
@@ -18,4 +18,5 @@ current_exp = 9999
 equipped_weapon = ExtResource("3_weapon")
 equipped_armor = ExtResource("4_armor")
 granted_abilities = Array[ExtResource("3_js5hq")]([ExtResource("5_lde"), ExtResource("6_spark"), ExtResource("7_flame")])
+type = 0
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

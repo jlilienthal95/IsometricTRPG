@@ -21,7 +21,7 @@ enum TerrainType {
 @export var is_walkable: bool = false
 
 # Runtime only — not exported, not saved
-var unit_ref: Unit = null
+var unit_ref: BattleActor = null
 var object_ref: BattleObject = null
 var cell: Vector3i = Vector3i.ZERO
 var atlas_source_id: int = 0

@@ -1,5 +1,5 @@
 class_name Unit
-extends Node2D
+extends BattleActor
 
 @onready var unit_visual_root: Node2D = $VisualRoot
 @onready var unit_sprite: AnimatedSprite2D = $VisualRoot/UnitSprite
@@ -13,8 +13,8 @@ signal ability_impact
 
 const WATER_SHADER = preload("res://Assets/Shaders/Unit_Water.gdshader")
 
-var data: UnitData = null
-var grid_position: Vector3i = Vector3i.ZERO
+#var data: UnitData = null
+#var grid_position: Vector3i = Vector3i.ZERO
 var _default_material: Material = null
 
 func _ready() -> void:
@@ -163,16 +163,16 @@ func play_cast_spell() -> void:
 		return
 	unit_sprite.play("cast_spell")
 
-func play_attack_animation(cast_impact_delay: float, has_effect: bool) -> void:
-	if not data.is_dead:
-		if has_effect:
-			# TODO: unit animation should be custom per ability — special abilities will not always be spells
-			play_cast_spell()
-		else:
-			play_attack()
-
-		await get_tree().create_timer(cast_impact_delay / 1000).timeout
-		notify_ability_impact()
+func play_attack_animation(cast_impact_delay: float, unit_anim: AbilityData.UnitAnimation) -> void:
+	if data.is_dead:
+		return
+	match unit_anim:
+		AbilityData.UnitAnimation.SPELL: play_cast_spell()
+		AbilityData.UnitAnimation.ATTACK: play_attack()
+		_: play_attack()  # default fallback
+	await get_tree().create_timer(cast_impact_delay / 1000).timeout
+	print("arrow fires")
+	notify_ability_impact()
 
 # plays the hit reaction animation and returns to idle when finished
 func play_hit() -> void:

@@ -19,6 +19,7 @@ max_elevation_difference = 3
 base_power = 1.2
 element = 4
 animation_id = "spark"
+unit_animation = 1
 impact_delay = 1700
 charge_delay = 500
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

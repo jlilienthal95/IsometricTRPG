@@ -1,5 +1,5 @@
 class_name UnitData
-extends Resource
+extends BattleActorData
 
 @export var unit_name: String = ""
 
@@ -10,7 +10,7 @@ extends Resource
 # =============================================================================
 # BASE STATS — authored in the inspector, NEVER touched at runtime
 # =============================================================================
-@export var base_max_hp: int = Constants.UNIT_BASE_HP
+#@export var base_max_hp: int = Constants.UNIT_BASE_HP
 @export var base_max_mp: int = Constants.UNIT_BASE_MP
 @export var base_attack: int = Constants.UNIT_BASE_ATTACK
 @export var base_defense: int = Constants.UNIT_BASE_DEFENSE
@@ -21,7 +21,7 @@ extends Resource
 
 # elemental affinities — multipliers applied to incoming elemental damage
 # 1.0 = normal, 0.5 = resistant, 2.0 = weak, 0.0 = immune, -1.0 = absorbs
-@export var elemental_affinities: Dictionary = {}
+#@export var elemental_affinities: Dictionary = {}
 
 # =============================================================================
 # EQUIPMENT — direct resource references (authoring); IDs derived for saves
@@ -39,12 +39,12 @@ extends Resource
 # COMPUTED STATS — populated by resolve() at battle start; read during battle
 # =============================================================================
 var current_lvl: int = 1	# derived from current_exp
-var max_hp: int = 0
-var current_hp: int = 0
+#var max_hp: int = 0
+#var current_hp: int = 0
 var max_mp: int = 0
 var current_mp: int = 0
 var attack: int = 0
-var defense: int = 0
+#var defense: int = 0
 var move_range: int = 0
 var jump_height: int = 0
 var speed: JobData.SpeedRank = JobData.SpeedRank.NORMAL
@@ -54,13 +54,13 @@ var speed: JobData.SpeedRank = JobData.SpeedRank.NORMAL
 # =============================================================================
 var has_moved: bool = false
 var has_acted: bool = false
-var is_dead: bool = false
+#var is_dead: bool = false
 
 var equipment: Array[EquipmentData] = []		# resolved flat list of equipped pieces
 var abilities: Array[AbilityData] = []			# resolved: granted + job abilities
-var active_effects: Array[EffectInstance] = []
-var immunities: Array[EffectId.Id] = []			# precomputed from equipment materials
-var weaknesses: Array[EffectId.Id] = []
+#var active_effects: Array[EffectInstance] = []
+#var immunities: Array[EffectId.Id] = []			# precomputed from equipment materials
+#var weaknesses: Array[EffectId.Id] = []
 
 # =============================================================================
 # RESOLUTION — the single pipeline that turns authored data into battle stats.

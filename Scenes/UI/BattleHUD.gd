@@ -89,7 +89,9 @@ func _on_fight_pressed() -> void:
 	if _active_unit == null or _active_unit.data.job == null:
 		return
 	var fight = _active_unit.data.job.fight_ability
+	print("fight ability: ", fight)
 	if fight == null:
+		print("error")
 		push_error("BattleHUD: job '%s' has no fight_ability assigned" % _active_unit.data.job.job_name)
 		return
 	BattleManager.select_ability(fight)

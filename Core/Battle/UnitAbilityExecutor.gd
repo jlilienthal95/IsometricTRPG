@@ -49,9 +49,14 @@ func _execute_sequence() -> void:
 	await _director.begin_sequence(_caster)
 	_face_target()
 	var cast_impact_delay = _caster.data.job.cast_impact_delay if _caster.data.job != null else 0.0
-	await _caster.play_attack_animation(cast_impact_delay, _ability.animation_id != "")
+	await _caster.play_attack_animation(cast_impact_delay, _ability.unit_animation)
 	await _execute_effect()
-	await get_tree().create_timer((_ability.impact_delay - _ability.charge_delay) * .001).timeout
+	# wait time it takes from ability anim begin until timpact of ability, less any charge time if applicable
+	print("impact delay: ", _ability.impact_delay)
+	print("charge delay: ", _ability.charge_delay)
+	print("waiting for arrow anim, seconds: ", float((_ability.impact_delay - _ability.charge_delay) / 1000.0))
+	await get_tree().create_timer(float((_ability.impact_delay - _ability.charge_delay) / 1000.0)).timeout
+	print("arrow strikes")
 	await resolve_ability(_action_resolver)
 	_caster.play_idle()
 	# let every queued impact beat land inside the sequence before tearing down
@@ -77,11 +82,14 @@ func _execute_effect() -> void:
 		var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
 		get_parent().add_child(effect)
 		effect.global_position = _caster.global_position
+		effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
 		if _single_target != null:
 			effect.z_index = _single_target.z_index + 1
 		effect.play(_ability.animation_id)
 		_camera.follow(effect)
-		await get_tree().create_timer(_ability.charge_delay * .001).timeout
+		# wait for ability/spell charge portion of anim, if applicable
+		if _ability.charge_delay != 0:
+			await get_tree().create_timer(_ability.charge_delay * .001).timeout
 		_travel(effect)
 
 # resolves the ability against its target(s).
@@ -120,6 +128,15 @@ func _travel(effect: Node2D) -> void:
 		AbilityData.AnimationPath.PROJECTILE:
 			var tween = create_tween()
 			tween.tween_property(effect, "global_position", _single_target.global_position, 0.4)
+			await tween.finished
+		AbilityData.AnimationPath.PROJECTILE_ARROW:
+			var tween = create_tween()
+			var target_pos = _single_target.global_position
+			target_pos.x -= 7
+			#target_pos.y -= 8
+			tween.tween_property(effect, "global_position", target_pos, 0.625)
+			await tween.finished
+			print("arrow hits target")
 		AbilityData.AnimationPath.INSTANT:
 			effect.global_position = _single_target.global_position
 		AbilityData.AnimationPath.PATH:

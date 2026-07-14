@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://dw31v3bfg3y8c"]
+
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_xs2gy"]
+
+[resource]
+script = ExtResource("1_xs2gy")
+ability_name = "Fight_Archer"
+description = "A basic attack. Use your bow just the way it was intended."
+max_range = 6
+max_elevation_difference = 4
+base_power = 0.7
+animation_id = "arrow"
+impact_delay = 625
+animation_path = 1
+metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

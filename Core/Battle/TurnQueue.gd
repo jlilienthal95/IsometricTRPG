@@ -2,10 +2,10 @@ class_name TurnQueue
 extends Node
 
 var _queue: Array = []
-var _player_units: Array[Unit] = []
-var _enemy_units: Array[Unit] = []
+var _player_units: Array[BattleActor] = []
+var _enemy_units: Array[BattleActor] = []
 
-func setup(player_units: Array[Unit], enemy_units: Array[Unit]) -> void:
+func setup(player_units: Array[BattleActor], enemy_units: Array[BattleActor]) -> void:
 	_player_units = player_units
 	_enemy_units = enemy_units
 	_queue = determine_turn_order()

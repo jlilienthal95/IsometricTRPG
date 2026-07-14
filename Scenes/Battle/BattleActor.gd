@@ -3,6 +3,7 @@ extends Node2D
 
 # shared interface contract — override in Unit and BattleObject
 var grid_position: Vector3i = Vector3i.ZERO
+var data: BattleActorData = null
 
 func apply_damage(amount: int) -> void:
 	pass

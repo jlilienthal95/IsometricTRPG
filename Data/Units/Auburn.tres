@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" format=3 uid="uid://clgn6724vufu4"]
+
+[ext_resource type="Resource" uid="uid://e5vgnlh20jjr" path="res://Data/Equipment/Armor/Bronze_Plate.tres" id="1_7jy57"]
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_yuyop"]
+[ext_resource type="Resource" uid="uid://da8jwqcs7lexr" path="res://Data/Jobs/Archer.tres" id="2_7jy57"]
+[ext_resource type="Script" uid="uid://ldc6ph2g5wim" path="res://Resources/UnitData.gd" id="2_da18a"]
+
+[resource]
+script = ExtResource("2_da18a")
+unit_name = "Auburn"
+job = ExtResource("2_7jy57")
+current_exp = 5000
+equipped_weapon = ExtResource("1_7jy57")
+metadata/_custom_type_script = "uid://ldc6ph2g5wim"

@@ -4,7 +4,8 @@ extends Resource
 enum AbilityType { PHYSICAL, MAGICAL, HEALING, STATUS, MOVEMENT }
 enum TargetType { SINGLE_ENEMY, SINGLE_ALLY, SELF, AREA_ENEMY, AREA_ALLY, AREA_ALL }
 enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
-enum AnimationPath { PROJECTILE, INSTANT, PATH }
+enum AnimationPath { PROJECTILE, PROJECTILE_ARROW, INSTANT, PATH }
+enum UnitAnimation { ATTACK, SPELL, SHOOT }
 
 @export var ability_name: String = ""
 @export var ability_id: int = 0		# permanent, never reuse — used only for save serialization
@@ -37,6 +38,7 @@ enum AnimationPath { PROJECTILE, INSTANT, PATH }
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
+@export var unit_animation: UnitAnimation = UnitAnimation.ATTACK # e.g. "attack", "cast_spell", "shoot" — empty = default
 @export var impact_delay: int = 0 #time from ability anim start until ability impact
 @export var charge_delay: int = 0  #if any, time from ability anim start until tween start
 @export var animation_path: AnimationPath = AnimationPath.PROJECTILE #path ability anim tweens through

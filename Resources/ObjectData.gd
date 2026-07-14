@@ -1,5 +1,5 @@
 class_name ObjectData
-extends Resource
+extends BattleActorData
 
 # Authoring data for a battle Object: a movable/interactive stage element.
 # Objects are treated like terrain for effect resolution (they hold effects and
@@ -15,22 +15,22 @@ extends Resource
 # whether unit actions can push/slide this object
 @export var is_movable: bool = true
 
-@export var base_max_hp: int = 10
-@export var defense: int = 0
+#@export var base_max_hp: int = 10
+#@export var defense: int = 0
 
 # multipliers applied to incoming elemental damage — same semantics as UnitData
-@export var elemental_affinities: Dictionary = {}
+#@export var elemental_affinities: Dictionary = {}
 
 # runtime state — never exported
-var max_hp: int = 0
-var current_hp: int = 0
-var is_dead: bool = false
-var active_effects: Array[EffectInstance] = []
+#var max_hp: int = 0
+#var current_hp: int = 0
+#var is_dead: bool = false
+#var active_effects: Array[EffectInstance] = []
 
 # objects have no equipment, so these exist only to satisfy the shared
 # damage-resolution interface with UnitData
-var immunities: Array[EffectId.Id] = []
-var weaknesses: Array[EffectId.Id] = []
+#var immunities: Array[EffectId.Id] = []
+#var weaknesses: Array[EffectId.Id] = []
 
 func resolve() -> void:
 	max_hp = base_max_hp

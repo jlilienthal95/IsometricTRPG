@@ -1,5 +1,5 @@
 class_name BattleObject
-extends Node2D
+extends BattleActor
 
 # A movable/interactive stage element (crate, barrel, boulder...).
 # Deliberately implements the same duck-typed surface Unit exposes for the
@@ -12,8 +12,8 @@ extends Node2D
 
 @onready var object_sprite: Sprite2D = get_node_or_null("Sprite2D")
 
-var data: ObjectData = null
-var grid_position: Vector3i = Vector3i.ZERO
+#var data: ObjectData = null
+#var grid_position: Vector3i = Vector3i.ZERO
 var _grid_ref: BattleGrid = null
 
 func setup(object_data: ObjectData, start_position: Vector3i) -> void:

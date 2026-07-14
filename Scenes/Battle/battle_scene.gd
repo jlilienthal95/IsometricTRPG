@@ -21,6 +21,7 @@ extends Node2D
 # TODO: replace with proper spawn system driven by battle/GameState configuration
 const MARTA_DATA = preload("res://Data/Units/Marta.tres")
 const THEO_DATA = preload("res://Data/Units/Theo.tres")
+const AUBURN_DATA = preload("res://Data/Units/Auburn.tres")
 
 # --- state ---
 # _turn_context is the single source of truth for "who's acting" plus all pathfinding
@@ -114,8 +115,10 @@ func _setup_systems() -> void:
 func _spawn_units() -> void:
 	var marta = _spawn_unit(Vector3i(-8, 0, 1), MARTA_DATA)
 	var theo = _spawn_unit(Vector3i(-8, -1, 1), THEO_DATA)
-	var player_units: Array[Unit] = [marta]
-	var enemy_units: Array[Unit] = [theo]
+	var auburn = _spawn_unit(Vector3i(-7, 0, 1), AUBURN_DATA)
+	
+	var player_units: Array[BattleActor] = [marta, auburn]
+	var enemy_units: Array[BattleActor] = [theo]
 
 	# NOTE: units are resolved inside _spawn_unit, BEFORE the turn queue is
 	# built — the queue orders by resolved speed rank, so resolution must
@@ -127,9 +130,9 @@ func _spawn_units() -> void:
 	BattleManager.call_deferred("start_battle", player_units, enemy_units)
 
 # instantiates a Unit scene, resolves its stats, and places it on the grid
-func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> Unit:
+func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> BattleActor:
 	var unit_scene = preload("res://Scenes/Battle/Unit.tscn")
-	var unit: Unit = unit_scene.instantiate()
+	var unit: BattleActor = unit_scene.instantiate()
 	unit_data.resolve()
 	unit.global_position = grid_to_world(cell)
 	add_child(unit)
@@ -194,9 +197,9 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
 
-	var unit: Unit = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
-	if unit != null:
-		_character_info.setup(unit.data)
+	var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
+	if actor != null and actor is Unit:
+		_character_info.setup(actor)
 	else:
 		_character_info.hide_window()
 

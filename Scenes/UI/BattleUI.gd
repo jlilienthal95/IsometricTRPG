@@ -66,8 +66,8 @@ func on_turn_changed(unit: Unit) -> void:
 func _on_turn_ended(_unit: Unit) -> void:
 	fade_out()
 
-func refresh_character_info(unit_data: UnitData) -> void:
-	character_info.setup(unit_data)
+func refresh_character_info(actor: BattleActor) -> void:
+	character_info.setup(actor)
 
 func refresh_hud() -> void:
 	battle_hud.refresh()

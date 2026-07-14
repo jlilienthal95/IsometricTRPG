@@ -20,6 +20,7 @@ func setup(cursor: Node2D) -> void:
 	#follow(_cursor)
 
 func follow(node: Node2D) -> void:
+	print("follow target: ", node)
 	await pan_to(node.global_position)
 	_follow_target = node
 

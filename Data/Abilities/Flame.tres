@@ -17,6 +17,7 @@ max_elevation_difference = 3
 base_power = 1.2
 element = 2
 animation_id = "flame"
+unit_animation = 1
 impact_delay = 1625
 animation_path = 1
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"
