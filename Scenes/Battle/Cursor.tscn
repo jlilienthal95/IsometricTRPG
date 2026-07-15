@@ -1,10 +1,65 @@
 [gd_scene format=3 uid="uid://djcnqynklsoer"]
 
-[ext_resource type="Texture2D" uid="uid://dikm40ht87wxs" path="res://Assets/Sprites/Tilesets/CursorTile.png" id="1_066nv"]
 [ext_resource type="Script" uid="uid://bd72xgccb26q7" path="res://Scenes/Battle/Cursor.gd" id="1_nvec1"]
+[ext_resource type="Texture2D" uid="uid://bme5128id72a7" path="res://Assets/UI/Cursor_Sheet.png" id="2_nvec1"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fwc37"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rrlf0"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p3uip"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i6jca"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5mhrr"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tihuk"]
+atlas = ExtResource("2_nvec1")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_d51up"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fwc37")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rrlf0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p3uip")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i6jca")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5mhrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tihuk")
+}],
+"loop": true,
+"name": &"cursor",
+"speed": 9.0
+}]
 
 [node name="Cursor" type="Node2D" unique_id=998784835]
 script = ExtResource("1_nvec1")
 
-[node name="CursorSprite" type="Sprite2D" parent="." unique_id=1734883385]
-texture = ExtResource("1_066nv")
+[node name="CursorSprite" type="AnimatedSprite2D" parent="." unique_id=1372680782]
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_d51up")
+animation = &"cursor"
+autoplay = "cursor"
+frame_progress = 0.70820993
+offset = Vector2(0, 6)

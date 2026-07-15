@@ -32,9 +32,9 @@ signal turn_ended(unit: Unit)
 signal battle_ended(isWin: bool)
 
 var current_state: BattleState = BattleState.SETUP
-var active_unit: Unit = null
-var player_units: Array[Unit] = []
-var enemy_units: Array[Unit] = []
+var active_unit: BattleActor = null
+var player_units: Array[BattleActor] = []
+var enemy_units: Array[BattleActor] = []
 var current_round: int = 1
 
 #TODO: create in BattleEndConditionContext
@@ -83,7 +83,7 @@ func reset() -> void:
 		_turn_queue.reset()
 
 # begins the battle with the given player and enemy unit arrays
-func start_battle(p_units: Array[Unit], e_units: Array[Unit]) -> void:
+func start_battle(p_units: Array[BattleActor], e_units: Array[BattleActor]) -> void:
 	player_units = p_units
 	enemy_units = e_units
 	_turn_queue.call_deferred("start_next_turn")
@@ -104,6 +104,7 @@ func set_active_unit(participant) -> void:
 		return
 	active_unit = participant
 	active_unit.reset_turn()
+	print("emitting active unit changed")
 	active_unit_changed.emit(active_unit)
 	if player_units.has(active_unit):
 		change_state(BattleState.ACTION_SELECT)

@@ -23,7 +23,7 @@ func _on_state_changed(state: BattleManager.BattleState) -> void:
 			fade_in()
 		BattleManager.BattleState.MOVE_SELECT:
 			battle_hud.show_menu(null)
-			fade_out()
+			#fade_out()
 		BattleManager.BattleState.EQUIPMENT_SELECT:
 			battle_hud.show_menu(battle_hud.equipment_menu)
 			fade_in()

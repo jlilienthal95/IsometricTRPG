@@ -19,20 +19,33 @@ extends Control
 var _current_actor: BattleActor = null
 
 func _ready() -> void:
+	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleEvents.hp_changed.connect(_on_hp_changed)
 
 func _on_hp_changed(actor, _amount: int, _new_hp: int) -> void:
 	if _current_actor != null and actor == _current_actor:
 		refresh()
+		
+func _on_active_unit_changed(actor: BattleActor) -> void:
+	print("active unit: ", actor)
+	if actor is Unit:
+		_current_actor = actor
+		setup(_current_actor)
+		show()
 
 func setup(actor: BattleActor) -> void:
 	if actor == null:
+		print("actor is null")
 		_clear_info()
 		return
 	_current_actor = actor
 	_set_bg_color(actor.data.type)
 	hp_bar.setup(actor.data.current_hp, actor.data.max_hp)
+	hp_count.text = str(actor.data.current_hp)
+	hp_max_count.text = str(actor.data.max_hp)
+	print("unit hp: ", actor.data.current_hp)
 	if actor.data is UnitData:
+		print("actor is unit")
 		var unit_data := actor.data as UnitData
 		mp_bar.show()
 		mp_bar.setup(unit_data.current_mp, unit_data.max_mp)
@@ -42,6 +55,7 @@ func setup(actor: BattleActor) -> void:
 		lvl_count.text = str(unit_data.current_lvl)
 		portrait_rect.texture = unit_data.job.portrait if unit_data.job != null else null
 	else:
+		print("actor is not unit")
 		mp_bar.hide()
 		mp_count.text = ""
 		mp_max_count.text = ""

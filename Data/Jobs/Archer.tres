@@ -10,6 +10,7 @@ script = ExtResource("2_pk5v1")
 job_name = "Archer"
 job_id = 2
 sprite_frames = ExtResource("4_u7nq7")
+sprite_offset = Vector2(2, -2)
 cast_impact_delay = 635.0
 speed_rank = 2
 fight_ability = ExtResource("2_bqgeu")

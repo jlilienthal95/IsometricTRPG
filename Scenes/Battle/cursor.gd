@@ -1,6 +1,7 @@
 extends Node2D
 
-@onready var _cursor: Sprite2D = $CursorSprite
+@onready var _cursor: AnimatedSprite2D = $CursorSprite
+
 var is_visible: bool = false
 
 # initializes the cursor with its sprite node reference

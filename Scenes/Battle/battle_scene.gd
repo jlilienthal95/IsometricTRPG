@@ -196,12 +196,14 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 	if not _cursor.is_visible:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
-
-	var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
-	if actor != null and actor is Unit:
-		_character_info.setup(actor)
-	else:
-		_character_info.hide_window()
+	
+	if BattleManager.current_state == BattleManager.BattleState.MOVE_SELECT \
+	or BattleManager.current_state == BattleManager.BattleState.TARGET_SELECT:
+		var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
+		if actor != null and actor is Unit:
+			_character_info.setup(actor)
+		else:
+			_character_info.hide_window()
 
 # routes cell selection to the appropriate BattleManager action based on current state
 func _on_cell_selected(cell: Vector2i) -> void:
