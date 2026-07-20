@@ -11,4 +11,5 @@ unit_name = "Auburn"
 job = ExtResource("2_7jy57")
 current_exp = 5000
 equipped_weapon = ExtResource("1_7jy57")
+type = 0
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

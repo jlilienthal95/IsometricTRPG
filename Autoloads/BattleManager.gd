@@ -9,7 +9,6 @@ enum BattleState {
 	MOVE_SELECT,		# player selecting a destination tile
 	TARGET_SELECT,		# player selecting a target for an ability
 	RESOLVING,			# action is executing, no input accepted
-	ENEMY_TURN,			# AI is taking its turn
 	TERRAIN_TURN,		# resolving all round-based terrain effects and visuals
 	BATTLE_END,			# battle is over, win or lose
 }
@@ -46,7 +45,6 @@ var reach_tile: BattleTileData = null
 var reach_requires_all: bool = false
 var reach_arrived: Array[Unit] = []  # units that have already reached the tile
 
-
 var _grid: BattleGrid = null
 var _camera: BattleCamera = null
 var _unit_mover: UnitMover = null
@@ -54,6 +52,7 @@ var _unit_ability_executor: UnitAbilityExecutor = null
 var _effect_executor: EffectExecutor = null
 var _current_ability: AbilityData = null
 var _turn_queue: TurnQueue = null
+var _input_handler: InputHandler = null
 
 # =============================================================================
 # SETUP / LIFECYCLE
@@ -62,13 +61,14 @@ var _turn_queue: TurnQueue = null
 # initializes battle manager with required system references.
 # Note: no UI reference — the UI reacts to state_changed / turn signals on its
 # own. BattleManager never drives presentation directly.
-func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor, effect_executor: EffectExecutor, turn_queue: TurnQueue) -> void:
+func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor, effect_executor: EffectExecutor, turn_queue: TurnQueue, input_handler: InputHandler) -> void:
 	_grid = grid
 	_camera = camera
 	_unit_mover = unit_mover
 	_unit_ability_executor = unit_ability_executor
 	_effect_executor = effect_executor
 	_turn_queue = turn_queue
+	_input_handler = input_handler
 	
 	#TODO: fetch this information from battle instance .tres file on setup
 	current_win_condition = BattleWinCondition.DEFEAT_ALL
@@ -87,6 +87,10 @@ func start_battle(p_units: Array[BattleActor], e_units: Array[BattleActor]) -> v
 	player_units = p_units
 	enemy_units = e_units
 	_turn_queue.call_deferred("start_next_turn")
+	
+# moves cursor to cell automatically
+func _simulate_cell_hover(cell: Vector3i) -> void:
+		_input_handler.emit_signal("cell_hovered", Vector2i(cell.x, cell.y))
 
 # =============================================================================
 # STATE MACHINE
@@ -96,20 +100,21 @@ func start_battle(p_units: Array[BattleActor], e_units: Array[BattleActor]) -> v
 func change_state(new_state: BattleState) -> void:
 	current_state = new_state
 	state_changed.emit(new_state)
+	print("BattleManager State: ", BattleState.keys()[new_state])
 
 func set_active_unit(participant) -> void:
 	if participant is TerrainTurnParticipant:
 		change_state(BattleState.TERRAIN_TURN)
 		current_round += 1
 		return
+		
+	# highlight active unit with cursor 
+	_simulate_cell_hover(participant.grid_position)
 	active_unit = participant
+	print("active unit: ", active_unit.data.unit_name)
 	active_unit.reset_turn()
-	print("emitting active unit changed")
 	active_unit_changed.emit(active_unit)
-	if player_units.has(active_unit):
-		change_state(BattleState.ACTION_SELECT)
-	else:
-		change_state(BattleState.ENEMY_TURN)
+	change_state(BattleState.ACTION_SELECT)
 
 # =============================================================================
 # PLAYER ACTIONS
@@ -174,6 +179,7 @@ func cancel_action() -> void:
 # resource is spent (it previously happened both here and in battle_scene,
 # firing the move_consumed signal twice per move).
 func confirm_move(target_cell: Vector3i) -> void:
+	print("confirm move start")
 	if current_state != BattleState.MOVE_SELECT:
 		_state_error("confirm_move", BattleState.MOVE_SELECT)
 		return

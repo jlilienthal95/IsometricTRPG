@@ -83,3 +83,9 @@ func get_all_units() -> Array[Unit]:
 		if participant is Unit:
 			units.append(participant)
 	return units
+	
+func get_all_player_units() -> Array[BattleActor]:
+	return _player_units
+
+func get_all_enemy_units() -> Array[BattleActor]:
+	return _enemy_units

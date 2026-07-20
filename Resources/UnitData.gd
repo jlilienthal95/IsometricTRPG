@@ -10,13 +10,13 @@ extends BattleActorData
 # =============================================================================
 # BASE STATS — authored in the inspector, NEVER touched at runtime
 # =============================================================================
-#@export var base_max_hp: int = Constants.UNIT_BASE_HP
+@export var ai_profile_override: AIProfile = null
+
 @export var base_max_mp: int = Constants.UNIT_BASE_MP
 @export var base_attack: int = Constants.UNIT_BASE_ATTACK
 @export var base_defense: int = Constants.UNIT_BASE_DEFENSE
 @export var base_move_range: int = Constants.UNIT_BASE_MOVE_RANGE
 @export var base_jump_height: int = Constants.UNIT_BASE_JUMP_HEIGHT
-
 @export var current_exp: int = Constants.BASE_EXP_PER_LEVEL
 
 # elemental affinities — multipliers applied to incoming elemental damage
@@ -54,6 +54,7 @@ var speed: JobData.SpeedRank = JobData.SpeedRank.NORMAL
 # =============================================================================
 var has_moved: bool = false
 var has_acted: bool = false
+@export var is_player_controlled: bool = false
 #var is_dead: bool = false
 
 var equipment: Array[EquipmentData] = []		# resolved flat list of equipped pieces
@@ -194,3 +195,10 @@ func unequip(equipment_type: EquipmentData.Type) -> void:
 		EquipmentData.Type.BOOTS:		equipped_boots = null
 		EquipmentData.Type.ACCESSORY:	equipped_accessory = null
 	resolve_equipment()
+
+func get_ai_profile() -> AIProfile:
+	if ai_profile_override != null:
+		return ai_profile_override
+	if job != null and job.ai_profile != null:
+		return job.ai_profile
+	return null  # brain falls back to a default profile

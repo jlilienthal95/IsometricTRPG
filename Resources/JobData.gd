@@ -21,6 +21,8 @@ enum SpeedRank { SLOW, NORMAL, FAST }
 @export var attack_modifier: float = 1.0
 @export var defense_modifier: float = 1.0
 
+@export var ai_profile: AIProfile
+
 # --- movement (flat bonuses added to unit base stats) ---
 @export var move_range_bonus: int = 0
 @export var jump_height_bonus: int = 0

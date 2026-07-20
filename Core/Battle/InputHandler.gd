@@ -14,16 +14,17 @@ func setup(reference_layer: TileMapLayer) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _reference_layer == null:
 		return
-	if event is InputEventMouseMotion:
-		var cell = _get_cell_under_mouse()
-		if cell != _last_hovered_cell:
-			_last_hovered_cell = cell
-			emit_signal("cell_hovered", cell)
-	if event.is_action_pressed("menu_select"):
-		var cell = _get_cell_under_mouse()
-		emit_signal("cell_selected", cell)
-	if event.is_action_pressed("menu_cancel"):
-		emit_signal("cell_cancelled")
+	if not BattleManager.active_unit == null:
+		if event is InputEventMouseMotion and BattleManager.active_unit.data.is_player_controlled:
+			var cell = _get_cell_under_mouse()
+			if cell != _last_hovered_cell:
+				_last_hovered_cell = cell
+				emit_signal("cell_hovered", cell)
+		if event.is_action_pressed("menu_select"):
+			var cell = _get_cell_under_mouse()
+			emit_signal("cell_selected", cell)
+		if event.is_action_pressed("menu_cancel"):
+			emit_signal("cell_cancelled")
 
 func _get_cell_under_mouse() -> Vector2i:
 	var mouse_pos = _reference_layer.get_global_mouse_position()

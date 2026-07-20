@@ -18,5 +18,6 @@ current_exp = 9999
 equipped_weapon = ExtResource("3_weapon")
 equipped_armor = ExtResource("4_armor")
 granted_abilities = Array[ExtResource("3_js5hq")]([ExtResource("5_lde"), ExtResource("6_spark"), ExtResource("7_flame")])
+is_player_controlled = true
 type = 0
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

@@ -1,9 +1,9 @@
 class_name CharacterInfo
 extends Control
 
-@onready var player_bg = load("res://Assets/UI/Windows/Character_Info_Window.png")
-@onready var enemy_bg = load("res://Assets/UI/Windows/Character_Info_Window_Enemy.png")
-@onready var neutral_bg = load("res://Assets/UI/Windows/Character_Info_Window_Neutral.png")
+const PLAYER_BG = preload("res://Assets/UI/Windows/Character_Info_Window.png")
+const ENEMY_BG = preload("res://Assets/UI/Windows/Character_Info_Window_Enemy.png")
+const NEUTRAL_BG = preload("res://Assets/UI/Windows/Character_Info_Window_Neutral.png")
 
 @onready var background: NinePatchRect = $Background
 @onready var portrait_rect: TextureRect = $PortraitRect
@@ -16,36 +16,68 @@ extends Control
 @onready var mp_max_count: Label = $MpMaxCount
 @onready var lvl_count: Label = $LvlCount
 
-var _current_actor: BattleActor = null
+# --- state ---
+# _active_actor: whoever's turn it is (baseline display)
+# _hovered_actor: whoever's under the cursor (temporary override)
+# _update_display() is the ONLY place that resolves state -> render;
+# _render() never writes state, state changes never render directly.
+var _active_actor: BattleActor = null
+var _hovered_actor: BattleActor = null
 
 func _ready() -> void:
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleEvents.hp_changed.connect(_on_hp_changed)
 
-func _on_hp_changed(actor, _amount: int, _new_hp: int) -> void:
-	if _current_actor != null and actor == _current_actor:
-		refresh()
-		
-func _on_active_unit_changed(actor: BattleActor) -> void:
-	print("active unit: ", actor)
-	if actor is Unit:
-		_current_actor = actor
-		setup(_current_actor)
-		show()
+# =============================================================================
+# STATE — every mutation funnels into _update_display
+# =============================================================================
 
-func setup(actor: BattleActor) -> void:
-	if actor == null:
-		print("actor is null")
-		_clear_info()
-		return
-	_current_actor = actor
-	_set_bg_color(actor.data.type)
+func _on_active_unit_changed(actor: BattleActor) -> void:
+	_active_actor = actor
+	_update_display()
+
+func set_hovered_actor(actor: BattleActor) -> void:
+	_hovered_actor = actor
+	_update_display()
+
+func clear_hovered_actor() -> void:
+	_hovered_actor = null
+	_update_display()
+
+# reactive: refresh only if the changed actor is the one currently displayed
+func _on_hp_changed(actor, _amount: int, _new_hp: int) -> void:
+	if actor == _displayed_actor():
+		_update_display()
+
+func refresh() -> void:
+	_update_display()
+
+# =============================================================================
+# DISPLAY RESOLUTION
+# =============================================================================
+
+# hover overrides active; no actor at all hides the window
+func _displayed_actor() -> BattleActor:
+	return _hovered_actor if _hovered_actor != null else _active_actor
+
+func _update_display() -> void:
+	var to_show = _displayed_actor()
+	if to_show != null:
+		_render(to_show)
+	else:
+		hide_window()
+
+# =============================================================================
+# RENDER — pure display, never writes state
+# =============================================================================
+
+func _render(actor: BattleActor) -> void:
+	_set_background(actor.data.type)
 	hp_bar.setup(actor.data.current_hp, actor.data.max_hp)
 	hp_count.text = str(actor.data.current_hp)
 	hp_max_count.text = str(actor.data.max_hp)
-	print("unit hp: ", actor.data.current_hp)
+
 	if actor.data is UnitData:
-		print("actor is unit")
 		var unit_data := actor.data as UnitData
 		mp_bar.show()
 		mp_bar.setup(unit_data.current_mp, unit_data.max_mp)
@@ -55,7 +87,6 @@ func setup(actor: BattleActor) -> void:
 		lvl_count.text = str(unit_data.current_lvl)
 		portrait_rect.texture = unit_data.job.portrait if unit_data.job != null else null
 	else:
-		print("actor is not unit")
 		mp_bar.hide()
 		mp_count.text = ""
 		mp_max_count.text = ""
@@ -64,14 +95,18 @@ func setup(actor: BattleActor) -> void:
 		portrait_rect.texture = null
 	show()
 
-func _set_bg_color(type: BattleActorData.Type) -> void:
+func _set_background(type: BattleActorData.Type) -> void:
 	match type:
 		BattleActorData.Type.PLAYER:
-			background.texture = player_bg
+			background.texture = PLAYER_BG
 		BattleActorData.Type.ENEMY:
-			background.texture = enemy_bg
+			background.texture = ENEMY_BG
 		BattleActorData.Type.NEUTRAL:
-			background.texture = neutral_bg
+			background.texture = NEUTRAL_BG
+
+# =============================================================================
+# VISIBILITY
+# =============================================================================
 
 func _clear_info() -> void:
 	name_label.text = ""
@@ -84,7 +119,3 @@ func _clear_info() -> void:
 func hide_window() -> void:
 	_clear_info()
 	hide()
-
-func refresh() -> void:
-	if _current_actor != null:
-		setup(_current_actor)

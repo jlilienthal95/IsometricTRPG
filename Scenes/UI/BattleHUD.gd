@@ -22,7 +22,7 @@ var _active_unit: Unit = null
 
 var job_ability_button = preload("res://Scenes/UI/JobActionButton.tscn")
 
-func setup(battle_manager) -> void:
+func setup(battle_manager: BattleManager) -> void:
 	move_button.pressed.connect(battle_manager.select_action_move)
 	abilities_button.pressed.connect(battle_manager.select_action_abilities)
 	equipment_button.pressed.connect(battle_manager.select_action_equipment)
@@ -43,15 +43,20 @@ func refresh() -> void:
 # button states always mirror the data without manual refresh calls scattered
 # around the codebase
 func on_turn_changed(unit: Unit) -> void:
-	if _active_unit != null:
-		if _active_unit.move_consumed.is_connected(refresh):
-			_active_unit.move_consumed.disconnect(refresh)
-		if _active_unit.ability_consumed.is_connected(refresh):
-			_active_unit.ability_consumed.disconnect(refresh)
-	_active_unit = unit
-	unit.move_consumed.connect(refresh)
-	unit.ability_consumed.connect(refresh)
-	refresh()
+	if unit.data.is_player_controlled:
+		show()
+		if _active_unit != null:
+			if _active_unit.move_consumed.is_connected(refresh):
+				_active_unit.move_consumed.disconnect(refresh)
+			if _active_unit.ability_consumed.is_connected(refresh):
+				_active_unit.ability_consumed.disconnect(refresh)
+		
+		_active_unit = unit
+		unit.move_consumed.connect(refresh)
+		unit.ability_consumed.connect(refresh)
+		refresh()
+	else:
+		hide()
 
 func _generate_equipment_buttons(equipment: Array[EquipmentData]) -> void:
 	_equipment_reset()
@@ -89,7 +94,6 @@ func _on_fight_pressed() -> void:
 	if _active_unit == null or _active_unit.data.job == null:
 		return
 	var fight = _active_unit.data.job.fight_ability
-	print("fight ability: ", fight)
 	if fight == null:
 		print("error")
 		push_error("BattleHUD: job '%s' has no fight_ability assigned" % _active_unit.data.job.job_name)

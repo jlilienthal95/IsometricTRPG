@@ -33,6 +33,8 @@ func _on_state_changed(state: BattleManager.BattleState) -> void:
 		BattleManager.BattleState.JOB_ABILITIES_SELECT:
 			battle_hud.show_menu(battle_hud.job_ability_menu)
 			fade_in()
+		BattleManager.BattleState.TARGET_SELECT:
+			pass
 		BattleManager.BattleState.RESOLVING:
 			battle_hud.show_menu(null)
 			fade_out()

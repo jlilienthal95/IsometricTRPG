@@ -171,7 +171,6 @@ func play_attack_animation(cast_impact_delay: float, unit_anim: AbilityData.Unit
 		AbilityData.UnitAnimation.ATTACK: play_attack()
 		_: play_attack()  # default fallback
 	await get_tree().create_timer(cast_impact_delay / 1000).timeout
-	print("arrow fires")
 	notify_ability_impact()
 
 # plays the hit reaction animation and returns to idle when finished

@@ -31,10 +31,10 @@ func refresh_move_range(pathfinder: Pathfinder) -> void:
 	reachable_move_cells.erase(unit.grid_position)
 
 # selects an ability and eagerly computes its target range — always keyed off this context's own unit
-func select_ability(ability_data: AbilityData, pathfinder: Pathfinder) -> void:
+func select_ability(ability_data: AbilityData, pathfinder: Pathfinder, origin: Vector3i = unit.grid_position) -> void:
 	ability = ability_data
 	ability_query = pathfinder.build_ability_query(ability_data)
-	reachable_target_cells = pathfinder.get_cells_in_range(unit.grid_position, ability_query, unit)
+	reachable_target_cells = pathfinder.get_cells_in_range(origin, ability_query, unit)
 
 # clears the ability selection — called when returning to ACTION_SELECT
 func clear_ability() -> void:

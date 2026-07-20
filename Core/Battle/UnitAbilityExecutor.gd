@@ -52,11 +52,7 @@ func _execute_sequence() -> void:
 	await _caster.play_attack_animation(cast_impact_delay, _ability.unit_animation)
 	await _execute_effect()
 	# wait time it takes from ability anim begin until timpact of ability, less any charge time if applicable
-	print("impact delay: ", _ability.impact_delay)
-	print("charge delay: ", _ability.charge_delay)
-	print("waiting for arrow anim, seconds: ", float((_ability.impact_delay - _ability.charge_delay) / 1000.0))
 	await get_tree().create_timer(float((_ability.impact_delay - _ability.charge_delay) / 1000.0)).timeout
-	print("arrow strikes")
 	await resolve_ability(_action_resolver)
 	_caster.play_idle()
 	# let every queued impact beat land inside the sequence before tearing down
@@ -136,7 +132,6 @@ func _travel(effect: Node2D) -> void:
 			#target_pos.y -= 8
 			tween.tween_property(effect, "global_position", target_pos, 0.625)
 			await tween.finished
-			print("arrow hits target")
 		AbilityData.AnimationPath.INSTANT:
 			effect.global_position = _single_target.global_position
 		AbilityData.AnimationPath.PATH:

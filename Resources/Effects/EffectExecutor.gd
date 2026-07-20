@@ -42,7 +42,6 @@ func apply_effect(target, effect_id: EffectId.Id, ticks: int = -1) -> void:
 		await remove_effect(target, neutralized_effect, RemovalReason.NEUTRALIZED)
 
 	target.apply_effect(effect_id, ticks)
-	print("effect applied. emitting signal")
 	BattleEvents.effect_applied.emit(target, effect_id)
 	await _play_apply_animation(target, effect_id)
 

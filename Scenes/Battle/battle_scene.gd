@@ -8,7 +8,7 @@ extends Node2D
 @onready var _battle_hud: BattleHUD = $CanvasLayer/BattleUI/BattleHUD
 @onready var _character_info: CharacterInfo = $CanvasLayer/BattleUI/CharacterInfo
 @onready var _pathfinder: Pathfinder = $Pathfinder
-@onready var _cursor: Node2D = $Cursor
+@onready var _cursor: Cursor = $Cursor
 @onready var _unit_mover: UnitMover = $UnitMover
 @onready var _unit_ability_executor: UnitAbilityExecutor = $UnitAbilityExecutor
 @onready var _tile_visual_manager: TileVisualManager = $TileVisualManager
@@ -16,6 +16,7 @@ extends Node2D
 @onready var _terrain_layers: Node2D = $TerrainLayers
 @onready var _effect_executor: EffectExecutor = $EffectExecutor
 @onready var _turn_queue: TurnQueue = $TurnQueue
+@onready var _ai_brain: AIBrain = $AIBrain
 
 # units to spawn — preloaded so exports can never fail to find them
 # TODO: replace with proper spawn system driven by battle/GameState configuration
@@ -79,7 +80,7 @@ func _setup_systems() -> void:
 
 	# hud — subscribes itself to BattleManager/BattleEvents signals (reactive)
 	_battle_ui.setup()
-	_character_info.setup(null)
+	_character_info.refresh()
 
 	# pathfinder
 	_pathfinder.setup(_battle_grid)
@@ -91,7 +92,7 @@ func _setup_systems() -> void:
 	_battle_camera.setup(_cursor)
 
 	# battle manager
-	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _effect_executor, _turn_queue)
+	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _effect_executor, _turn_queue, _input_handler)
 	BattleManager.state_changed.connect(_on_battle_state_changed)
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleManager.unit_moved.connect(_on_unit_moved)
@@ -108,6 +109,9 @@ func _setup_systems() -> void:
 	_effect_executor.setup(_battle_grid, _battle_camera, _tile_visual_manager)
 
 	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
+	
+	# ai systems
+	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _unit_mover, _unit_ability_executor, _cursor, _input_handler)
 	
 	print("systems ready")
 
@@ -197,13 +201,11 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
 	
-	if BattleManager.current_state == BattleManager.BattleState.MOVE_SELECT \
-	or BattleManager.current_state == BattleManager.BattleState.TARGET_SELECT:
-		var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
-		if actor != null and actor is Unit:
-			_character_info.setup(actor)
-		else:
-			_character_info.hide_window()
+	var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
+	if actor != null:
+		_character_info.set_hovered_actor(actor)
+	else:
+		_character_info.clear_hovered_actor()
 
 # routes cell selection to the appropriate BattleManager action based on current state
 func _on_cell_selected(cell: Vector2i) -> void:
@@ -242,7 +244,9 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 		BattleManager.BattleState.MOVE_SELECT:
 			# move range was already computed atomically in _turn_context when the unit
 			# became active — just display it, never recompute against a separate variable
+			print("showing move range")
 			_tile_visual_manager.show_move_range(_turn_context.reachable_move_cells, grid_to_world)
+			await get_tree().create_timer(1).timeout
 		BattleManager.BattleState.ACTION_SELECT:
 			_tile_visual_manager.clear()
 			if _turn_context != null:
@@ -255,9 +259,6 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			_tile_visual_manager.clear()
 			if _turn_context.unit.data.has_moved && _turn_context.unit.data.has_acted:
 				_previous_cell = Vector3i(999,999,999)
-		BattleManager.BattleState.ENEMY_TURN:
-			await get_tree().create_timer(2).timeout
-			_turn_queue.start_next_turn()
 		BattleManager.BattleState.TERRAIN_TURN:
 			var processor = TerrainTurnProcessor.new()
 			await processor.process_terrain_turn(_battle_grid, _effect_executor, _battle_camera, get_tree(), grid_to_world, _cinematic_director)
@@ -273,6 +274,7 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 # unit reference to leak in and desync from BattleManager.active_unit.
 func _on_active_unit_changed(unit: Unit) -> void:
 	_turn_context = TurnContext.for_unit(unit, _pathfinder)
+	_ai_brain.refresh_context(_turn_context)
 
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit

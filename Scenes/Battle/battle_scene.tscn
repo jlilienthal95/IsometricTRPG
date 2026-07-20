@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://bxa0s5gon4uee" path="res://Core/Grid/BattleGrid.gd" id="2_c3aki"]
 [ext_resource type="Script" uid="uid://cl5j70hkqepge" path="res://Core/Battle/ActionResolver.gd" id="2_ik5sk"]
 [ext_resource type="Script" uid="uid://bvcboe225kcx0" path="res://Scenes/Battle/battle_camera.gd" id="3_4nlbu"]
+[ext_resource type="Script" uid="uid://dqvvb5xfc7duf" path="res://Core/AI/AIBrain.gd" id="3_4pmf7"]
 [ext_resource type="Script" uid="uid://bbc2igq8pf07j" path="res://Core/Battle/TileVisualManager.gd" id="6_6tvrj"]
 [ext_resource type="Script" uid="uid://bmju1mbepa1a" path="res://Core/Battle/InputHandler.gd" id="6_jp0ri"]
 [ext_resource type="Script" uid="uid://si8wah1cwvpy" path="res://Resources/Effects/EffectExecutor.gd" id="7_ik5sk"]
@@ -62,6 +63,10 @@ script = ExtResource("1_68j0i")
 [node name="ActionResolver" type="Node" parent="." unique_id=1754629182]
 script = ExtResource("2_ik5sk")
 metadata/_custom_type_script = "uid://cl5j70hkqepge"
+
+[node name="AIBrain" type="Node" parent="." unique_id=1023540535]
+script = ExtResource("3_4pmf7")
+metadata/_custom_type_script = "uid://dqvvb5xfc7duf"
 
 [node name="BattleGrid" type="Node" parent="." unique_id=73758981]
 script = ExtResource("2_c3aki")
