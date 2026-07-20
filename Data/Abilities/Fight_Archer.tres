@@ -6,6 +6,7 @@
 script = ExtResource("1_xs2gy")
 ability_name = "Fight_Archer"
 description = "A basic attack. Use your bow just the way it was intended."
+min_range = 3
 max_range = 6
 max_elevation_difference = 4
 base_power = 0.7

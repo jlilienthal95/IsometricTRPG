@@ -65,11 +65,8 @@ func _execute_sequence() -> void:
 func _face_target() -> void:
 	if _single_target == null:
 		return
-	if _caster.grid_position.y > _single_target.grid_position.y or \
-	_caster.grid_position.x < _single_target.grid_position.x:
-		_caster.set_facing(false)
-	else:
-		_caster.set_facing(true)
+	print("x diff: ", _single_target.global_position.x - _caster.global_position.x)
+	_caster.set_facing(_single_target.global_position.x < _caster.global_position.x + 8.0)
 
 func _execute_effect() -> void:
 	if _ability.animation_id == "":
