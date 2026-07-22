@@ -24,6 +24,10 @@ const BASE_CRIT_CHANCE: float = 0.05
 const CRIT_MULTIPLIER: float = 2.0
 const POWER_VARIANCE: float = 0.2
 
+# one elevation step is equivalent to this many flat grid steps for distance estimation.
+# derived from elevation neighbor offset formula: one z level shifts x and y by 1 each.
+const ELEVATION_DISTANCE_MULTIPLIER: int = 2
+
 static func level_from_xp(current_exp: int) -> int:
 	return floori(pow((current_exp / BASE_EXP_PER_LEVEL), 1.0 / BASE_XP_REQ_MOD))
 

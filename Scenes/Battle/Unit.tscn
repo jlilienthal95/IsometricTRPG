@@ -4,7 +4,7 @@
 [ext_resource type="Shader" uid="uid://kpydy86nqivi" path="res://Assets/hit_flash.gdshader" id="1_dg72p"]
 [ext_resource type="SpriteFrames" uid="uid://cb0sg4wgbbtyi" path="res://Data/Jobs/KnightFrames.tres" id="2_63c20"]
 [ext_resource type="Texture2D" uid="uid://cmrw5iyl7q72j" path="res://Assets/Sprites/Jobs/Knight/shadow.png" id="3_3o6xq"]
-[ext_resource type="Material" uid="uid://bxmxufi56ixdy" path="res://Data/Jobs/UnitShaderMaterial.tres" id="3_165ns"]
+[ext_resource type="Material" uid="uid://bxmxufi56ixdy" path="res://Assets/Shaders/UnitShaderMaterial.tres" id="3_165ns"]
 [ext_resource type="PackedScene" uid="uid://dwbu06odki00a" path="res://Scenes/Battle/DamageCount.tscn" id="4_63c20"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_165ns"]

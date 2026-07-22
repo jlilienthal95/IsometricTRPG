@@ -16,6 +16,7 @@ enum Id {
 	SLIPPERY,
 
 	# Wind
+	WINDY,
 	FEATHER,
 	STAGGERED,
 
@@ -29,6 +30,7 @@ enum Id {
 
 	# Disease
 	DISEASED,
+	PLAGUED,
 
 	# Movement / Action (classic)
 	CONFUSE,

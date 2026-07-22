@@ -1,9 +1,28 @@
 [gd_resource type="Resource" script_class="JobData" format=3 uid="uid://dpbujg0ifjm1m"]
 
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_hhnry"]
 [ext_resource type="Texture2D" uid="uid://dv8p1kemk34o3" path="res://Assets/Sprites/Jobs/Knight/Knight-Portrait-no-bg-475.png" id="1_jn4e3"]
+[ext_resource type="Script" uid="uid://bkpjwyj1tu52l" path="res://Core/AI/AIProfile.gd" id="2_bdl8b"]
 [ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_byrk4"]
 [ext_resource type="SpriteFrames" uid="uid://cb0sg4wgbbtyi" path="res://Data/Jobs/KnightFrames.tres" id="2_jn4e3"]
 [ext_resource type="Resource" uid="uid://cm5rldk0hhdsl" path="res://Data/Abilities/Fight_Knight.tres" id="3_fight"]
+
+[sub_resource type="Resource" id="Resource_8usvp"]
+script = ExtResource("2_bdl8b")
+weights = {
+"ally_proximity": 0.0,
+"buff_value": 0.0,
+"debuff_value": 0.0,
+"destination_safety": 1.0,
+"distance_to_threat": 0.5,
+"effect_synergy": 0.0,
+"expected_damage": 2.0,
+"healing_value": 0.0,
+"kill_potential": 2.0,
+"resource_efficiency": 0.5,
+"target_weakness": 0.0
+}
+metadata/_custom_type_script = "uid://bkpjwyj1tu52l"
 
 [resource]
 script = ExtResource("2_byrk4")
@@ -16,8 +35,8 @@ cast_impact_delay = 1000.0
 hp_modifier = 1.2
 mp_modifier = 0.8
 attack_modifier = 1.2
+ai_profile = SubResource("Resource_8usvp")
 move_range_bonus = 1
-jump_height_bonus = 0
 speed_rank = 0
 fight_ability = ExtResource("3_fight")
 metadata/_custom_type_script = "uid://ct2virpcpm7ny"

@@ -111,7 +111,7 @@ func _setup_systems() -> void:
 	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
 	
 	# ai systems
-	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _unit_mover, _unit_ability_executor, _cursor, _input_handler)
+	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _input_handler)
 	
 	print("systems ready")
 
@@ -274,7 +274,6 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 # unit reference to leak in and desync from BattleManager.active_unit.
 func _on_active_unit_changed(unit: Unit) -> void:
 	_turn_context = TurnContext.for_unit(unit, _pathfinder)
-	_ai_brain.refresh_context(_turn_context)
 
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	_previous_unit = unit

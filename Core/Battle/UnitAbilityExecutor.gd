@@ -65,7 +65,6 @@ func _execute_sequence() -> void:
 func _face_target() -> void:
 	if _single_target == null:
 		return
-	print("x diff: ", _single_target.global_position.x - _caster.global_position.x)
 	_caster.set_facing(_single_target.global_position.x < _caster.global_position.x + 8.0)
 
 func _execute_effect() -> void:

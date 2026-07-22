@@ -25,7 +25,7 @@ static func enumerate_actions(unit: Unit, origin: BattleTileData, pathfinder: Pa
 						actions.push_back(action)
 						#print("action: ", action)
 				# create action with no ability use
-				actions.push_back(_generate_action(tile, null, Vector3i(999,999,999)))
+			actions.push_back(_generate_action(tile, null, Vector3i(999,999,999)))
 	return actions
 
 static func get_reachable_tiles(unit: Unit, origin: BattleTileData, pathfinder: Pathfinder) -> Dictionary:
