@@ -12,7 +12,7 @@ enum Type { PLAYER, ENEMY, NEUTRAL }
 # --- base stats (never touched at runtime) ---
 @export var base_max_hp: int = 100
 @export var defense: int = 0
-@export var elemental_affinities: Dictionary = {}
+@export var elemental_affinities: Dictionary[ElementData.Element, float] = {}
 
 # --- computed stats ---
 var max_hp: int = 0
@@ -23,6 +23,7 @@ var is_dead: bool = false
 var active_effects: Array[EffectInstance] = []
 var immunities: Array[EffectId.Id] = []
 var weaknesses: Array[EffectId.Id] = []
+var elemental_weaknesses: Array[ElementData.Element]
 
 func has_effect(effect_id: EffectId.Id) -> bool:
 	return EffectStore.has_effect(active_effects, effect_id)

@@ -31,5 +31,6 @@ job = ExtResource("2_7jy57")
 ai_profile_override = SubResource("Resource_latfd")
 current_exp = 5000
 equipped_weapon = ExtResource("1_7jy57")
+is_player_controlled = true
 type = 0
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"

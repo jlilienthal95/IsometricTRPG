@@ -31,7 +31,7 @@ func get_consideration_name() -> String:
 	return ""
 
 #for use with DistanceToTargets / DistanceToAlly
-func _grid_distance(a: Vector3i, b: Vector3i) -> int:
+func _grid_distance(a: Vector3i, b: Vector3i) -> float:
 	var flat = abs(a.x - b.x) + abs(a.y - b.y)
 	var elev = abs(a.z - b.z) * Constants.ELEVATION_DISTANCE_MULTIPLIER
 	return flat + elev

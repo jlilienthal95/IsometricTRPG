@@ -6,10 +6,8 @@ enum Element {
 	WATER = 1,
 	ICE = 10,
 	FIRE = 2,
-	LAVA = 20,
 	EARTH = 3,
-	LIGHTNING = 4,
+	ELECTRICITY = 4,
 	WIND = 5,
-	HOLY = 6,
-	DARK = 7,
+	DISEASE = 6,
 }

@@ -46,6 +46,10 @@ func calc_damage(candidate: ActionCandidate, context: AIContext) -> float:
 	var normal_damage: float = damage * (1.0 - max_crit_chance)
 	var crit_damage: float = (damage * Constants.CRIT_MULTIPLIER) * max_crit_chance
 	
+	candidate.expected_damage["normal_damage"] = normal_damage
+	candidate.expected_damage["crit_damage"] = crit_damage
+	
+	
 	var normalized_damage: float = normal_damage + crit_damage
 	
 	# (damage if no crit * probability of no crit) + (damage if crit * probability of crit)

@@ -88,6 +88,7 @@ func show_menu(menu) -> void:
 	if menu != null:
 		menu.show()
 
+
 # the fight ability is a direct resource reference on the unit's job — no more
 # name-string lookup ("Fight_" + job_name) that silently broke on rename
 func _on_fight_pressed() -> void:

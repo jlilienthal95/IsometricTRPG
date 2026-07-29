@@ -1,6 +1,10 @@
 class_name BattleUI
 extends Control
 
+enum UIElement { ALL, HUD, CHARACTER_INFO }
+
+var _fade_tween: Tween = null
+
 @onready var battle_hud: BattleHUD = $BattleHUD
 @onready var character_info: CharacterInfo = $CharacterInfo
 @onready var cinematic_bars: CinematicBars = $CinematicBars
@@ -34,7 +38,7 @@ func _on_state_changed(state: BattleManager.BattleState) -> void:
 			battle_hud.show_menu(battle_hud.job_ability_menu)
 			fade_in()
 		BattleManager.BattleState.TARGET_SELECT:
-			pass
+			fade_out(Constants.FADE_OUT_TIMER, UIElement.HUD)
 		BattleManager.BattleState.RESOLVING:
 			battle_hud.show_menu(null)
 			fade_out()
@@ -74,17 +78,23 @@ func refresh_character_info(actor: BattleActor) -> void:
 func refresh_hud() -> void:
 	battle_hud.refresh()
 
-func fade_out(duration: float = Constants.FADE_OUT_TIMER) -> void:
+func fade_out(duration: float = Constants.FADE_OUT_TIMER, target: UIElement = UIElement.ALL) -> void:
 	var tween = get_tree().create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(battle_hud, "modulate:a", 0.0, duration)
-	tween.tween_property(character_info, "modulate:a", 0.0, duration)
+	if target == UIElement.ALL or target == UIElement.HUD:
+		tween.tween_property(battle_hud, "modulate:a", 0.0, duration)
+	if target == UIElement.ALL or target == UIElement.CHARACTER_INFO:
+		tween.tween_property(character_info, "modulate:a", 0.0, duration)
 
-func fade_in(duration: float = 0.2) -> void:
-	var tween = get_tree().create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(battle_hud, "modulate:a", 1.0, duration)
-	tween.tween_property(character_info, "modulate:a", 1.0, duration)
+func fade_in(duration: float = 0.2, target: UIElement = UIElement.ALL) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+	_fade_tween = get_tree().create_tween()
+	_fade_tween.set_parallel(true)
+	if target == UIElement.ALL or target == UIElement.HUD:
+		_fade_tween.tween_property(battle_hud, "modulate:a", 1.0, duration)
+	if target == UIElement.ALL or target == UIElement.CHARACTER_INFO:
+		_fade_tween.tween_property(character_info, "modulate:a", 1.0, duration)
 
 func fade_bars_in() -> void:
 	await cinematic_bars.fade_in()

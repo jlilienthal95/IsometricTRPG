@@ -2,7 +2,7 @@ class_name BattleCamera
 extends Camera2D
 
 @export var pan_speed: float = 0.3	# seconds to pan to target
-@export var follow_speed: float = 6.0
+@export var follow_speed: float = 10.0
 @onready var cam_animation_player: AnimationPlayer = $AnimationPlayer
 
 var _cursor: Node2D = null
@@ -26,9 +26,9 @@ func follow(node: Node2D) -> void:
 #func stop_following() -> void:
 	#_follow_target = null
 
-func pan_to(target_pos: Vector2) -> void:
+func pan_to(target_pos: Vector2, duration: float = pan_speed) -> void:
 	var tween = create_tween()
-	tween.tween_property(self, "position", target_pos, pan_speed)
+	tween.tween_property(self, "position", target_pos, duration)
 	await tween.finished
 
 func play_shake() -> void:
@@ -42,6 +42,14 @@ func zoom_in()-> void:
 	var tween = create_tween()
 	tween.tween_property(self, "zoom", Vector2(1.5,1.5), 0.3)
 	await tween.finished
+
+func zoom_for_projectile(distance: float, max_range: float) -> void:
+	print("zoom for projectile start")
+	var zoom_amount = lerpf(1.5, 0.8, distance / max_range)
+	var tween = create_tween()
+	tween.tween_property(self, "zoom", Vector2(zoom_amount, zoom_amount), 0.2)
+	await tween.finished
+	print("zoom for projectile end")
 
 func zoom_reset() -> void:
 	var tween = create_tween()

@@ -115,6 +115,11 @@ func resolve_stats() -> void:
 	move_range = base_move_range + (job.move_range_bonus if job else 0)
 	jump_height = base_jump_height + (job.jump_height_bonus if job else 0)
 	speed = job.speed_rank if job else JobData.SpeedRank.NORMAL
+	
+	elemental_weaknesses.clear()
+	for element:ElementData.Element in elemental_affinities:
+		if elemental_affinities[element] > 1.0:
+			elemental_weaknesses.append(element)
 
 # =============================================================================
 # EFFECTS

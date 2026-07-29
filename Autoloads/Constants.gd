@@ -1,6 +1,7 @@
 extends Node
 
 const TILE_ORIGIN_OFFSET: int = 16
+const TILE_WORLD_SIZE: float = 32.0  # world-space distance of one flat tile step
 const UNIT_EFFECT_OFFSET: int = TILE_ORIGIN_OFFSET + 10
 const FADE_OUT_TIMER: float = 0.35
 const ACTION_BUTTON_X = 335
@@ -23,6 +24,8 @@ const BASE_XP_REQ_MOD: float = 1.5
 const BASE_CRIT_CHANCE: float = 0.05
 const CRIT_MULTIPLIER: float = 2.0
 const POWER_VARIANCE: float = 0.2
+
+#const ARROW_TRAVEL_DISTANCE: int = 50
 
 # one elevation step is equivalent to this many flat grid steps for distance estimation.
 # derived from elevation neighbor offset formula: one z level shifts x and y by 1 each.

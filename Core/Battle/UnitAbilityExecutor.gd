@@ -71,18 +71,18 @@ func _execute_effect() -> void:
 	if _ability.animation_id == "":
 		return
 	if AbilitySceneRegistry.SCENES.has(_ability.animation_id):
-		var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
+		var effect: Node2D = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
 		get_parent().add_child(effect)
 		effect.global_position = _caster.global_position
 		effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
 		if _single_target != null:
 			effect.z_index = _single_target.z_index + 1
-		effect.play(_ability.animation_id)
 		_camera.follow(effect)
+		effect.play(_ability.animation_id)
 		# wait for ability/spell charge portion of anim, if applicable
 		if _ability.charge_delay != 0:
 			await get_tree().create_timer(_ability.charge_delay * .001).timeout
-		_travel(effect)
+		await _travel(effect)
 
 # resolves the ability against its target(s).
 # Damage flows exclusively through target.apply_damage — that single call
@@ -122,13 +122,54 @@ func _travel(effect: Node2D) -> void:
 			tween.tween_property(effect, "global_position", _single_target.global_position, 0.4)
 			await tween.finished
 		AbilityData.AnimationPath.PROJECTILE_ARROW:
+			var start = effect.global_position
+			var end = _single_target.global_position
+			end.x -= 7
+			var distance = start.distance_to(end)
+			var max_range = _ability.max_range * Constants.TILE_WORLD_SIZE
+			
+			var ratio = distance / max_range
+			var clamped = clampf(ratio, 0.0, 1.0)
+			var arc_height = 40.0 * (clamped)
+			var duration = 0.625 + ratio * 0.4
+
+			print("=== Arrow Debug ===")
+			print("  distance:    ", snappedf(distance, 0.01))
+			print("  max_range:   ", snappedf(max_range, 0.01))
+			print("  ratio:       ", snappedf(ratio, 0.01))
+			print("  clamped:     ", snappedf(clamped, 0.01))
+			print("  arc_height:  ", snappedf(arc_height, 0.01))
+			print("  duration:    ", snappedf(duration, 0.01))
+			print("==================")
+			#var arc_height = 40.0 * (1.0 - clampf(distance / max_range, 0.0, 1.0))
+			#var duration = 0.625 + (distance / max_range) * 0.4  # further = slightly longer
+			
+			_camera.zoom_for_projectile(distance, max_range)
+			print("arrow tween start")
 			var tween = create_tween()
-			var target_pos = _single_target.global_position
-			target_pos.x -= 7
-			#target_pos.y -= 8
-			tween.tween_property(effect, "global_position", target_pos, 0.625)
+			print("invalid instance. killing tween")
+			var prev_pos = effect.global_position
+			tween.tween_method(func(t: float):
+				if not is_instance_valid(effect):
+					tween.kill()
+					return
+				var flat = start.lerp(end, t)
+				flat.y -= arc_height * 4.0 * t * (1.0 - t)
+				var direction = flat - prev_pos
+				if direction.length() > 0.01:
+					var angle = direction.angle()
+					# if arrow is flipped (facing left), mirror the rotation
+					if effect.scale.x < 0:
+						effect.get_child(0).rotation = PI - angle
+					else:
+						effect.get_child(0).rotation = angle
+				prev_pos = flat
+				effect.global_position = flat
+			, 0.0, 1.0, duration)
 			await tween.finished
+			print("arrow tween end")
 		AbilityData.AnimationPath.INSTANT:
+			print("effect: ", effect)
 			effect.global_position = _single_target.global_position
 		AbilityData.AnimationPath.PATH:
 			_travel_path(effect)

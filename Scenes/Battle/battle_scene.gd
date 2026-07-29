@@ -118,7 +118,7 @@ func _setup_systems() -> void:
 # TODO: replace with proper spawn system driven by battle/GameState configuration
 func _spawn_units() -> void:
 	var marta = _spawn_unit(Vector3i(-8, 0, 1), MARTA_DATA)
-	var theo = _spawn_unit(Vector3i(-8, -1, 1), THEO_DATA)
+	var theo = _spawn_unit(Vector3i(-11, -14, 4), THEO_DATA)
 	var auburn = _spawn_unit(Vector3i(-7, 0, 1), AUBURN_DATA)
 	
 	var player_units: Array[BattleActor] = [marta, auburn]

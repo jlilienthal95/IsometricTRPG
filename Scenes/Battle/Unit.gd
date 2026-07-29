@@ -18,6 +18,7 @@ const WATER_SHADER = preload("res://Assets/Shaders/Unit_Water.gdshader")
 var _default_material: Material = null
 
 func _ready() -> void:
+	unit_sprite.material = unit_sprite.material.duplicate()
 	_default_material = unit_sprite.material
 	if data != null:
 		play_idle()
@@ -287,7 +288,7 @@ func _apply_water_effect() -> void:
 
 func _remove_water_effect() -> void:
 	unit_shadow.visible = true
-	unit_sprite.material = _default_material
+	#unit_sprite.material = _default_material
 
 func set_effect_alpha(alpha: float) -> void:
 	var tween = create_tween()

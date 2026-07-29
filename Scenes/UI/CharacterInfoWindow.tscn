@@ -13,6 +13,7 @@ anchors_preset = 0
 offset_right = 800.0
 offset_bottom = 280.0
 scale = Vector2(0.2, 0.2)
+mouse_filter = 2
 script = ExtResource("1_2vp68")
 
 [node name="Background" type="NinePatchRect" parent="." unique_id=416064163]
