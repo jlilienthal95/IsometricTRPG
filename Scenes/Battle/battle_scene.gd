@@ -76,7 +76,7 @@ func _setup_systems() -> void:
 	# cinematic director — reacts to BattleEvents on its own once set up
 	_cinematic_director = CinematicDirector.new()
 	add_child(_cinematic_director)
-	_cinematic_director.setup(_battle_ui, _battle_camera)
+	_cinematic_director.setup(_battle_ui, _battle_camera, grid_to_world)
 
 	# hud — subscribes itself to BattleManager/BattleEvents signals (reactive)
 	_battle_ui.setup()
@@ -92,7 +92,7 @@ func _setup_systems() -> void:
 	_battle_camera.setup(_cursor)
 
 	# battle manager
-	BattleManager.setup(_battle_grid, _battle_camera, _unit_mover, _unit_ability_executor, _effect_executor, _turn_queue, _input_handler)
+	BattleManager.setup(_battle_grid, _battle_camera, _cinematic_director, _unit_mover, _unit_ability_executor, _effect_executor, _turn_queue, _input_handler)
 	BattleManager.state_changed.connect(_on_battle_state_changed)
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleManager.unit_moved.connect(_on_unit_moved)
@@ -106,7 +106,7 @@ func _setup_systems() -> void:
 	_unit_ability_executor.setup(_battle_grid, _cinematic_director)
 
 	# effect executor
-	_effect_executor.setup(_battle_grid, _battle_camera, _tile_visual_manager)
+	_effect_executor.setup(_battle_grid, _battle_camera, _cinematic_director, _tile_visual_manager)
 
 	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
 	
@@ -261,7 +261,7 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 				_previous_cell = Vector3i(999,999,999)
 		BattleManager.BattleState.TERRAIN_TURN:
 			var processor = TerrainTurnProcessor.new()
-			await processor.process_terrain_turn(_battle_grid, _effect_executor, _battle_camera, get_tree(), grid_to_world, _cinematic_director)
+			await processor.process_terrain_turn(_battle_grid, _effect_executor, _cinematic_director)
 			await get_tree().create_timer(2).timeout
 			_turn_queue.start_next_turn()
 		BattleManager.BattleState.BATTLE_END:

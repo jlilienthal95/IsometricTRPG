@@ -28,7 +28,7 @@ metadata/_custom_type_script = "uid://bkpjwyj1tu52l"
 
 [resource]
 script = ExtResource("1_gw5mv")
-unit_name = "Theo"
+name = "Theo"
 job = ExtResource("2_job")
 ai_profile_override = SubResource("Resource_gctgy")
 base_max_mp = 10

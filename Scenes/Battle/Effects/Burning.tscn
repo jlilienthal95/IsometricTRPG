@@ -9,8 +9,10 @@ z_as_relative = false
 position = Vector2(-1, -8)
 scale = Vector2(0.38, 0.38)
 sprite_frames = ExtResource("1_crquo")
-animation = &"burning"
+animation = &"fade"
 autoplay = "burning"
+frame = 18
+frame_progress = 1.0
 script = ExtResource("2_bvm7u")
 
 [node name="Node2D" type="Node2D" parent="." unique_id=955625119]

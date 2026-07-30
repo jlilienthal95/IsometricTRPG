@@ -51,3 +51,21 @@ func _resolve_object(object: BattleObject, instance: EffectInstance, context) ->
 # override in subclasses that need turn-boundary-specific logic (damage ticks, neutralization checks)
 func on_unit_turn_end(unit: Unit, instance: EffectInstance, context) -> void:
 	pass
+
+func _dispatch_turn_end(actor, instance: EffectInstance, context) -> void:
+	if actor is Unit:
+		await _resolve_unit(actor, instance, context)
+	elif actor is BattleObject:
+		await _resolve_object(actor, instance, context)
+
+# safe spread — applies effect to target only if it doesn't already have it.
+# call this from handlers instead of context.executor.apply_effect directly
+# when spreading to neighboring tiles, so no handler ever needs to remember
+# the has_effect check individually.
+func _spread_effect(target, effect_id: EffectId.Id, context: EffectContext, ticks: int = -1) -> void:
+	if target == null:
+		return
+	if target.has_effect(effect_id):
+		print("[EffectHandler:_spread_effect] skipping — target already has effect: ", EffectId.Id.keys()[effect_id])
+		return
+	await context.executor.apply_effect(target, effect_id, ticks)

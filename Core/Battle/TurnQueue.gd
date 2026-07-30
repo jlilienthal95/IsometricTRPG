@@ -17,7 +17,6 @@ func reset() -> void:
 
 # Speed-rank ordering: all FAST units act before all NORMAL units, which act
 # before all SLOW units. Order within a rank is randomized each battle.
-# Deliberately simple — speed has no combat math, just queue position.
 # The terrain sentinel always goes last so terrain effects resolve after every
 # unit has taken its turn in the round.
 func determine_turn_order() -> Array:

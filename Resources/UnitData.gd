@@ -1,7 +1,7 @@
 class_name UnitData
 extends BattleActorData
 
-@export var unit_name: String = ""
+@export var name: String = ""
 
 # direct resource reference — drag the job .tres in the inspector.
 # job.job_id is still available for save serialization.

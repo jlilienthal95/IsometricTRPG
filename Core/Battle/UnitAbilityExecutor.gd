@@ -54,6 +54,7 @@ func _execute_sequence() -> void:
 	# wait time it takes from ability anim begin until timpact of ability, less any charge time if applicable
 	await get_tree().create_timer(float((_ability.impact_delay - _ability.charge_delay) / 1000.0)).timeout
 	await resolve_ability(_action_resolver)
+	# resolve_ability fully completes here including all rider effects
 	_caster.play_idle()
 	# let every queued impact beat land inside the sequence before tearing down
 	await _director.wait_until_idle()
@@ -168,6 +169,7 @@ func _travel(effect: Node2D) -> void:
 			, 0.0, 1.0, duration)
 			await tween.finished
 			print("arrow tween end")
+			_camera.stop_following()
 		AbilityData.AnimationPath.INSTANT:
 			print("effect: ", effect)
 			effect.global_position = _single_target.global_position

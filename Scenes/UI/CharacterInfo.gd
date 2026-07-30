@@ -83,7 +83,7 @@ func _render(actor: BattleActor) -> void:
 		mp_bar.setup(unit_data.current_mp, unit_data.max_mp)
 		mp_count.text = str(unit_data.current_mp)
 		mp_max_count.text = str(unit_data.max_mp)
-		name_label.text = unit_data.unit_name
+		name_label.text = unit_data.name
 		lvl_count.text = str(unit_data.current_lvl)
 		portrait_rect.texture = unit_data.job.portrait if unit_data.job != null else null
 	else:

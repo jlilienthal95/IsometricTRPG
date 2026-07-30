@@ -26,7 +26,7 @@ metadata/_custom_type_script = "uid://bkpjwyj1tu52l"
 
 [resource]
 script = ExtResource("2_da18a")
-unit_name = "Auburn"
+name = "Auburn"
 job = ExtResource("2_7jy57")
 ai_profile_override = SubResource("Resource_latfd")
 current_exp = 5000

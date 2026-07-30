@@ -37,6 +37,5 @@ attack_modifier = 1.2
 ai_profile = SubResource("Resource_rn3un")
 move_range_bonus = 2
 jump_height_bonus = 1
-speed_rank = 2
 fight_ability = ExtResource("3_fight")
 metadata/_custom_type_script = "uid://ct2virpcpm7ny"

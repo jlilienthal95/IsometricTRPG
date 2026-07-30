@@ -26,3 +26,8 @@ signal stat_changed(actor, stat_name: String, old_value, new_value)
 # effect lifecycle — target is a Unit, BattleObject, or BattleTileData
 signal effect_applied(target, effect_id: EffectId.Id)
 signal effect_removed(target, effect_id: EffectId.Id, reason: int)
+
+# fired when an effect is applied to a tile, carrying a callable that plays
+# the visual. The director calls it at the right moment inside the sequence.
+signal tile_effect_applied(tile: BattleTileData, effect_id: EffectId.Id, play_visual: Callable)
+signal tile_effect_removed(tile: BattleTileData, effect_id: EffectId.Id, reason: int, play_visual: Callable)

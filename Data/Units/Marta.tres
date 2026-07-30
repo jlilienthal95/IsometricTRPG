@@ -29,7 +29,7 @@ metadata/_custom_type_script = "uid://bkpjwyj1tu52l"
 
 [resource]
 script = ExtResource("1_s07lb")
-unit_name = "Marta"
+name = "Marta"
 job = ExtResource("2_job")
 ai_profile_override = SubResource("Resource_p0dbs")
 base_max_mp = 150

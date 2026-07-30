@@ -9,6 +9,7 @@ var _effect_executor: EffectExecutor = null
 var _tile_visual_manager: TileVisualManager = null
 var _reference_layer: TileMapLayer = null
 var _input_handler: Node = null
+var _hover_label: Label = null
 
 func _ready() -> void:
 	_battle_grid = get_parent().get_node("BattleGrid")
@@ -23,10 +24,32 @@ func _ready() -> void:
 	_debug_panel.walkable_toggled.connect(_on_walkable_toggled)
 	_debug_panel.tick_requested.connect(_tick_selected_tile)
 	_debug_panel.visible = false
+	
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100  # above everything
+	add_child(canvas)
+	
+	var shadow = Label.new()
+	shadow.position = Vector2(11, 11)
+	shadow.add_theme_font_size_override("font_size", 10)
+	shadow.add_theme_color_override("font_color", Color.BLACK)
+	canvas.add_child(shadow)
+	
+	_hover_label = Label.new()
+	_hover_label.position = Vector2(10, 10)
+	_hover_label.add_theme_font_size_override("font_size", 10)
+	_hover_label.add_theme_color_override("font_color", Color.YELLOW)
+	canvas.add_child(_hover_label)
+	_input_handler.cell_hovered.connect(func(cell):
+		var text = _get_hover_text(cell)
+		_hover_label.text = text
+		shadow.text = text
+	)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_home"):
 		show_grid = not show_grid
+		_hover_label.visible = show_grid
 		queue_redraw()
 	if event.is_action_pressed("debug_toggle"):
 		debug_mode = not debug_mode
@@ -124,3 +147,14 @@ func _draw() -> void:
 		var bottom = world_pos + Vector2(0, 8)
 		var left = world_pos + Vector2(-16, 0)
 		draw_polyline(PackedVector2Array([top, right, bottom, left, top]), color, 1.0)
+
+func _get_hover_text(cell: Vector2i) -> String:
+	if not show_grid:
+		return ""
+	var tile = _battle_grid.get_tile_at_highest_elevation(cell)
+	if tile == null:
+		return "(%d, %d) —" % [cell.x, cell.y]
+	return "(%d, %d, %d) %s" % [
+		tile.cell.x, tile.cell.y, tile.cell.z,
+		BattleTileData.TerrainType.keys()[tile.terrain_type]
+	]

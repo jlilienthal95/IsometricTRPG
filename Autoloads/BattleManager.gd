@@ -47,6 +47,7 @@ var reach_arrived: Array[Unit] = []  # units that have already reached the tile
 
 var _grid: BattleGrid = null
 var _camera: BattleCamera = null
+var _cinematic_director: CinematicDirector = null
 var _unit_mover: UnitMover = null
 var _unit_ability_executor: UnitAbilityExecutor = null
 var _effect_executor: EffectExecutor = null
@@ -61,9 +62,10 @@ var _input_handler: InputHandler = null
 # initializes battle manager with required system references.
 # Note: no UI reference — the UI reacts to state_changed / turn signals on its
 # own. BattleManager never drives presentation directly.
-func setup(grid: BattleGrid, camera: BattleCamera, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor, effect_executor: EffectExecutor, turn_queue: TurnQueue, input_handler: InputHandler) -> void:
+func setup(grid: BattleGrid, camera: BattleCamera, cinematic_director: CinematicDirector, unit_mover: UnitMover, unit_ability_executor: UnitAbilityExecutor, effect_executor: EffectExecutor, turn_queue: TurnQueue, input_handler: InputHandler) -> void:
 	_grid = grid
 	_camera = camera
+	_cinematic_director = cinematic_director
 	_unit_mover = unit_mover
 	_unit_ability_executor = unit_ability_executor
 	_effect_executor = effect_executor
@@ -103,6 +105,7 @@ func change_state(new_state: BattleState) -> void:
 	print("BattleManager State: ", BattleState.keys()[new_state])
 
 func set_active_unit(participant) -> void:
+	print("[BM:set_active_unit] participant: ", participant.data.name if participant is BattleActor else "terrain")
 	if participant is TerrainTurnParticipant:
 		change_state(BattleState.TERRAIN_TURN)
 		current_round += 1
@@ -111,7 +114,7 @@ func set_active_unit(participant) -> void:
 	# highlight active unit with cursor 
 	_simulate_cell_hover(participant.grid_position)
 	active_unit = participant
-	print("active unit: ", active_unit.data.unit_name)
+	print("active unit: ", active_unit.data.name)
 	active_unit.reset_turn()
 	active_unit_changed.emit(active_unit)
 	change_state(BattleState.ACTION_SELECT)
@@ -204,11 +207,27 @@ func confirm_target(target_cell: Vector3i) -> void:
 # ends the active unit's turn and advances to the next
 func end_turn() -> void:
 	if current_state != BattleState.ACTION_SELECT:
-		_state_error("end_turn", BattleState.ACTION_SELECT)
 		return
-
-	_process_unit_turn_end_effects(active_unit)
-
+	if active_unit == null:
+		return
+	var has_effects = not active_unit.data.active_effects.is_empty()
+	var tile = _grid.get_tile(active_unit.grid_position)
+	var tile_has_effects = tile != null and not tile.active_effects.is_empty()
+	print("[BM:end_turn] unit: ", active_unit.data.name, " has_effects: ", has_effects, " tile_has_effects: ", tile_has_effects)
+	if has_effects or tile_has_effects:
+		print("[BM:end_turn] opening sequence for turn-end effects")
+		await _cinematic_director.begin_sequence(active_unit)
+		print("[BM:end_turn] processing turn-end effects")
+		await _process_unit_turn_end_effects(active_unit)
+		print("[BM:end_turn] effects processed — waiting for director idle")
+		await _cinematic_director.wait_until_idle()
+		print("[BM:end_turn] closing sequence")
+		await _cinematic_director.end_sequence()
+		print("[BM:end_turn] sequence closed")
+	else:
+		print("[BM:end_turn] no effects — skipping sequence")
+		await _process_unit_turn_end_effects(active_unit)
+	print("[BM:end_turn] emitting turn_ended")
 	turn_ended.emit(active_unit)
 	active_unit = null
 	await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout
@@ -229,19 +248,14 @@ func _process_unit_turn_end_effects(unit: Unit) -> void:
 	var context = EffectContext.new()
 	context.grid = _grid
 	context.executor = _effect_executor
-	var tile = _grid.get_tile(unit.grid_position)
-	# process tile effects on the unit
-	if tile != null:
-		for instance in tile.active_effects.duplicate():
-			var handler = EffectRegistry.get_handler(instance.effect_id)
-			if handler != null:
-				handler.on_unit_turn_end(unit, instance, context)
-	# process unit's own effects
+	print("[BM:turn_end_effects] unit: ", unit.data.name, " effect count: ", unit.data.active_effects.size())
 	for instance in unit.data.active_effects.duplicate():
+		print("[BM:turn_end_effects] processing: ", EffectId.Id.keys()[instance.effect_id])
 		var handler = EffectRegistry.get_handler(instance.effect_id)
 		if handler != null:
-			handler.on_unit_turn_end(unit, instance, context)
-			
+			await handler.on_unit_turn_end(unit, instance, context)
+			print("[BM:turn_end_effects] handler complete: ", EffectId.Id.keys()[instance.effect_id])
+
 func _check_for_battle_end() -> void:
 	#check loss conditions
 	if not _turn_queue.get_all_living_players().is_empty():

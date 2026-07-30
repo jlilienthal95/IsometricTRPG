@@ -55,9 +55,10 @@ func apply_damage(amount: int) -> void:
 	if data.is_dead:
 		return
 	data.current_hp = maxi(0, data.current_hp - amount)
+	print("[Unit] apply_damage — ", data.name, " took ", amount, " new_hp: ", data.current_hp)
 	BattleEvents.hp_changed.emit(self, -amount, data.current_hp)
 	play_damage_count(amount)
-	_flash_red()
+	await _flash_red()
 	if data.current_hp == 0:
 		await play_death()
 		BattleEvents.actor_defeated.emit(self)
