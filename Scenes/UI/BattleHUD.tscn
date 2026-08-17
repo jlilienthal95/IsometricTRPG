@@ -3,23 +3,30 @@
 [ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_hcak5"]
 [ext_resource type="Theme" uid="uid://c8hxw7kvhigam" path="res://Assets/Theme/ScrollMenuTheme.tres" id="1_ioexv"]
 [ext_resource type="Script" uid="uid://trceolafsptg" path="res://Scenes/UI/BattleHUD.gd" id="1_xilco"]
+[ext_resource type="Script" uid="uid://cce84r87we5dk" path="res://Scenes/UI/HoverButton.gd" id="4_tbwvx"]
+[ext_resource type="FontFile" uid="uid://cu00oo4n4wtq3" path="res://Assets/Theme/MinoGram_Font/minogram_6x10.fnt" id="5_83cdx"]
 
 [node name="BattleHUD" type="Control" unique_id=1260164239]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 400.0
-offset_bottom = 256.0
-scale = Vector2(0.25, 0.25)
+offset_right = 320.0
+offset_bottom = 180.0
 theme = ExtResource("1_hcak5")
 script = ExtResource("1_xilco")
 
 [node name="EquipmentMenu" type="PanelContainer" parent="." unique_id=25345652]
+visible = false
 layout_mode = 1
-anchors_preset = -1
-offset_right = 384.0
-offset_bottom = 256.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -64.0
+offset_right = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 theme = ExtResource("1_hcak5")
 
 [node name="EquipmentScroll" type="ScrollContainer" parent="EquipmentMenu" unique_id=2023976590]
@@ -31,77 +38,138 @@ theme = ExtResource("1_ioexv")
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme = ExtResource("1_hcak5")
 
 [node name="ActionMenu" type="PanelContainer" parent="." unique_id=1146287213]
+visible = false
 layout_mode = 1
-offset_right = 384.0
-offset_bottom = 256.0
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -64.0
+offset_right = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 theme = ExtResource("1_hcak5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ActionMenu" unique_id=98039181]
 layout_mode = 2
 
-[node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1078247193]
-custom_minimum_size = Vector2(200, 60)
+[node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=295700898]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Move"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
-[node name="AbilitiesButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1459068095]
-custom_minimum_size = Vector2(200, 60)
+[node name="AbilitiesButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=52847447]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
 theme = ExtResource("1_hcak5")
 text = "Abilities"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
-[node name="EquipmentButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1843631511]
-custom_minimum_size = Vector2(200, 60)
+[node name="EquipmentButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1684023085]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
 text = "Equipment"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
-[node name="WaitButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=335231776]
-custom_minimum_size = Vector2(200, 60)
+[node name="WaitButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=448627905]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
 text = "Wait"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
 [node name="JobAbilityMenu" type="PanelContainer" parent="." unique_id=345067622]
+custom_minimum_size = Vector2(96, 64)
 layout_mode = 1
-anchors_preset = -1
-offset_right = 384.0
-offset_bottom = 256.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -64.0
+offset_right = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 theme = ExtResource("1_ioexv")
 
 [node name="JobAbilityScroll" type="ScrollContainer" parent="JobAbilityMenu" unique_id=418521758]
+clip_contents = false
+custom_minimum_size = Vector2(96, 64)
 layout_mode = 2
 theme = ExtResource("1_ioexv")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="JobAbilityMenu/JobAbilityScroll" unique_id=463900206]
+custom_minimum_size = Vector2(96, 64)
 layout_mode = 2
 size_flags_horizontal = 6
-size_flags_vertical = 6
+size_flags_vertical = 4
 theme = ExtResource("1_ioexv")
 
 [node name="AbilitiesMenu" type="PanelContainer" parent="." unique_id=156690001]
 visible = false
-layout_mode = 0
-offset_right = 384.0
-offset_bottom = 256.0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -64.0
+offset_right = -4.0
+grow_horizontal = 0
+grow_vertical = 0
 theme = ExtResource("1_hcak5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="AbilitiesMenu" unique_id=1168510152]
 layout_mode = 2
+theme = ExtResource("1_hcak5")
 
-[node name="FightButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=2011413579]
-custom_minimum_size = Vector2(200, 60)
+[node name="FightButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=1242821209]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+theme = ExtResource("1_hcak5")
 text = "Fight"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
-[node name="JobActionButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=1147136800]
-custom_minimum_size = Vector2(200, 60)
+[node name="JobAbilityMenuButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=695248736]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
-text = "Job Action"
+text = "Job Ability"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
 
-[node name="ItemsButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=1155403522]
-custom_minimum_size = Vector2(200, 60)
+[node name="ItemsButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=858068264]
+custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
 text = "Items"
+script = ExtResource("4_tbwvx")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
+
+[node name="BattleInfo" type="ColorRect" parent="." unique_id=363184653]
+layout_mode = 0
+offset_right = 320.0
+offset_bottom = 16.0
+theme = ExtResource("1_hcak5")
+color = Color(0.1254902, 0.08235294, 0.2, 1)
+
+[node name="InfoLabel" type="Label" parent="BattleInfo" unique_id=1376872432]
+layout_mode = 0
+offset_right = 320.0
+offset_bottom = 16.0
+theme_override_fonts/font = ExtResource("5_83cdx")
+theme_override_font_sizes/font_size = 8
+text = "This is a sample description of an ability or action."
+horizontal_alignment = 1
+vertical_alignment = 1

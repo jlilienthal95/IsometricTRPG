@@ -1,8 +1,6 @@
 extends Node
 
-# Design-time list of every ability — same reasoning as JobRegistry: preloaded
-# explicitly rather than scanned via DirAccess, which breaks silently in exported
-# builds due to Godot's .remap renaming of resource files on export.
+# List of every ability: preloaded
 
 # --- AUTO-GENERATED ABILITIES LIST START ---
 const ABILITIES: Array[AbilityData] = [

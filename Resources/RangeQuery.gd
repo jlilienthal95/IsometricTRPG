@@ -18,9 +18,9 @@ var ignore_elevation: bool = false
 # target filters
 var requires_unit: bool = false
 var requires_empty: bool = false
-var requires_enemy: bool = false
-var requires_ally: bool = false
-var requires_dead: bool = false
+#var requires_enemy: bool = false
+#var requires_ally: bool = false
+#var requires_dead: bool = false
 
 static func for_movement(unit_data: UnitData) -> RangeQuery:
 	var query = RangeQuery.new()

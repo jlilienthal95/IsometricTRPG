@@ -6,7 +6,7 @@ signal ability_complete
 var _grid: BattleGrid = null
 var _is_executing: bool = false
 var _caster: Unit = null
-var _single_target = null				# Unit or BattleObject
+var _single_target = null	# Unit/BattleObject/BattleTile
 var _multi_target: Array = []
 var _ability: AbilityData = null
 var _action_resolver: ActionResolver = null
@@ -27,6 +27,8 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 	_is_executing = true
 	_caster = caster
 	_single_target = _grid.get_actor_at(target_cell)	# units and objects are both valid targets
+	if _single_target == null:
+		_single_target = _grid.get_tile(target_cell)
 	_ability = ability
 	_camera = camera
 	_action_resolver = action_resolver
@@ -66,24 +68,40 @@ func _execute_sequence() -> void:
 func _face_target() -> void:
 	if _single_target == null:
 		return
-	_caster.set_facing(_single_target.global_position.x < _caster.global_position.x + 8.0)
+	var target_pos = _get_target_world_pos()
+	_caster.set_facing(target_pos.x < _caster.global_position.x + 8.0)
+
+func _get_target_world_pos() -> Vector2:
+	if _single_target is BattleActor:
+		return _single_target.global_position
+	elif _single_target is BattleTileData:
+		var pos = get_parent().grid_to_world(_single_target.cell)
+		return pos
+	return Vector2.ZERO
 
 func _execute_effect() -> void:
 	if _ability.animation_id == "":
 		return
+		
 	if AbilitySceneRegistry.SCENES.has(_ability.animation_id):
 		var effect: Node2D = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
 		get_parent().add_child(effect)
 		effect.global_position = _caster.global_position
 		effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
-		if _single_target != null:
+		if _single_target != null and _single_target is Node:
 			effect.z_index = _single_target.z_index + 1
+		else:
+		# tile target — derive z_index from elevation layer formula
+			effect.z_index = _single_target.cell.z * 4 + 1
 		_camera.follow(effect)
 		effect.play(_ability.animation_id)
 		# wait for ability/spell charge portion of anim, if applicable
 		if _ability.charge_delay != 0:
 			await get_tree().create_timer(_ability.charge_delay * .001).timeout
 		await _travel(effect)
+		#if is_instance_valid(effect):
+			#await effect
+			#effect.queue_free()
 
 # resolves the ability against its target(s).
 # Damage flows exclusively through target.apply_damage — that single call
@@ -91,8 +109,16 @@ func _execute_effect() -> void:
 # camera shake), and plays the target's hit feedback. No separate shake /
 # take_hit / HP bookkeeping calls to keep in sync.
 func resolve_ability(action_resolver: ActionResolver) -> void:
+		# tiles don't participate in hit/miss resolution — apply effects directly
+	if _single_target is BattleTileData:
+		if not _ability.effects.is_empty():
+			for effect_id in _ability.effects.keys():
+				await _effect_executor.apply_effect(_single_target, effect_id)
+		return
+		
 	if _single_target == null:
 		return
+
 	var result = action_resolver.resolve(_caster, _single_target, _ability)
 	_caster.spend_mp(_ability.mp_cost)
 	if not result.is_miss:
@@ -104,7 +130,7 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 
 		# apply the ability's rider effects to the target and its tile
 		if not _ability.effects.is_empty():
-			for effect in _ability.effects:
+			for effect in _ability.effects.keys():
 				var context = EffectContext.create(_grid, _effect_executor)
 				if _single_target is Unit:
 					await _effect_executor.apply_effect_to_unit_and_tile(_single_target, effect, context)
@@ -120,11 +146,11 @@ func _travel(effect: Node2D) -> void:
 	match _ability.animation_path:
 		AbilityData.AnimationPath.PROJECTILE:
 			var tween = create_tween()
-			tween.tween_property(effect, "global_position", _single_target.global_position, 0.4)
+			tween.tween_property(effect, "global_position", _get_target_world_pos(), 0.4)
 			await tween.finished
 		AbilityData.AnimationPath.PROJECTILE_ARROW:
 			var start = effect.global_position
-			var end = _single_target.global_position
+			var end = _get_target_world_pos()
 			end.x -= 7
 			var distance = start.distance_to(end)
 			var max_range = _ability.max_range * Constants.TILE_WORLD_SIZE
@@ -134,21 +160,11 @@ func _travel(effect: Node2D) -> void:
 			var arc_height = 40.0 * (clamped)
 			var duration = 0.625 + ratio * 0.4
 
-			print("=== Arrow Debug ===")
-			print("  distance:    ", snappedf(distance, 0.01))
-			print("  max_range:   ", snappedf(max_range, 0.01))
-			print("  ratio:       ", snappedf(ratio, 0.01))
-			print("  clamped:     ", snappedf(clamped, 0.01))
-			print("  arc_height:  ", snappedf(arc_height, 0.01))
-			print("  duration:    ", snappedf(duration, 0.01))
-			print("==================")
 			#var arc_height = 40.0 * (1.0 - clampf(distance / max_range, 0.0, 1.0))
 			#var duration = 0.625 + (distance / max_range) * 0.4  # further = slightly longer
 			
 			_camera.zoom_for_projectile(distance, max_range)
-			print("arrow tween start")
 			var tween = create_tween()
-			print("invalid instance. killing tween")
 			var prev_pos = effect.global_position
 			tween.tween_method(func(t: float):
 				if not is_instance_valid(effect):
@@ -168,11 +184,9 @@ func _travel(effect: Node2D) -> void:
 				effect.global_position = flat
 			, 0.0, 1.0, duration)
 			await tween.finished
-			print("arrow tween end")
 			_camera.stop_following()
 		AbilityData.AnimationPath.INSTANT:
-			print("effect: ", effect)
-			effect.global_position = _single_target.global_position
+			effect.global_position = _get_target_world_pos()
 		AbilityData.AnimationPath.PATH:
 			_travel_path(effect)
 

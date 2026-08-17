@@ -48,15 +48,11 @@ func apply_effect(target, effect_id: EffectId.Id, ticks: int = -1) -> void:
 	if is_new:
 		# only emit and play visual for genuinely new effects
 		if target is BattleTileData:
-			print("[EE:apply_effect] emitting tile_effect_applied with visual callable")
 			BattleEvents.tile_effect_applied.emit(target, effect_id, func(): await _play_apply_animation(target, effect_id))
 		else:
-			print("[EE:apply_effect] emitting effect_applied")
 			BattleEvents.effect_applied.emit(target, effect_id)
 			await _play_apply_animation(target, effect_id)
-	else:
-		print("[EE:apply_effect] refresh only — skipping visual and signal")
-		
+
 # calls apply effect once for the unit and once for the tile it occupies
 func apply_effect_to_unit_and_tile(unit: Unit, effect_id: EffectId.Id, context: EffectContext) -> void:
 	await apply_effect(unit, effect_id)
@@ -68,17 +64,21 @@ func apply_effect_to_unit_and_tile(unit: Unit, effect_id: EffectId.Id, context: 
 # removes an effect from a target — mutates, then plays the animation matching the reason
 func remove_effect(target, effect_id: EffectId.Id, reason: RemovalReason = RemovalReason.EXPIRED) -> void:
 	var effect_name = EffectId.Id.keys()[effect_id]
-	print("[EE:remove_effect] target: ", target, " effect: ", effect_name, " reason: ", reason)
 	target.remove_effect(effect_id)
 	if target is BattleTileData:
-		print("[EE:remove_effect] emitting tile_effect_removed with visual callable")
 		BattleEvents.tile_effect_removed.emit(target, effect_id, reason, func(): await _play_remove_animation(target, effect_id, reason))
 	else:
-		print("[EE:remove_effect] emitting effect_removed")
 		BattleEvents.effect_removed.emit(target, effect_id, reason)
-		print("[EE:remove_effect] playing remove animation")
 		await _play_remove_animation(target, effect_id, reason)
-	print("[EE:remove_effect] complete — effect: ", effect_name)
+
+func apply_tile_entry_effects(actor: BattleActor, tile: BattleTileData) -> void:
+	if tile == null or tile.active_effects.is_empty():
+		return
+	var context = EffectContext.create(_grid, self)
+	for instance in tile.active_effects.duplicate():
+		var handler = EffectRegistry.get_handler(instance.effect_id)
+		if handler != null:
+			await handler.on_actor_entered_tile(actor, tile, instance, context)
 
 func convert_terrain(tile: BattleTileData, new_terrain: BattleTileData.TerrainType) -> void:
 	tile.terrain_type = new_terrain
@@ -103,27 +103,19 @@ func _check_neutralization(target, incoming_effect_id: EffectId.Id) -> EffectId.
 
 func _play_apply_animation(target, effect_id: EffectId.Id) -> void:
 	var effect_name = EffectId.Id.keys()[effect_id]
-	print("[EE:_play_apply_animation] target: ", target, " effect: ", effect_name)
 	if target is BattleTileData and _tile_visual_manager != null:
-		print("[EE:_play_apply_animation] playing tile animation")
 		await _tile_visual_manager.play_effect_apply_animation(target, effect_id)
 		_tile_visual_manager.refresh(target)
 	elif target is Unit:
-		print("[EE:_play_apply_animation] playing unit animation")
 		await target.play_effect_apply_animation(effect_id)
 	elif target is BattleObject and target.has_method("play_effect_apply_animation"):
-		print("[EE:_play_apply_animation] playing object animation")
 		await target.play_effect_apply_animation(effect_id)
-	print("[EE:_play_apply_animation] complete")
 
 func _play_remove_animation(target, effect_id: EffectId.Id, reason: RemovalReason) -> void:
 	var effect_name = EffectId.Id.keys()[effect_id]
-	print("[EE:_play_remove_animation] target: ", target, " effect: ", effect_name, " reason: ", reason)
 	if target is BattleTileData and _tile_visual_manager != null:
-		print("[EE:_play_remove_animation] playing tile remove animation")
 		await _tile_visual_manager.play_effect_remove_animation(target, effect_id, reason)
 		_tile_visual_manager.refresh(target)
-	print("[EE:_play_remove_animation] complete")
 
 func _play_immune_animation(target, effect_id: EffectId.Id) -> void:
 	pass

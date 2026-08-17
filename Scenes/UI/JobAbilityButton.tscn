@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://6mbwjxr1a2ro"]
+
+[ext_resource type="Theme" uid="uid://cowt1pq1qf0qm" path="res://Assets/Theme/GameTheme.tres" id="1_lpyax"]
+[ext_resource type="Script" uid="uid://cce84r87we5dk" path="res://Scenes/UI/HoverButton.gd" id="2_x4axg"]
+
+[node name="JobAbilityButton" type="Button" unique_id=905751340]
+custom_minimum_size = Vector2(24, 16)
+offset_right = 96.0
+offset_bottom = 16.0
+theme = ExtResource("1_lpyax")
+theme_override_font_sizes/font_size = 8
+script = ExtResource("2_x4axg")
+metadata/_custom_type_script = "uid://cce84r87we5dk"
+
+[node name="ActionLabel" type="Label" parent="." unique_id=697674529]
+layout_mode = 1
+offset_right = 90.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 5
+text = "ACTION NAME"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MpLabel" type="Label" parent="." unique_id=811211000]
+layout_mode = 0
+offset_left = 7.0
+offset_right = 23.0
+offset_bottom = 16.0
+theme_override_colors/font_color = Color(0.047058824, 0.9019608, 0.9490196, 1)
+theme_override_font_sizes/font_size = 8
+vertical_alignment = 1

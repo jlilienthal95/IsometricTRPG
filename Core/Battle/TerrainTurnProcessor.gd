@@ -17,34 +17,22 @@ func process_terrain_turn(grid: BattleGrid, effect_executor: EffectExecutor, dir
 		for object in grid.get_objects_with_effect(effect_id):
 			object_work.append([effect_id, object])
 
-	print("[TTP] terrain turn — cell_work: ", cell_work.size(), " object_work: ", object_work.size())
 	for entry in cell_work:
-		print("[TTP] processing cell: ", entry[1], " effect: ", EffectId.Id.keys()[entry[0]])
 		await _process_cell(grid, entry[1], entry[0], effect_executor, context)
-		print("[TTP] cell processed — waiting for director idle")
 		await director.wait_until_idle()
-		print("[TTP] director idle after cell")
 
 	for entry in object_work:
-		print("[TTP] processing object effect: ", EffectId.Id.keys()[entry[0]])
 		await _process_object(entry[1], entry[0], effect_executor, context)
-		print("[TTP] object processed — waiting for director idle")
 		await director.wait_until_idle()
-		print("[TTP] director idle after object")
-	print("[TTP] terrain turn complete")
 
 func _process_cell(grid: BattleGrid, cell: Vector3i, effect_id: EffectId.Id, effect_executor: EffectExecutor, context: EffectContext) -> void:
 	var tile = grid.get_tile(cell)
 	if tile == null:
-		print("[TTP:_process_cell] tile null at: ", cell)
 		return
 	var instance = tile.get_effect(effect_id)
 	if instance == null:
-		print("[TTP:_process_cell] no instance for effect: ", EffectId.Id.keys()[effect_id], " at: ", cell)
 		return
-	print("[TTP:_process_cell] ticking — cell: ", cell, " effect: ", EffectId.Id.keys()[effect_id], " ticks_active: ", instance.ticks_active, " rounds_remaining: ", instance.rounds_remaining)
 	await effect_executor.process_tick(tile, instance, context, true)
-	print("[TTP:_process_cell] tick complete — cell: ", cell)
 
 func _process_object(object: BattleObject, effect_id: EffectId.Id, effect_executor: EffectExecutor, context: EffectContext) -> void:
 	if not is_instance_valid(object) or object.data.is_dead:

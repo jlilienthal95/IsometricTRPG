@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://cu00oo4n4wtq3"
+path="res://.godot/imported/minogram_6x10.fnt-93c5d21a05e333260ce642f4689aaeee.fontdata"
+
+[deps]
+
+source_file="res://Assets/Theme/MinoGram_Font/minogram_6x10.fnt"
+dest_files=["res://.godot/imported/minogram_6x10.fnt-93c5d21a05e333260ce642f4689aaeee.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

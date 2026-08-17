@@ -9,11 +9,11 @@ extends RefCounted
 var unit: Unit = null
 
 var move_query: RangeQuery = null
-var reachable_move_cells: Dictionary = {}
+var reachable_move_cells: Dictionary = {} # Vector3i : target_isValid
 
 var ability: AbilityData = null
 var ability_query: RangeQuery = null
-var reachable_target_cells: Dictionary = {}
+var reachable_target_cells: Dictionary = {} # Vector3i : target_isValid
 
 # builds a context for the given unit, computing its movement range.
 # this is the only constructor — a TurnContext cannot exist without a unit and

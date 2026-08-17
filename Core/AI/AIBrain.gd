@@ -55,6 +55,7 @@ func _take_turn(actor: Unit) -> void:
 
 	var origin: BattleTileData = _grid.get_tile(actor.grid_position)
 	var actions: Array[ActionCandidate] = ActionEnumerator.enumerate_actions(actor, origin, _pathfinder, _turn_context)
+	actions = _filter_actions(actions)
 
 	if actions.is_empty():
 		BattleManager.end_turn()
@@ -82,7 +83,7 @@ func _choose_action(actions: Array[ActionCandidate], intelligence: AIProfile.Int
 	# which attack is chosen, not whether to attack at all
 	var pool = ability_candidates if not ability_candidates.is_empty() else move_only_candidates
 	
-	print("Ability candidates: ", ability_candidates.size(), " Move-only candidates: ", move_only_candidates.size())
+	#print("Ability candidates: ", ability_candidates.size(), " Move-only candidates: ", move_only_candidates.size())
 	print("Using pool of size: ", pool.size())
 	#print("ActionCandidates, ALL:")
 	#for action in pool:
@@ -152,6 +153,19 @@ func _execute_ability(actor: Unit, action: ActionCandidate) -> void:
 		await BattleManager.confirm_target(action.target_cell)
 		_simulate_cell_hover(actor.grid_position)
 
+# filter out actions with abilities that don't target a unit
+func _filter_actions(actions: Array[ActionCandidate]) -> Array[ActionCandidate]:
+	return actions.filter(func(a: ActionCandidate) -> bool:
+		if a.ability == null:
+			return true
+		var target = _grid.get_actor_at(a.target_cell)
+		if target == null or target.data.is_dead:
+			return false
+		if target == _board_context.acting_unit:
+			return false
+		return true
+	)
+	
 func _build_board_context(acting_unit: Unit) -> AIContext:
 	var context = AIContext.new()
 	context.grid = _grid

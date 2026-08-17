@@ -2,21 +2,24 @@ class_name BattleHUD
 extends Control
 
 @onready var action_menu = $ActionMenu
-@onready var move_button = $ActionMenu/VBoxContainer/MoveButton
-@onready var abilities_button = $ActionMenu/VBoxContainer/AbilitiesButton
-@onready var equipment_button = $ActionMenu/VBoxContainer/EquipmentButton
-@onready var wait_button = $ActionMenu/VBoxContainer/WaitButton
+@onready var move_button: HoverButton = $ActionMenu/VBoxContainer/MoveButton
+@onready var abilities_button: HoverButton = $ActionMenu/VBoxContainer/AbilitiesButton
+@onready var equipment_button: HoverButton = $ActionMenu/VBoxContainer/EquipmentButton
+@onready var wait_button: HoverButton = $ActionMenu/VBoxContainer/WaitButton
 
 @onready var equipment_menu = $EquipmentMenu
 @onready var equipment_vbox: VBoxContainer = $EquipmentMenu/EquipmentScroll/VBoxContainer
 
 @onready var abilities_menu = $AbilitiesMenu
 @onready var fight_button = $AbilitiesMenu/VBoxContainer/FightButton
-@onready var job_action_button = $AbilitiesMenu/VBoxContainer/JobActionButton
-@onready var items_button: Button = $AbilitiesMenu/VBoxContainer/ItemsButton
+@onready var job_ability_menu_button: HoverButton = $AbilitiesMenu/VBoxContainer/JobAbilityMenuButton
+@onready var items_button: HoverButton = $AbilitiesMenu/VBoxContainer/ItemsButton
 
 @onready var job_ability_menu = $JobAbilityMenu
 @onready var job_ability_vbox: VBoxContainer = $JobAbilityMenu/JobAbilityScroll/VBoxContainer
+
+@onready var battle_info: ColorRect = $BattleInfo
+@onready var battle_info_label: Label = $BattleInfo/InfoLabel
 
 var _active_unit: Unit = null
 
@@ -24,14 +27,36 @@ var job_ability_button = preload("res://Scenes/UI/JobActionButton.tscn")
 
 func setup(battle_manager: BattleManager) -> void:
 	move_button.pressed.connect(battle_manager.select_action_move)
+	move_button.focused.connect(_on_button_focused)
+	move_button.unfocused.connect(_on_button_unfocused)
+	
 	abilities_button.pressed.connect(battle_manager.select_action_abilities)
+	abilities_button.focused.connect(_on_button_focused)
+	abilities_button.unfocused.connect(_on_button_unfocused)
+	
 	equipment_button.pressed.connect(battle_manager.select_action_equipment)
+	equipment_button.focused.connect(_on_button_focused)
+	equipment_button.unfocused.connect(_on_button_unfocused)
+
 	wait_button.pressed.connect(battle_manager.end_turn)
+	wait_button.focused.connect(_on_button_focused)
+	wait_button.unfocused.connect(_on_button_unfocused)
+	
 	fight_button.pressed.connect(_on_fight_pressed)
-	job_action_button.pressed.connect(battle_manager.select_job_ability)
+	fight_button.focused.connect(_on_button_focused)
+	fight_button.unfocused.connect(_on_button_unfocused)
+	
+	job_ability_menu_button.pressed.connect(battle_manager.select_job_ability)
+	job_ability_menu_button.focused.connect(_on_button_focused)
+	job_ability_menu_button.unfocused.connect(_on_button_unfocused)
+	
+	items_button.focused.connect(_on_button_focused)
+	items_button.unfocused.connect(_on_button_unfocused)
+	
 	_hide_all()
 
 func refresh() -> void:
+	battle_info.hide()
 	if _active_unit == null:
 		return
 	move_button.disabled = _active_unit.data.has_moved
@@ -61,7 +86,7 @@ func on_turn_changed(unit: Unit) -> void:
 func _generate_equipment_buttons(equipment: Array[EquipmentData]) -> void:
 	_equipment_reset()
 	for item in equipment:
-		var button = Button.new()
+		var button = HoverButton.new()
 		button.text = item.equipment_name
 		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
 		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
@@ -100,6 +125,31 @@ func _on_fight_pressed() -> void:
 		push_error("BattleHUD: job '%s' has no fight_ability assigned" % _active_unit.data.job.job_name)
 		return
 	BattleManager.select_ability(fight)
+	
+func _on_button_focused(button: HoverButton) -> void:
+	match BattleManager.current_state:
+		BattleManager.BattleState.ACTION_SELECT, BattleManager.BattleState.ABILITIES_SELECT:
+			battle_info.show()
+			var text = button.text.to_upper().replace(" ", "_")
+			var desc_id = UiDescriptions.action_description[text]
+			battle_info_label.text = UiDescriptions.get_action_description(desc_id)
+		BattleManager.BattleState.JOB_ABILITIES_SELECT:
+			battle_info.show()
+			var text = button.text.replace(" ", "_")
+			for ability: AbilityData in AbilityRegistry:
+				if ability.ability_name == text:
+					battle_info_label.text = ability.description
+		BattleManager.BattleState.EQUIPMENT_SELECT:
+			battle_info.show()
+			var text = button.text.replace(" ", "_")
+			for equipment: EquipmentData in EquipmentRegistry:
+				if equipment.equipment_name == text:
+					battle_info_label.text = equipment.description
+		_:
+			battle_info.hide()
+
+func _on_button_unfocused() -> void:
+	battle_info.hide()
 
 func _equipment_reset() -> void:
 	for child in equipment_vbox.get_children():

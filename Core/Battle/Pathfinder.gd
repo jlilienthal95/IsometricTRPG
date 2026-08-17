@@ -20,38 +20,16 @@ func get_cells_in_range(origin: Vector3i, query: RangeQuery, acting_unit: Unit =
 			continue
 		if cell == origin:
 			continue
-			
+
 		reachable[cell] = true
-			
+
 		if query.requires_unit and not _grid.is_cell_occupied(cell):
 			reachable[cell] = false
 			continue
 		if query.requires_empty and _grid.is_cell_occupied(cell):
 			reachable[cell] = false
 			continue
-		if _grid.is_cell_occupied(cell):
-			var occupant = _grid.get_actor_at(cell)
-			# blocking objects are targetable like enemies but never allies
-			if occupant is BattleObject:
-				if query.requires_ally:
-					reachable[cell] = false
-				continue
-			if occupant is Unit:
-				# skip dead units unless ability explicitly allows targeting them
-				if occupant.data.is_dead and not query.requires_dead:
-					reachable[cell] = false
-					continue
-				if _is_ally(occupant, acting_unit):
-					if not query.can_end_on_ally:
-						reachable[cell] = false
-						continue
-				else:
-					if query.requires_empty:
-						reachable[cell] = false
-						continue
-					if not query.requires_enemy and not query.can_end_on_ally:
-						reachable[cell] = false
-						continue
+
 	return reachable
 
 func get_movement_path(origin: Vector3i, destination: Vector3i, query: RangeQuery, acting_unit: Unit = null) -> Array[MovementStep]:
@@ -211,20 +189,11 @@ func build_ability_query(ability_data: AbilityData) -> RangeQuery:
 	query.min_range = ability_data.min_range
 	query.ignore_elevation = ability_data.ignores_elevation
 	query.jump_height = ability_data.max_elevation_difference
-	query.requires_unit = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY or \
-		ability_data.target_type == AbilityData.TargetType.SINGLE_ALLY
-	query.requires_enemy = ability_data.target_type == AbilityData.TargetType.SINGLE_ENEMY
-	query.requires_ally = ability_data.target_type == AbilityData.TargetType.SINGLE_ALLY
 	return query
 	
 func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = null) -> void:
 	var result = _run_dijkstra(origin, query, acting_unit)
 	var visited = result[0]
-	#print("=== PATHFINDER DEBUG ===")
-	#print("Origin: ", origin)
-	#print("Max range: ", query.max_range)
-	#print("Jump height: ", query.jump_height)
-	#print("Total visited cells: ", visited.size())
 	
 	var by_elevation: Dictionary = {}
 	for cell in visited.keys():

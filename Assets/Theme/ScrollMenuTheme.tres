@@ -13,11 +13,12 @@ texture = ExtResource("5_2d6hn")
 
 [resource]
 default_font = ExtResource("1_mwetg")
+default_font_size = 6
 Button/colors/font_color = Color(0.8509804, 0.9019608, 0.9490196, 1)
 Button/colors/font_disabled_color = Color(0.8509804, 0.9019608, 0.9490196, 0.38431373)
 Button/colors/font_pressed_color = Color(1, 1, 1, 1)
 Button/constants/line_spacing = 2
-Button/font_sizes/font_size = 22
+Button/font_sizes/font_size = 6
 Button/fonts/font = ExtResource("1_mwetg")
 Button/styles/disabled = ExtResource("2_dkt81")
 Button/styles/focus = ExtResource("2_dkt81")
@@ -26,7 +27,7 @@ Button/styles/hover_pressed = ExtResource("2_dkt81")
 Button/styles/normal = ExtResource("4_1xw8v")
 Button/styles/pressed = ExtResource("2_dkt81")
 Label/colors/font_color = Color(0.8509804, 0.9019608, 0.9490196, 1)
-Label/font_sizes/font_size = 50
+Label/font_sizes/font_size = 6
 Panel/styles/panel = SubResource("StyleBoxTexture_3xgds")
 PanelContainer/styles/panel = SubResource("StyleBoxEmpty_sg5qf")
 ScrollContainer/colors/scroll_hint_horizontal_color = Color(0.14509805, 0.14117648, 0.27450982, 1)

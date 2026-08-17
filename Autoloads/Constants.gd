@@ -4,8 +4,8 @@ const TILE_ORIGIN_OFFSET: int = 16
 const TILE_WORLD_SIZE: float = 32.0  # world-space distance of one flat tile step
 const UNIT_EFFECT_OFFSET: int = TILE_ORIGIN_OFFSET + 10
 const FADE_OUT_TIMER: float = 0.35
-const ACTION_BUTTON_X = 335
-const ACTION_BUTTON_Y = 60
+const ACTION_BUTTON_X = 24
+const ACTION_BUTTON_Y = 16
 const BASE_DAMAGE_UNIT: float = 10.0
 const UNIT_ALPHA_FADE: float = 0.6
 

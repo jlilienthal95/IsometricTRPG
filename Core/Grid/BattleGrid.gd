@@ -1,7 +1,7 @@
 class_name BattleGrid
 extends Node
 
-signal tile_occupancy_changed(tile: BattleTileData)
+signal tile_occupancy_changed(tile: BattleTileData, actor: BattleActor, entered: bool)
 
 # =============================================================================
 # STATE
@@ -168,6 +168,7 @@ func move_actor(actor, from: Vector3i, to: Vector3i) -> void:
 	if from_tile == null or to_tile == null:
 		push_error("Invalid move from " + str(from) + " to " + str(to))
 		return
+		
 	if actor is Unit:
 		if to_tile.unit_ref != null:
 			push_error("Tried to move unit to occupied cell: " + str(to))
@@ -183,9 +184,10 @@ func move_actor(actor, from: Vector3i, to: Vector3i) -> void:
 	else:
 		push_error("move_actor: unknown actor type")
 		return
+		
 	actor.grid_position = to
-	tile_occupancy_changed.emit(from_tile)
-	tile_occupancy_changed.emit(to_tile)
+	tile_occupancy_changed.emit(from_tile, actor, false)  # leaving
+	tile_occupancy_changed.emit(to_tile, actor, true)     # entering
 
 # returns the Unit on the given cell, or null if unoccupied
 func get_unit_at(cell: Vector3i) -> BattleActor:

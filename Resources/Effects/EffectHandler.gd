@@ -52,6 +52,12 @@ func _resolve_object(object: BattleObject, instance: EffectInstance, context) ->
 func on_unit_turn_end(unit: Unit, instance: EffectInstance, context) -> void:
 	pass
 
+# called when any actor enters or passes through a tile with this effect.
+# override in handlers that should react to tile entry.
+# default: apply this effect to the actor.
+func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
+	await _spread_effect(actor, get_effect_id(), context)
+
 func _dispatch_turn_end(actor, instance: EffectInstance, context) -> void:
 	if actor is Unit:
 		await _resolve_unit(actor, instance, context)

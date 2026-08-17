@@ -10,9 +10,7 @@ func score(candidate: ActionCandidate, context: AIContext) -> float:
 	var normal_damage = candidate.expected_damage["normal_damage"]
 	var crit_damage = candidate.expected_damage["crit_damage"]
 	var target_hp = target.data.current_hp
-	print("kill potential normal damage: ", normal_damage)
-	print("kill potential crit damage: ", crit_damage)
-	print("kill potential target hp: ", target_hp)
+	
 	if target_hp < normal_damage:
 		return 1.0
 	elif target_hp < (normal_damage + crit_damage):

@@ -1114,6 +1114,7 @@ texture_region_size = Vector2i(32, 40)
 14:0/0 = 0
 14:0/0/texture_origin = Vector2i(0, 12)
 14:0/0/y_sort_origin = -11
+14:0/0/custom_data_2 = true
 15:0/0 = 0
 15:0/0/texture_origin = Vector2i(0, 12)
 15:0/0/y_sort_origin = -11

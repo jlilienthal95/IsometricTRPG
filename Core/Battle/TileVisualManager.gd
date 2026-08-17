@@ -218,19 +218,14 @@ func play_effect_apply_animation(tile: BattleTileData, effect_id: EffectId.Id) -
 	_effect_sprites[tile.cell][effect_id] = scene
 
 func play_effect_remove_animation(tile: BattleTileData, effect_id: EffectId.Id, reason: EffectExecutor.RemovalReason) -> void:
-	print("[TVM:remove_anim] cell: ", tile.cell, " effect: ", EffectId.Id.keys()[effect_id], " reason: ", reason)
 	if not _effect_sprites.has(tile.cell) or not _effect_sprites[tile.cell].has(effect_id):
-		print("[TVM:remove_anim] no sprite found — skipping")
 		return
 	var scene: Node2D = _effect_sprites[tile.cell][effect_id]
-	print("[TVM:remove_anim] playing fade anim on scene: ", scene)
 	scene.play("fade")
 	var tween = create_tween()
 	tween.tween_property(scene, "modulate:a", 0, 1.0)
 	await tween.finished
-	print("[TVM:remove_anim] fade complete — freeing scene")
 	scene.queue_free()
 	_effect_sprites[tile.cell].erase(effect_id)
 	if _effect_sprites[tile.cell].is_empty():
 		_effect_sprites.erase(tile.cell)
-	print("[TVM:remove_anim] complete — cell: ", tile.cell)

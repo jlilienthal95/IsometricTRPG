@@ -105,7 +105,6 @@ func change_state(new_state: BattleState) -> void:
 	print("BattleManager State: ", BattleState.keys()[new_state])
 
 func set_active_unit(participant) -> void:
-	print("[BM:set_active_unit] participant: ", participant.data.name if participant is BattleActor else "terrain")
 	if participant is TerrainTurnParticipant:
 		change_state(BattleState.TERRAIN_TURN)
 		current_round += 1
@@ -213,21 +212,13 @@ func end_turn() -> void:
 	var has_effects = not active_unit.data.active_effects.is_empty()
 	var tile = _grid.get_tile(active_unit.grid_position)
 	var tile_has_effects = tile != null and not tile.active_effects.is_empty()
-	print("[BM:end_turn] unit: ", active_unit.data.name, " has_effects: ", has_effects, " tile_has_effects: ", tile_has_effects)
 	if has_effects or tile_has_effects:
-		print("[BM:end_turn] opening sequence for turn-end effects")
 		await _cinematic_director.begin_sequence(active_unit)
-		print("[BM:end_turn] processing turn-end effects")
 		await _process_unit_turn_end_effects(active_unit)
-		print("[BM:end_turn] effects processed — waiting for director idle")
 		await _cinematic_director.wait_until_idle()
-		print("[BM:end_turn] closing sequence")
 		await _cinematic_director.end_sequence()
-		print("[BM:end_turn] sequence closed")
 	else:
-		print("[BM:end_turn] no effects — skipping sequence")
 		await _process_unit_turn_end_effects(active_unit)
-	print("[BM:end_turn] emitting turn_ended")
 	turn_ended.emit(active_unit)
 	active_unit = null
 	await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout
@@ -248,13 +239,10 @@ func _process_unit_turn_end_effects(unit: Unit) -> void:
 	var context = EffectContext.new()
 	context.grid = _grid
 	context.executor = _effect_executor
-	print("[BM:turn_end_effects] unit: ", unit.data.name, " effect count: ", unit.data.active_effects.size())
 	for instance in unit.data.active_effects.duplicate():
-		print("[BM:turn_end_effects] processing: ", EffectId.Id.keys()[instance.effect_id])
 		var handler = EffectRegistry.get_handler(instance.effect_id)
 		if handler != null:
 			await handler.on_unit_turn_end(unit, instance, context)
-			print("[BM:turn_end_effects] handler complete: ", EffectId.Id.keys()[instance.effect_id])
 
 func _check_for_battle_end() -> void:
 	#check loss conditions
