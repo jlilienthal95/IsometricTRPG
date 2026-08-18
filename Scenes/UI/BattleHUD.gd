@@ -100,8 +100,6 @@ func _generate_job_ability_buttons(abilities: Array[AbilityData]) -> void:
 		button.get_node("./ActionLabel").text = ability.ability_name.replace("_", " ")
 		if mp_cost > 0:
 			button.get_node("./MpLabel").text = str(ability.mp_cost)
-		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
-		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
 		if _active_unit.data.current_mp >= ability.mp_cost:
 			button.pressed.connect(BattleManager.select_ability.bind(ability))
 		else:

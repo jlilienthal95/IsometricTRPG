@@ -101,7 +101,6 @@ offset_top = -64.0
 offset_right = -4.0
 grow_horizontal = 0
 grow_vertical = 0
-theme = ExtResource("1_ioexv")
 
 [node name="JobAbilityScroll" type="ScrollContainer" parent="JobAbilityMenu" unique_id=418521758]
 clip_contents = false
@@ -114,7 +113,6 @@ custom_minimum_size = Vector2(96, 64)
 layout_mode = 2
 size_flags_horizontal = 6
 size_flags_vertical = 4
-theme = ExtResource("1_ioexv")
 
 [node name="AbilitiesMenu" type="PanelContainer" parent="." unique_id=156690001]
 visible = false
