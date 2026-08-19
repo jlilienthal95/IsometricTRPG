@@ -1,5 +1,11 @@
 extends Node2D
 
+# --- TEST HOOK ---
+# Set BEFORE this scene is added to the tree to spawn a randomized scenario
+# instead of the hardcoded Marta/Theo/Auburn setup. Used exclusively by
+# Tests/BattleTestRunner.gd — never set during normal gameplay.
+var test_scenario: BattleScenario = null
+
 # --- node references ---
 @onready var _battle_grid: BattleGrid = $BattleGrid
 @onready var _action_resolver: ActionResolver = $ActionResolver
@@ -45,7 +51,10 @@ func _ready() -> void:
 	randomize()
 	_build_grid()
 	_setup_systems()
-	_spawn_units()
+	if test_scenario != null:
+		_spawn_from_scenario(test_scenario)
+	else:
+		_spawn_units()
 
 # builds the logical grid from all elevation layers and sets their z indices
 func _build_grid() -> void:
@@ -75,6 +84,7 @@ func _setup_systems() -> void:
 
 	# cinematic director — reacts to BattleEvents on its own once set up
 	_cinematic_director = CinematicDirector.new()
+	_cinematic_director.name = "CinematicDirector"
 	add_child(_cinematic_director)
 	_cinematic_director.setup(_battle_ui, _battle_camera, grid_to_world)
 
@@ -108,7 +118,11 @@ func _setup_systems() -> void:
 	# effect executor
 	_effect_executor.setup(_battle_grid, _battle_camera, _cinematic_director, _tile_visual_manager)
 
-	_battle_grid.tile_occupancy_changed.connect(_tile_visual_manager.refresh)
+	_battle_grid.tile_occupancy_changed.connect(func(tile, actor, entered):
+		_tile_visual_manager.refresh(tile)
+		if entered and actor != null:
+			await _effect_executor.apply_tile_entry_effects(actor, tile)
+	)
 	
 	# ai systems
 	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _input_handler)
@@ -153,6 +167,49 @@ func spawn_object(cell: Vector3i, object_data: ObjectData, scene: PackedScene) -
 	object.setup(object_data, cell)
 	_battle_grid.place_object(object, cell)
 	return object
+	
+func _spawn_from_scenario(scenario: BattleScenario) -> void:
+	var open_cells: Array[Vector3i] = []
+	for cell in _battle_grid.get_all_cells():
+		if _battle_grid.is_walkable(cell) and not _battle_grid.is_cell_occupied(cell):
+			open_cells.append(cell)
+	open_cells.shuffle()
+
+	var player_units: Array[BattleActor] = []
+	var enemy_units: Array[BattleActor] = []
+
+	for spec in scenario.player_unit_specs:
+		if open_cells.is_empty():
+			push_warning("BattleTestRunner: ran out of open cells — player roster truncated")
+			break
+		var unit = _spawn_unit(open_cells.pop_back(), spec["unit_data"])
+		var seed_effect: int = spec.get("seed_effect", EffectId.Id.NONE)
+		if seed_effect != EffectId.Id.NONE:
+			unit.data.apply_effect(seed_effect)
+		player_units.append(unit)
+
+	for spec in scenario.enemy_unit_specs:
+		if open_cells.is_empty():
+			push_warning("BattleTestRunner: ran out of open cells — enemy roster truncated")
+			break
+		var unit = _spawn_unit(open_cells.pop_back(), spec["unit_data"])
+		var seed_effect: int = spec.get("seed_effect", EffectId.Id.NONE)
+		if seed_effect != EffectId.Id.NONE:
+			unit.data.apply_effect(seed_effect)
+		enemy_units.append(unit)
+
+	var object_scene_path := "res://Scenes/Battle/BattleObject.tscn"
+	if ResourceLoader.exists(object_scene_path):
+		var object_scene: PackedScene = load(object_scene_path)
+		for spec in scenario.object_specs:
+			if open_cells.is_empty():
+				break
+			spawn_object(open_cells.pop_back(), spec, object_scene)
+	elif not scenario.object_specs.is_empty():
+		push_warning("BattleTestRunner: no BattleObject.tscn found — skipping %d object spawns" % scenario.object_specs.size())
+
+	_turn_queue.setup(player_units, enemy_units)
+	BattleManager.call_deferred("start_battle", player_units, enemy_units)	
 
 # =============================================================================
 # GRID / WORLD
@@ -260,9 +317,16 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			if _turn_context.unit.data.has_moved && _turn_context.unit.data.has_acted:
 				_previous_cell = Vector3i(999,999,999)
 		BattleManager.BattleState.TERRAIN_TURN:
+			if _battle_grid.active_effect_cells.is_empty() and _battle_grid.active_effect_objects.is_empty():
+				_turn_queue.start_next_turn()
+				return
+			await _cinematic_director.begin_sequence(null)
 			var processor = TerrainTurnProcessor.new()
 			await processor.process_terrain_turn(_battle_grid, _effect_executor, _cinematic_director)
-			await get_tree().create_timer(2).timeout
+			await _cinematic_director.wait_until_idle()
+			await get_tree().create_timer(1.0).timeout
+			await _cinematic_director.end_sequence()
+			await get_tree().create_timer(0.5).timeout
 			_turn_queue.start_next_turn()
 		BattleManager.BattleState.BATTLE_END:
 			BattleManager.reset()

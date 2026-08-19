@@ -1,19 +1,37 @@
 class_name EffectRules
 extends RefCounted
 
+const ID = EffectId.Id
+const TYPE = BattleTileData.TerrainType
+
 # which effects each effect instantly neutralizes on contact
 const NEUTRALIZE_MAP: Dictionary = {
-	EffectId.Id.SOAKED: [EffectId.Id.BURNING],
-	EffectId.Id.FROZEN: [EffectId.Id.BURNING],
+	ID.SOAKED: [ID.BURNING],
+	ID.FROZEN: [ID.BURNING, ID.ELECTRIFIED],
 }
 
 # which terrain types each effect can spread/apply to
 const SUSCEPTIBLE_TERRAIN: Dictionary = {
-	EffectId.Id.BURNING: [
-		BattleTileData.TerrainType.WOOD,
-		BattleTileData.TerrainType.DRY_GRASS,
-		BattleTileData.TerrainType.GRASS,
+	ID.BURNING: [
+		TYPE.WOOD,
+		TYPE.DRY_GRASS,
 	],
+	ID.ELECTRIFIED: [
+		TYPE.METAL,
+		TYPE.WATER
+	],
+	ID.ELECTRIFIED_CONDUCTED: [
+		TYPE.METAL,
+		TYPE.WATER
+	]
+}
+
+const DEFAULT_DURATION: Dictionary = {
+	EffectId.Id.BURNING: 3,
+	EffectId.Id.REDHOT: 2,
+	EffectId.Id.ELECTRIFIED: 2,
+	EffectId.Id.ELECTRIFIED_CONDUCTED: 2,
+	EffectId.Id.SOAKED: 2,
 }
 
 # how many ticks an effect must remain active before triggering its threshold consequence

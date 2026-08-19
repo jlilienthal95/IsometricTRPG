@@ -38,7 +38,7 @@ func get_effect(effect_id: EffectId.Id) -> EffectInstance:
 func apply_effect(effect_id: EffectId.Id, ticks: int = -1) -> void:
 	var actual_ticks = ticks
 	if actual_ticks == -1:
-		actual_ticks = EffectRules.DURATION_THRESHOLD_TICKS.get(effect_id, 1)
+		actual_ticks = EffectRules.DEFAULT_DURATION.get(effect_id, 1)
 	var is_new = not has_effect(effect_id)
 	EffectStore.apply_effect(active_effects, effect_id, actual_ticks)
 	if _grid_ref != null and is_new:

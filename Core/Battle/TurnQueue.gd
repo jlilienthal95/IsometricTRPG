@@ -63,17 +63,30 @@ func get_all_living_units() -> Array[Unit]:
 func get_all_living_players() -> Array[Unit]:
 	var living_players: Array[Unit] = []
 	for unit in _queue:
-		if _player_units.has(unit):
-			if unit is Unit and not unit.data.is_dead:
+		if not (unit is Unit):
+			continue
+		if unit.data.is_dead:
+			continue
+		for player in _player_units:
+			if player == unit:
 				living_players.append(unit)
+				break
 	return living_players
-	
+
 func get_all_living_enemies() -> Array[Unit]:
 	var living_enemies: Array[Unit] = []
 	for unit in _queue:
-		if _enemy_units.has(unit):
-			if unit is Unit and not unit.data.is_dead:
-				living_enemies.append(unit)
+		if not (unit is Unit):
+			continue
+		if unit.data.is_dead:
+			continue
+		var is_player := false
+		for player in _player_units:
+			if player == unit:
+				is_player = true
+				break
+		if not is_player:
+			living_enemies.append(unit)
 	return living_enemies
 
 func get_all_units() -> Array[Unit]:

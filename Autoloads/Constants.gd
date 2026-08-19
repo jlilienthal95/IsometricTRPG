@@ -1,7 +1,10 @@
 extends Node
 
+var testing_mode: bool = false
+
 const TILE_ORIGIN_OFFSET: int = 16
 const TILE_WORLD_SIZE: float = 32.0  # world-space distance of one flat tile step
+const MAX_ELEVATION: int = 14
 const UNIT_EFFECT_OFFSET: int = TILE_ORIGIN_OFFSET + 10
 const FADE_OUT_TIMER: float = 0.35
 const ACTION_BUTTON_X = 24

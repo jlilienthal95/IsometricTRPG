@@ -88,11 +88,7 @@ func _execute_effect() -> void:
 		get_parent().add_child(effect)
 		effect.global_position = _caster.global_position
 		effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
-		if _single_target != null and _single_target is Node:
-			effect.z_index = _single_target.z_index + 1
-		else:
-		# tile target — derive z_index from elevation layer formula
-			effect.z_index = _single_target.cell.z * 4 + 1
+		effect.z_index = Constants.MAX_ELEVATION * 4 + 3
 		_camera.follow(effect)
 		effect.play(_ability.animation_id)
 		# wait for ability/spell charge portion of anim, if applicable

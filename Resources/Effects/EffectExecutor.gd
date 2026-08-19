@@ -49,6 +49,15 @@ func apply_effect(target, effect_id: EffectId.Id, ticks: int = -1) -> void:
 		# only emit and play visual for genuinely new effects
 		if target is BattleTileData:
 			BattleEvents.tile_effect_applied.emit(target, effect_id, func(): await _play_apply_animation(target, effect_id))
+			# run the handler immediately on first application so instant
+			# propagation, entry reactions etc. fire without waiting for
+			# the next terrain turn tick
+			var instance = target.get_effect(effect_id)
+			if instance != null:
+				var handler = EffectRegistry.get_handler(effect_id)
+				if handler != null:
+					var context = EffectContext.create(_grid, self)
+					await handler.resolve(target, instance, context)
 		else:
 			BattleEvents.effect_applied.emit(target, effect_id)
 			await _play_apply_animation(target, effect_id)
@@ -63,6 +72,7 @@ func apply_effect_to_unit_and_tile(unit: Unit, effect_id: EffectId.Id, context: 
 
 # removes an effect from a target — mutates, then plays the animation matching the reason
 func remove_effect(target, effect_id: EffectId.Id, reason: RemovalReason = RemovalReason.EXPIRED) -> void:
+	print("[EE:remove_effect] about to emit tile_effect_removed — target is tile: ", target is BattleTileData)
 	var effect_name = EffectId.Id.keys()[effect_id]
 	target.remove_effect(effect_id)
 	if target is BattleTileData:

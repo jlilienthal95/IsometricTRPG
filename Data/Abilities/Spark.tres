@@ -9,7 +9,8 @@ ability_id = 100
 description = "An arcane spell granting the power to call forth lightning and shock your foes."
 ability_type = 1
 effects = Dictionary[int, int]({
-9: 3
+9: 3,
+10: 3
 })
 mp_cost = 10
 min_range = 2

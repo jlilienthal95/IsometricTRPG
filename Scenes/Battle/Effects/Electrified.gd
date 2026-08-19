@@ -1,5 +1,4 @@
 extends Node2D
-
 @onready var sprite: AnimatedSprite2D = $"."
 @onready var node: Node2D = $Node2D
 

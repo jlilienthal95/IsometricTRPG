@@ -37,6 +37,6 @@ mp_modifier = 0.8
 attack_modifier = 1.2
 ai_profile = SubResource("Resource_8usvp")
 move_range_bonus = 1
-speed_rank = 0
+speed_rank = 2
 fight_ability = ExtResource("3_fight")
 metadata/_custom_type_script = "uid://ct2virpcpm7ny"

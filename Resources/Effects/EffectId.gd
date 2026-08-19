@@ -22,6 +22,7 @@ enum Id {
 
 	# Electric / Magnetic
 	ELECTRIFIED,
+	ELECTRIFIED_CONDUCTED,
 	MAGNETISED,
 	INDUCTION,
 
