@@ -16,6 +16,8 @@ const NEUTRAL_BG = preload("res://Assets/UI/Windows/Character_Info_Window_Neutra
 @onready var mp_max_count: Label = $MpMaxCount
 @onready var lvl_count: Label = $LvlCount
 
+var _fade_tween: Tween = null
+
 # --- state ---
 # _active_actor: whoever's turn it is (baseline display)
 # _hovered_actor: whoever's under the cursor (temporary override)
@@ -53,7 +55,7 @@ func refresh() -> void:
 	_update_display()
 
 # =============================================================================
-# DISPLAY RESOLUTION
+# DISPLAY
 # =============================================================================
 
 # hover overrides active; no actor at all hides the window
@@ -61,6 +63,12 @@ func _displayed_actor() -> BattleActor:
 	return _hovered_actor if _hovered_actor != null else _active_actor
 
 func _update_display() -> void:
+	if BattleManager.current_state == BattleManager.BattleState.RESOLVING:
+		hide_window()
+		return
+	if BattleManager.current_state == BattleManager.BattleState.MOVE_SELECT and _hovered_actor == null:
+		hide_window()
+		return
 	var to_show = _displayed_actor()
 	if to_show != null:
 		_render(to_show)
@@ -94,6 +102,7 @@ func _render(actor: BattleActor) -> void:
 		name_label.text = actor.data.object_name if actor.data is ObjectData else ""
 		portrait_rect.texture = null
 	show()
+	await fade_in()
 
 func _set_background(type: BattleActorData.Type) -> void:
 	match type:
@@ -117,5 +126,20 @@ func _clear_info() -> void:
 	lvl_count.text = ""
 
 func hide_window() -> void:
+	await fade_out()
 	_clear_info()
 	hide()
+
+func fade_out(duration: float = Constants.FADE_TIMER) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "modulate:a", 0.0, duration)
+	await _fade_tween.finished
+
+func fade_in(duration: float = Constants.FADE_TIMER) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "modulate:a", 1.0, duration)
+	await _fade_tween.finished

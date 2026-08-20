@@ -5,7 +5,8 @@ extends RefCounted
 var style: EffectHandler.PropagationStyle = EffectHandler.PropagationStyle.NONE
 var propagates_vertically: bool = false
 var decrement_before_propagation: bool = false
-var spreads_to_occupants: bool = true
+var spreads_to_occupants: bool = true			#effect spreads tile -> unit on turn end
+var spreads_to_tile_on_turn_end: bool = false	#effect spreads unit -> tile on turn end
 var min_ticks_before_spread: int = 1
 
 # --- damage ---

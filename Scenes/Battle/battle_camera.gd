@@ -1,8 +1,8 @@
 class_name BattleCamera
 extends Camera2D
 
-signal camera_settled
-signal zoom_settled
+#signal camera_settled
+#signal zoom_settled
 
 @export var pan_speed: float = 0.3       # default seconds to pan to target
 @export var follow_speed: float = 10.0   # follow re-pan interval reference — see follow()
@@ -39,8 +39,10 @@ func pan_to(target_pos: Vector2, duration: float = pan_speed) -> void:
 	_position_tween = create_tween()
 	_position_tween.tween_property(self, "position", target_pos, duration)
 	await _position_tween.finished
-	camera_settled.emit()
+	#print("pan to emits camera_settled")
+	#camera_settled.emit()
 
+	
 # continuously tracks a moving node (e.g. a flying projectile) by re-issuing
 # short pans toward its current position every frame. This is now just a
 # repeated, ownership-respecting pan rather than a separate _process authority —
@@ -68,7 +70,7 @@ func snap_to(target_pos: Vector2) -> void:
 	if _position_tween != null and _position_tween.is_valid():
 		_position_tween.kill()
 	position = target_pos
-	camera_settled.emit()
+	#camera_settled.emit()
 
 # =============================================================================
 # ZOOM
@@ -80,7 +82,7 @@ func _tween_zoom(target: Vector2, duration: float) -> void:
 	_zoom_tween = create_tween()
 	_zoom_tween.tween_property(self, "zoom", target, duration)
 	await _zoom_tween.finished
-	zoom_settled.emit()
+	#zoom_settled.emit()
 
 func zoom_in() -> void:
 	await _tween_zoom(Vector2(1.5, 1.5), 0.3)

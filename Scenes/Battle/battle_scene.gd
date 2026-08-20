@@ -36,7 +36,7 @@ const AUBURN_DATA = preload("res://Data/Units/Auburn.tres")
 # BattleManager fires whenever the active unit changes — nothing else may assign to it,
 # so there is no second cached unit reference that can desync from BattleManager.active_unit.
 var _turn_context: TurnContext = null
-var _previous_unit: Unit = null
+#var _previous_unit: Unit = null
 var _previous_cell: Vector3i = Vector3i(999,999,999)
 
 # created in code (not the scene tree) so the scene file needs no edits;
@@ -318,7 +318,9 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 				_previous_cell = Vector3i(999,999,999)
 		BattleManager.BattleState.TERRAIN_TURN:
 			if _battle_grid.active_effect_cells.is_empty() and _battle_grid.active_effect_objects.is_empty():
-				_turn_queue.start_next_turn()
+				print("current turn: terrain")
+				print("skipping and starting next turn.")
+				BattleManager.end_turn()
 				return
 			await _cinematic_director.begin_sequence(null)
 			var processor = TerrainTurnProcessor.new()
@@ -327,7 +329,7 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 			await get_tree().create_timer(1.0).timeout
 			await _cinematic_director.end_sequence()
 			await get_tree().create_timer(0.5).timeout
-			_turn_queue.start_next_turn()
+			BattleManager.end_turn()
 		BattleManager.BattleState.BATTLE_END:
 			BattleManager.reset()
 
@@ -340,9 +342,9 @@ func _on_active_unit_changed(unit: Unit) -> void:
 	_turn_context = TurnContext.for_unit(unit, _pathfinder)
 
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
-	_previous_unit = unit
+	#_previous_unit = unit
+	#print("_on_active_unit_changed, _previous_unit: ", _previous_unit.data.name)
 	_previous_cell = Vector3i(999,999,999)
-
 # =============================================================================
 # ABILITY / MOVEMENT EXECUTION
 # =============================================================================

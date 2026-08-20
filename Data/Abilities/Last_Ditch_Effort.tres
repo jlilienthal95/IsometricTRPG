@@ -6,7 +6,7 @@
 script = ExtResource("1_t23ba")
 ability_name = "Last_Ditch_Effort"
 ability_id = 3
-description = "An all or nothing attack. Either fells your foe with a critical hit, or barely leaves a scratch."
+description = "An all or nothing attack. Either strikes your foe with a critical hit, or misses entirely."
 base_hit_chance = 0.4
 base_crit_chance = 1.0
 impact_delay = 733

@@ -71,11 +71,18 @@ func _resolve_object(object: BattleObject, instance: EffectInstance, context) ->
 	await _resolve_actor_damage(object, context)
 
 func _resolve_tile(tile: BattleTileData, instance: EffectInstance, context) -> void:
-	pass
-
-func on_unit_turn_end(unit: Unit, instance: EffectInstance, context) -> void:
-	pass
-
+	if get_propagation_config().style != PropagationStyle.NONE:
+		await _resolve_tile_propagation(tile, instance, context)
+		
+func on_unit_turn_end(actor, instance: EffectInstance, context) -> void:
+	var config = get_propagation_config()
+	if config.spreads_to_tile_on_turn_end:
+		var tile = context.grid.get_tile(actor.grid_position)
+		if tile != null:
+			var susceptible = EffectRules.SUSCEPTIBLE_TERRAIN.get(get_effect_id(), [])
+			if susceptible.has(tile.terrain_type):
+				await _spread_effect(tile, get_effect_id(), context)
+	await _dispatch_turn_end(actor, instance, context)
 # =============================================================================
 # PROPAGATION — generic spreading pipeline, driven by subclass overrides
 # =============================================================================
@@ -83,6 +90,9 @@ func on_unit_turn_end(unit: Unit, instance: EffectInstance, context) -> void:
 # override to configure propagation behavior for this effect
 func get_propagation_config() -> PropagationConfig:
 	return PropagationConfig.new()
+	
+func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context) -> void:
+	await _spread_effect(actor, get_effect_id(), context)
 
 # override to define what happens when ticks_active hits the threshold
 func _on_threshold_reached(tile: BattleTileData, context) -> void:

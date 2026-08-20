@@ -88,6 +88,8 @@ func reset() -> void:
 func start_battle(p_units: Array[BattleActor], e_units: Array[BattleActor]) -> void:
 	player_units = p_units
 	enemy_units = e_units
+	print("battle starting")
+	print("starting first turn...")
 	_turn_queue.call_deferred("start_next_turn")
 	
 # moves cursor to cell automatically
@@ -105,15 +107,16 @@ func change_state(new_state: BattleState) -> void:
 	print("BattleManager State: ", BattleState.keys()[new_state])
 
 func set_active_unit(participant) -> void:
+	if participant == null:
+		push_error("BattleManager.set_active_unit: participant is null — queue may be empty or exhausted")
+		return
 	if participant is TerrainTurnParticipant:
 		change_state(BattleState.TERRAIN_TURN)
 		current_round += 1
 		return
-		
-	# highlight active unit with cursor 
+	print("set_active_unit participant: ", participant)
 	_simulate_cell_hover(participant.grid_position)
 	active_unit = participant
-	print("active unit: ", active_unit.data.name)
 	active_unit.reset_turn()
 	active_unit_changed.emit(active_unit)
 	change_state(BattleState.ACTION_SELECT)
@@ -205,24 +208,29 @@ func confirm_target(target_cell: Vector3i) -> void:
 
 # ends the active unit's turn and advances to the next
 func end_turn() -> void:
-	if current_state != BattleState.ACTION_SELECT:
-		return
-	if active_unit == null:
-		return
-	var has_effects = not active_unit.data.active_effects.is_empty()
-	var tile = _grid.get_tile(active_unit.grid_position)
-	var tile_has_effects = tile != null and not tile.active_effects.is_empty()
-	if has_effects or tile_has_effects:
-		await _cinematic_director.begin_sequence(active_unit)
-		await _process_unit_turn_end_effects(active_unit)
-		await _cinematic_director.wait_until_idle()
-		await _cinematic_director.end_sequence()
-	else:
-		await _process_unit_turn_end_effects(active_unit)
-	turn_ended.emit(active_unit)
+	print("trying to end turn")
+	#if current_state != BattleState.ACTION_SELECT or current_state != BattleState.TERRAIN_TURN:
+		#return
+	#if active_unit == null:
+		#print("active unit is null")
+		#return
+	if active_unit is Unit:
+		var has_effects = not active_unit.data.active_effects.is_empty()
+		var tile = _grid.get_tile(active_unit.grid_position)
+		var tile_has_effects = tile != null and not tile.active_effects.is_empty()
+		print("awaits begin")
+		if has_effects or tile_has_effects:
+			await _cinematic_director.begin_sequence(active_unit)
+			await _process_unit_turn_end_effects(active_unit)
+			await _cinematic_director.wait_until_idle()
+			await _cinematic_director.end_sequence()
+		else:
+			await _process_unit_turn_end_effects(active_unit)
+	print("ending turn.")
 	active_unit = null
-	await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout
-	_turn_queue.start_next_turn()
+	turn_ended.emit()
+	#await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout
+	#_turn_queue.start_next_turn()
 
 # =============================================================================
 # INTERNALS
@@ -233,6 +241,7 @@ func _enter_resolving(completion_signal: Signal, next_state: BattleState) -> voi
 	change_state(BattleState.RESOLVING)
 	await completion_signal
 	_check_for_battle_end()
+	await get_tree().create_timer(1.0).timeout
 	change_state(next_state)
 
 func _process_unit_turn_end_effects(unit: Unit) -> void:

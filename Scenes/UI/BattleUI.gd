@@ -23,28 +23,34 @@ func setup() -> void:
 func _on_state_changed(state: BattleManager.BattleState) -> void:
 	match state:
 		BattleManager.BattleState.ACTION_SELECT:
+			await fade_out()
 			battle_hud.show_menu(battle_hud.action_menu)
-			fade_in()
+			character_info._update_display()
+			await fade_in()
 		BattleManager.BattleState.MOVE_SELECT:
+			fade_out(Constants.FADE_TIMER, UIElement.HUD)
+			await character_info.fade_out(Constants.FADE_TIMER)
 			battle_hud.show_menu(null)
-			#fade_out()
 		BattleManager.BattleState.EQUIPMENT_SELECT:
+			await fade_out(Constants.FADE_TIMER, UIElement.HUD)
 			battle_hud.show_menu(battle_hud.equipment_menu)
-			fade_in()
+			await fade_in()
 		BattleManager.BattleState.ABILITIES_SELECT:
+			await fade_out(Constants.FADE_TIMER, UIElement.HUD)
 			battle_hud.show_menu(battle_hud.abilities_menu)
-			fade_in()
+			await fade_in()
 		BattleManager.BattleState.JOB_ABILITIES_SELECT:
+			await fade_out(Constants.FADE_TIMER, UIElement.HUD)
 			battle_hud.show_menu(battle_hud.job_ability_menu)
-			fade_in()
+			await fade_in()
 		BattleManager.BattleState.TARGET_SELECT:
-			fade_out(Constants.FADE_OUT_TIMER, UIElement.HUD)
+			await fade_out(Constants.FADE_TIMER, UIElement.HUD)
 		BattleManager.BattleState.RESOLVING:
+			await fade_out()
 			battle_hud.show_menu(null)
-			fade_out()
 		_:
+			await fade_out()
 			battle_hud.show_menu(null)
-			fade_out()
 
 func on_battle_start() -> void:
 	var battle_start_scene: PackedScene = preload("res://Scenes/UI/BattleStart.tscn")
@@ -69,32 +75,37 @@ func _on_battle_end(isWin: bool) -> void:
 func on_turn_changed(unit: Unit) -> void:
 	battle_hud.on_turn_changed(unit)
 
-func _on_turn_ended(_unit: Unit) -> void:
+func _on_turn_ended() -> void:
 	fade_out()
 
 func refresh_character_info(actor: BattleActor) -> void:
+	print("refreshing character_info, new actor: ", actor.data.name)
 	character_info.setup(actor)
 
 func refresh_hud() -> void:
 	battle_hud.refresh()
 
-func fade_out(duration: float = Constants.FADE_OUT_TIMER, target: UIElement = UIElement.ALL) -> void:
-	var tween = get_tree().create_tween()
-	tween.set_parallel(true)
-	if target == UIElement.ALL or target == UIElement.HUD:
-		tween.tween_property(battle_hud, "modulate:a", 0.0, duration)
-	if target == UIElement.ALL or target == UIElement.CHARACTER_INFO:
-		tween.tween_property(character_info, "modulate:a", 0.0, duration)
-
-func fade_in(duration: float = 0.2, target: UIElement = UIElement.ALL) -> void:
+func fade_out(duration: float = Constants.FADE_TIMER, target: UIElement = UIElement.ALL) -> void:
 	if _fade_tween:
 		_fade_tween.kill()
-	_fade_tween = get_tree().create_tween()
+	_fade_tween = create_tween()
+	_fade_tween.set_parallel(true)
+	if target == UIElement.ALL or target == UIElement.HUD:
+		_fade_tween.tween_property(battle_hud, "modulate:a", 0.0, duration)
+	if target == UIElement.ALL or target == UIElement.CHARACTER_INFO:
+		_fade_tween.tween_property(character_info, "modulate:a", 0.0, duration)
+	await _fade_tween.finished
+
+func fade_in(duration: float = Constants.FADE_TIMER, target: UIElement = UIElement.ALL) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
 	_fade_tween.set_parallel(true)
 	if target == UIElement.ALL or target == UIElement.HUD:
 		_fade_tween.tween_property(battle_hud, "modulate:a", 1.0, duration)
 	if target == UIElement.ALL or target == UIElement.CHARACTER_INFO:
 		_fade_tween.tween_property(character_info, "modulate:a", 1.0, duration)
+	await _fade_tween.finished
 
 func fade_bars_in() -> void:
 	await cinematic_bars.fade_in()

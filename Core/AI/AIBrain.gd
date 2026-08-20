@@ -163,6 +163,9 @@ func _filter_actions(actions: Array[ActionCandidate]) -> Array[ActionCandidate]:
 			return false
 		if target == _board_context.acting_unit:
 			return false
+		# don't attack allies
+		if target is Unit and target.data.type == _board_context.acting_unit.data.type:
+			return false
 		return true
 	)
 	

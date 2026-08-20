@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://trceolafsptg" path="res://Scenes/UI/BattleHUD.gd" id="1_xilco"]
 [ext_resource type="Script" uid="uid://cce84r87we5dk" path="res://Scenes/UI/HoverButton.gd" id="4_tbwvx"]
 [ext_resource type="FontFile" uid="uid://cu00oo4n4wtq3" path="res://Assets/Theme/MinoGram_Font/minogram_6x10.fnt" id="5_83cdx"]
+[ext_resource type="Script" uid="uid://xpth3bekisc0" path="res://Scenes/UI/BattleInfo.gd" id="5_wmss7"]
 
 [node name="BattleHUD" type="Control" unique_id=1260164239]
 layout_mode = 3
@@ -158,16 +159,32 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="BattleInfo" type="ColorRect" parent="." unique_id=363184653]
 layout_mode = 0
 offset_right = 320.0
-offset_bottom = 16.0
+offset_bottom = 12.0
 theme = ExtResource("1_hcak5")
 color = Color(0.1254902, 0.08235294, 0.2, 1)
+script = ExtResource("5_wmss7")
 
-[node name="InfoLabel" type="Label" parent="BattleInfo" unique_id=1376872432]
-layout_mode = 0
-offset_right = 320.0
-offset_bottom = 16.0
+[node name="InfoScroll" type="ScrollContainer" parent="BattleInfo" unique_id=581083894]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 3.0
+offset_right = -16.0
+offset_bottom = 10.2
+grow_horizontal = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="InfoCenter" type="CenterContainer" parent="BattleInfo/InfoScroll" unique_id=697010462]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InfoLabel" type="Label" parent="BattleInfo/InfoScroll/InfoCenter" unique_id=682970413]
+layout_mode = 2
+size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("5_83cdx")
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 6
 text = "This is a sample description of an ability or action."
 horizontal_alignment = 1
 vertical_alignment = 1

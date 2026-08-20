@@ -61,7 +61,9 @@ func apply_damage(amount: int) -> void:
 	await _flash_red()
 	if data.current_hp == 0:
 		await play_death()
+		print("actor_defeated emit start")
 		BattleEvents.actor_defeated.emit(self)
+		print("actor_defeated emit end")
 	else:
 		await play_hit()
 

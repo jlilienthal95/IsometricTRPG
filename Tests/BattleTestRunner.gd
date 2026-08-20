@@ -6,6 +6,7 @@ const NUM_CORRECTNESS_SCENARIOS := 20
 const WATCHDOG_TIMEOUT_SEC := 15.0
 
 var _end_handler: Callable
+var _loss_handler: Callable
 var _state_handler: Callable
 
 var _fps_samples: Array[float] = []
@@ -76,32 +77,43 @@ func _run_scenario(scenario: BattleScenario, run_label: String, time_scale: floa
 	var battle_instance = battle_scene_res.instantiate()
 
 	if not ("test_scenario" in battle_instance):
-		logger.log_line("!!! battle_scene.gd has no test_scenario hook yet — see required integration notes")
+		logger.log_line("!!! battle_scene.gd has no test_scenario hook yet")
 		logger.flush(false)
 		battle_instance.queue_free()
 		Constants.testing_mode = false
 		Engine.time_scale = 1.0
 		return {"passed": 0, "failed": 1, "timed_out": false}
 
+	# set scenario before adding to tree so _ready() sees it
 	battle_instance.test_scenario = scenario
+
+	# instantiate synthetic player before battle enters tree
+	# so we can connect before start_battle fires active_unit_changed
+	var synthetic_player := SyntheticPlayer.new()
+	add_child(synthetic_player)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = scenario.seed_value
+
+	# add battle instance — this triggers _ready() and wires systems,
+	# but start_battle is call_deferred so active_unit_changed hasn't fired yet
 	add_child(battle_instance)
-	await get_tree().process_frame
+
+	# connect synthetic player immediately after _ready() runs but before
+	# the deferred start_battle fires active_unit_changed
+	synthetic_player.setup(
+		battle_instance.get_node("BattleGrid"),
+		battle_instance.get_node("Pathfinder"),
+		rng
+	)
 
 	var grid: BattleGrid = battle_instance.get_node("BattleGrid")
 	var turn_queue: TurnQueue = battle_instance.get_node("TurnQueue")
 	var director: CinematicDirector = battle_instance.get_node_or_null("CinematicDirector")
-	var pathfinder: Pathfinder = battle_instance.get_node("Pathfinder")
 
 	if director == null:
 		logger.log_line("!!! CinematicDirector not found — sequence-depth checks skipped")
 
 	var assertion := BattleAssertion.new(grid, turn_queue, director)
-
-	var synthetic_player := SyntheticPlayer.new()
-	add_child(synthetic_player)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = scenario.seed_value
-	synthetic_player.setup(grid, pathfinder, rng)
 
 	var battle_ended := false
 	var battle_won := false
@@ -115,6 +127,9 @@ func _run_scenario(scenario: BattleScenario, run_label: String, time_scale: floa
 
 	BattleManager.battle_ended.connect(_end_handler)
 	BattleManager.state_changed.connect(_state_handler)
+
+	# one frame for deferred calls to settle
+	await get_tree().process_frame
 
 	var watchdog := Watchdog.new()
 	add_child(watchdog)

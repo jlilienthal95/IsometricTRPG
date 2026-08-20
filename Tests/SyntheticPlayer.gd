@@ -32,15 +32,18 @@ func setup(grid: BattleGrid, pathfinder: Pathfinder, rng: RandomNumberGenerator)
 	_grid = grid
 	_pathfinder = pathfinder
 	_rng = rng
-	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
+	BattleManager.active_unit_changed.connect(_on_active_unit_changed, CONNECT_DEFERRED)
 
 func teardown() -> void:
 	if BattleManager.active_unit_changed.is_connected(_on_active_unit_changed):
 		BattleManager.active_unit_changed.disconnect(_on_active_unit_changed)
 
 func _on_active_unit_changed(actor) -> void:
+	print("[SP] active_unit_changed received — actor: ", actor, " is_unit: ", actor is Unit)
 	if not (actor is Unit) or not actor.data.is_player_controlled:
-		return	# enemy-controlled units are handled by AIBrain
+		print("[SP] skipping — not player controlled")
+		return
+	print("[SP] taking turn for: ", actor.data.name)
 	await _take_turn(actor)
 
 func _least_used_strategy() -> Strategy:
@@ -49,6 +52,10 @@ func _least_used_strategy() -> Strategy:
 	return strategies[0]
 
 func _take_turn(actor: Unit) -> void:
+	# wait for ACTION_SELECT in case we fired before BattleManager finished transitioning
+	while BattleManager.current_state != BattleManager.BattleState.ACTION_SELECT:
+		await get_tree().process_frame
+		
 	var strategy: Strategy = _least_used_strategy()
 	print("[SP] taking turn for: ", actor.data.name, " strategy: ", Strategy.keys()[strategy])
 	_strategy_use_count[strategy] = _strategy_use_count.get(strategy, 0) + 1
@@ -81,6 +88,7 @@ func _do_positional_move(actor: Unit, strategy: Strategy) -> void:
 	if candidates.is_empty():
 		return
 
+	# sort candidates by strategy
 	match strategy:
 		Strategy.FURTHEST_MOVE:
 			candidates.sort_custom(func(a, b): return _dist(actor.grid_position, a) > _dist(actor.grid_position, b))
@@ -90,11 +98,12 @@ func _do_positional_move(actor: Unit, strategy: Strategy) -> void:
 			candidates.sort_custom(func(a, b): return a.z > b.z)
 		Strategy.LOWEST_ELEVATION:
 			candidates.sort_custom(func(a, b): return a.z < b.z)
-		Strategy.USE_FIGHT_ABILITY:
-			await _do_fight_ability(actor)
-		
+
 	var chosen: Vector3i = candidates[0]
 	BattleManager.select_action_move()
+	await get_tree().process_frame  # let state settle to MOVE_SELECT before confirming
+	if BattleManager.current_state != BattleManager.BattleState.MOVE_SELECT:
+		return  # state guard failed — bail out, end_turn will clean up
 	await BattleManager.confirm_move(chosen)
 
 func _do_fight_ability(actor: Unit) -> void:
@@ -111,24 +120,36 @@ func _do_fight_ability(actor: Unit) -> void:
 			targets.append(cell)
 	if targets.is_empty():
 		return
+
 	_ability_use_count[fight] = _ability_use_count.get(fight, 0) + 1
+	var target_cell: Vector3i = targets[_rng.randi_range(0, targets.size() - 1)]
+
 	BattleManager.select_action_abilities()
+	await get_tree().process_frame
+	if BattleManager.current_state != BattleManager.BattleState.ABILITIES_SELECT:
+		return
 	BattleManager.select_ability(fight)
-	await BattleManager.confirm_target(targets[_rng.randi_range(0, targets.size() - 1)])
+	await get_tree().process_frame
+	if BattleManager.current_state != BattleManager.BattleState.TARGET_SELECT:
+		return
+	await BattleManager.confirm_target(target_cell)
 
 func _do_ability_cycle(actor: Unit) -> void:
 	if not actor.can_act():
 		return
 	var abilities: Array = actor.data.abilities.duplicate()
-	if actor.data.job != null and actor.data.job.fight_ability != null:
-		abilities.append(actor.data.job.fight_ability)
-
-	# pick the globally least-used ability so coverage spreads across all of
-	# them over the course of the suite rather than always firing the first one
-	abilities.sort_custom(func(a, b): return _ability_use_count.get(a, 0) < _ability_use_count.get(b, 0))
+	if abilities.is_empty():
+		return
+	abilities.sort_custom(func(a, b):
+		var a_is_fight = actor.data.job != null and a == actor.data.job.fight_ability
+		var b_is_fight = actor.data.job != null and b == actor.data.job.fight_ability
+		if a_is_fight != b_is_fight:
+			return not a_is_fight
+		return _ability_use_count.get(a, 0) < _ability_use_count.get(b, 0)
+	)
 	var ability: AbilityData = abilities[0]
 	if actor.data.current_mp < ability.mp_cost:
-		return	# can't afford it this turn — a later turn will retry
+		return
 
 	var context := TurnContext.for_unit(actor, _pathfinder)
 	context.select_ability(ability, _pathfinder)
@@ -143,7 +164,13 @@ func _do_ability_cycle(actor: Unit) -> void:
 	var target_cell: Vector3i = targets[_rng.randi_range(0, targets.size() - 1)]
 
 	BattleManager.select_action_abilities()
+	await get_tree().process_frame
+	if BattleManager.current_state != BattleManager.BattleState.ABILITIES_SELECT:
+		return
 	BattleManager.select_ability(ability)
+	await get_tree().process_frame
+	if BattleManager.current_state != BattleManager.BattleState.TARGET_SELECT:
+		return
 	await BattleManager.confirm_target(target_cell)
 
 func _dist(a: Vector3i, b: Vector3i) -> float:
