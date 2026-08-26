@@ -4,6 +4,7 @@ extends Node
 signal cell_selected(cell: Vector2i)
 signal cell_hovered(cell: Vector2i)
 signal cell_cancelled
+signal center_camera_called
 
 var _reference_layer: TileMapLayer = null
 var _last_hovered_cell: Vector2i = Vector2i(-999, 999)
@@ -25,9 +26,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			emit_signal("cell_selected", cell)
 		if event.is_action_pressed("menu_cancel"):
 			emit_signal("cell_cancelled")
+		if event.is_action_pressed("center_camera"):
+			emit_signal("center_camera_called")
 
 func _get_cell_under_mouse() -> Vector2i:
-	var mouse_pos = _reference_layer.get_global_mouse_position()
+	var mouse_pos = get_mouse_global_pos()
 	var local_pos = _reference_layer.to_local(mouse_pos)
 	local_pos.y += Constants.TILE_ORIGIN_OFFSET  # offset upward to account for bottom origin
 	return _reference_layer.local_to_map(local_pos)
+	
+func get_mouse_global_pos() -> Vector2:
+	return _reference_layer.get_global_mouse_position()

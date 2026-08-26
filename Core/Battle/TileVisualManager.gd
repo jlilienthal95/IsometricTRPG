@@ -19,7 +19,6 @@ const TERRAIN_CONVERSION_TILES: Dictionary = {
 	BattleTileData.TerrainType.ICE: [0, Vector2i(13, 3)],	# replace with actual coords
 }
 
-
 const LIGHT_Y_OFFSET: float = -8.0
 const LIGHT_SCALE: float = 1.0
 const PULSE_ENERGY_MIN: float = 1.0
@@ -223,7 +222,7 @@ func play_effect_remove_animation(tile: BattleTileData, effect_id: EffectId.Id, 
 	var scene: Node2D = _effect_sprites[tile.cell][effect_id]
 	scene.play("fade")
 	var tween = create_tween()
-	tween.tween_property(scene, "modulate:a", 0, 1.0)
+	tween.tween_property(scene, "modulate:a", 0, Constants.FADE_TIMER)
 	await tween.finished
 	scene.queue_free()
 	_effect_sprites[tile.cell].erase(effect_id)

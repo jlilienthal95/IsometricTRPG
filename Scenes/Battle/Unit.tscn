@@ -6,6 +6,11 @@
 [ext_resource type="Texture2D" uid="uid://cmrw5iyl7q72j" path="res://Assets/Sprites/Jobs/Knight/shadow.png" id="3_3o6xq"]
 [ext_resource type="Material" uid="uid://bxmxufi56ixdy" path="res://Assets/Shaders/UnitShaderMaterial.tres" id="3_165ns"]
 [ext_resource type="PackedScene" uid="uid://dwbu06odki00a" path="res://Scenes/Battle/DamageCount.tscn" id="4_63c20"]
+[ext_resource type="Script" uid="uid://q1rhxo4pw2yt" path="res://addons/game_feel_flow/core/gff_combo.gd" id="7_6ksh5"]
+[ext_resource type="Script" uid="uid://b6hb1c3t0eppb" path="res://addons/game_feel_flow/core/gff_player.gd" id="7_y86ry"]
+[ext_resource type="Script" uid="uid://4uoyf4ncegfi" path="res://addons/game_feel_flow/core/gff_combo_entry.gd" id="8_bcy1g"]
+[ext_resource type="PackedScene" uid="uid://cqbil5tm4ms3p" path="res://Effects/HitParticles.tscn" id="12_47bt5"]
+[ext_resource type="Script" uid="uid://d0raprnpaulqm" path="res://addons/game_feel_flow/effects/particles/gff_particles.gd" id="12_bcy1g"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_165ns"]
 shader = ExtResource("1_dg72p")
@@ -154,6 +159,24 @@ _data = {
 &"missed_face_left": SubResource("Animation_dg72p")
 }
 
+[sub_resource type="Resource" id="Resource_kgp5a"]
+script = ExtResource("12_bcy1g")
+particle_scene = ExtResource("12_47bt5")
+emit_count = 20
+duration = 3.0
+restore_duration = 2.0
+metadata/_gff_expanded_groups = Array[String](["Particles Settings", "Restore", "Looping"])
+
+[sub_resource type="Resource" id="Resource_fq1be"]
+script = ExtResource("8_bcy1g")
+effect = SubResource("Resource_kgp5a")
+duration = 3.0
+
+[sub_resource type="Resource" id="Resource_6ksh5"]
+script = ExtResource("7_6ksh5")
+label = "GFFPlayer"
+entries = Array[ExtResource("8_bcy1g")]([SubResource("Resource_fq1be")])
+
 [node name="Unit" type="Node2D" unique_id=1157963703]
 z_as_relative = false
 material = SubResource("ShaderMaterial_165ns")
@@ -170,7 +193,7 @@ material = ExtResource("3_165ns")
 position = Vector2(-30.000002, -54.000004)
 scale = Vector2(0.6, 0.6)
 sprite_frames = ExtResource("2_63c20")
-animation = &"attack"
+animation = &"attack_finisher"
 centered = false
 
 [node name="UnitSpriteShadow" type="Sprite2D" parent="VisualRoot" unique_id=2222824]
@@ -178,6 +201,17 @@ z_index = -1
 position = Vector2(-50, -51)
 texture = ExtResource("3_3o6xq")
 centered = false
+
+[node name="GFFPlayer" type="Node" parent="VisualRoot" unique_id=440990113]
+script = ExtResource("7_y86ry")
+default_combo_index = -1
+combo_dictionary = Dictionary[String, ExtResource("7_6ksh5")]({
+"flash_and_particles": SubResource("Resource_6ksh5")
+})
+active_combo_key = "flash_and_particles"
+metadata/_custom_type_script = "uid://b6hb1c3t0eppb"
+metadata/_gff_inspector_selected_combo = "flash_and_particles"
+metadata/_gff_inspector_expanded_entry = -1
 
 [node name="DamageCount" parent="." unique_id=783185985 instance=ExtResource("4_63c20")]
 modulate = Color(1, 1, 1, 0)

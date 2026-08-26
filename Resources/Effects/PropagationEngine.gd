@@ -10,10 +10,13 @@ static func propagate_pulse(origin: Vector3i, grid: BattleGrid, susceptible_terr
 		var current = queue.pop_front()
 		if visited.has(current):
 			continue
+		#mark current tile as visited
 		visited[current] = true
 		var tile = grid.get_tile(current)
+		#if tiledata is null or terrain is not susceptible to effect, skip
 		if tile == null or not susceptible_terrain.has(tile.terrain_type):
 			continue
+		#else add tile to affected array
 		affected.append(current)
 		for neighbor in grid.get_effect_neighbors(current, include_elevation):
 			if not visited.has(neighbor):

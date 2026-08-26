@@ -11,6 +11,7 @@ extends BattleActorData
 # BASE STATS — authored in the inspector, NEVER touched at runtime
 # =============================================================================
 @export var ai_profile_override: AIProfile = null
+@export var caster_impact_frame_overrides: Dictionary[AbilityData.UnitAnimation, int] = {}  # UnitAnimation -> int 
 
 @export var base_max_mp: int = Constants.UNIT_BASE_MP
 @export var base_attack: int = Constants.UNIT_BASE_ATTACK
@@ -207,3 +208,10 @@ func get_ai_profile() -> AIProfile:
 	if job != null and job.ai_profile != null:
 		return job.ai_profile
 	return null  # brain falls back to a default profile
+
+func get_caster_impact_frame(anim: AbilityData.UnitAnimation) -> int:
+	if caster_impact_frame_overrides.has(anim):
+		return caster_impact_frame_overrides[anim]
+	if job != null and job.caster_impact_frames.has(anim):
+		return job.caster_impact_frames[anim]
+	return 0

@@ -7,6 +7,7 @@ extends BattleActorData
 # destroyed), and can be moved by unit actions (pushed, rolled, slid).
 
 @export var object_name: String = ""
+@export var scene: PackedScene = null
 
 # whether units can stand on / path through the tile this object occupies
 # (crate = true, barrel = false)
@@ -15,8 +16,7 @@ extends BattleActorData
 # whether unit actions can push/slide this object
 @export var is_movable: bool = true
 
-#@export var base_max_hp: int = 10
-#@export var defense: int = 0
+
 
 # multipliers applied to incoming elemental damage — same semantics as UnitData
 #@export var elemental_affinities: Dictionary = {}

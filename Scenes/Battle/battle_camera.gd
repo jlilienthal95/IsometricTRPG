@@ -1,9 +1,6 @@
 class_name BattleCamera
 extends Camera2D
 
-#signal camera_settled
-#signal zoom_settled
-
 @export var pan_speed: float = 0.3       # default seconds to pan to target
 @export var follow_speed: float = 10.0   # follow re-pan interval reference — see follow()
 @onready var cam_animation_player: AnimationPlayer = $AnimationPlayer
@@ -39,9 +36,6 @@ func pan_to(target_pos: Vector2, duration: float = pan_speed) -> void:
 	_position_tween = create_tween()
 	_position_tween.tween_property(self, "position", target_pos, duration)
 	await _position_tween.finished
-	#print("pan to emits camera_settled")
-	#camera_settled.emit()
-
 	
 # continuously tracks a moving node (e.g. a flying projectile) by re-issuing
 # short pans toward its current position every frame. This is now just a
@@ -49,7 +43,7 @@ func pan_to(target_pos: Vector2, duration: float = pan_speed) -> void:
 # it goes through the same _position_tween slot, so nothing else can silently
 # fight it, and pan_to()/snap_to() calling stop_following() first is always
 # enough to take control back.
-func follow(node: Node2D) -> void:
+func follow(node: Node2D, speed: float = follow_speed) -> void:
 	stop_following()
 	_follow_target = node
 	_following = true
@@ -57,20 +51,24 @@ func follow(node: Node2D) -> void:
 		if _position_tween != null and _position_tween.is_valid():
 			_position_tween.kill()
 		_position_tween = create_tween()
-		_position_tween.tween_property(self, "position", node.global_position, 1.0 / follow_speed)
+		_position_tween.tween_property(self, "position", node.global_position, 1.0 / speed)
 		await _position_tween.finished
 		await get_tree().process_frame
 
 func stop_following() -> void:
 	_following = false
 	_follow_target = null
+	
+func stop_following_instant() -> void:
+	stop_following()
+	if _position_tween != null and _position_tween.is_valid():
+		_position_tween.kill()
 
 func snap_to(target_pos: Vector2) -> void:
 	stop_following()
 	if _position_tween != null and _position_tween.is_valid():
 		_position_tween.kill()
 	position = target_pos
-	#camera_settled.emit()
 
 # =============================================================================
 # ZOOM

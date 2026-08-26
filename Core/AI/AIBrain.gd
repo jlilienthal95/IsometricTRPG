@@ -66,8 +66,8 @@ func _take_turn(actor: Unit) -> void:
 	
 	# choose action based on intelligence filter
 	var chosen: ActionCandidate = _choose_action(actions, _board_context.profile.intelligence)
-	print("Chosen Action:")
-	chosen.debug_print()
+	#print("Chosen Action:")
+	#chosen.debug_print()
 	await _execute_action(actor, chosen)
 	
 # run ActionScorer and alter actions array in-place, adding scores generates from weighted Considerations
@@ -83,39 +83,35 @@ func _choose_action(actions: Array[ActionCandidate], intelligence: AIProfile.Int
 	# which attack is chosen, not whether to attack at all
 	var pool = ability_candidates if not ability_candidates.is_empty() else move_only_candidates
 	
-	#print("Ability candidates: ", ability_candidates.size(), " Move-only candidates: ", move_only_candidates.size())
-	print("Using pool of size: ", pool.size())
-	#print("ActionCandidates, ALL:")
-	#for action in pool:
-		#action.debug_print()
+	#print("Using pool of size: ", pool.size())
 	
 	if pool.size() < AIProfile.Intelligence.keys().size() * 2:
-		print("Pool too small for meaningful split, returning best available:")
-		pool[pool.size() - 1].debug_print()
+		#print("Pool too small for meaningful split, returning best available:")
+		#pool[pool.size() - 1].debug_print()
 		return pool[pool.size() - 1]
 	
 	var split = split_array(pool, AIProfile.Intelligence.keys().size())
 	match intelligence:
 		AIProfile.Intelligence.DUMB:
 			var possible = split[0].slice(-3)
-			print("Action Candidates, DUMB:")
-			for action in possible:
-				action.debug_print()
+			#print("Action Candidates, DUMB:")
+			#for action in possible:
+				#action.debug_print()
 			return possible[randi_range(0, possible.size() - 1)]
 		AIProfile.Intelligence.NORMAL:
 			var possible = split[1].slice(-3)
-			print("Action Candidates, NORMAL:")
-			for action in possible:
-				action.debug_print()
+			#print("Action Candidates, NORMAL:")
+			#for action in possible:
+				#action.debug_print()
 			return possible[randi_range(0, possible.size() - 1)]
 		AIProfile.Intelligence.SMART:
-			print("ALL Action Candidates, SMART:")
-			for action in split[2]:
-				action.debug_print()
+			#print("ALL Action Candidates, SMART:")
+			#for action in split[2]:
+				#action.debug_print()
 			var possible = split[2].slice(-3)
-			print("CHOSEN Action Candidates, SMART:")
-			for action in possible:
-				action.debug_print()
+			#print("CHOSEN Action Candidates, SMART:")
+			#for action in possible:
+				#action.debug_print()
 			return possible[randi_range(0, possible.size() - 1)]
 		_:
 			return pool[0]

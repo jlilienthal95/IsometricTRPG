@@ -5,7 +5,7 @@ enum AbilityType { PHYSICAL, MAGICAL, HEALING, STATUS, MOVEMENT }
 enum TargetType { SINGLE_ENEMY, SINGLE_ALLY, SELF, AREA_ENEMY, AREA_ALLY, AREA_ALL }
 enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 enum AnimationPath { PROJECTILE, PROJECTILE_ARROW, INSTANT, PATH }
-enum UnitAnimation { ATTACK, SPELL, SHOOT }
+enum UnitAnimation { ATTACK, ATTACK_FINISHER, CAST_SPELL, }
 
 @export var ability_name: String = ""
 @export var ability_id: int = 0		# permanent, never reuse — used only for save serialization
@@ -38,7 +38,9 @@ enum UnitAnimation { ATTACK, SPELL, SHOOT }
 
 # Animation
 @export var animation_id: String = ""   # reference to which animation to play
-@export var unit_animation: UnitAnimation = UnitAnimation.ATTACK # e.g. "attack", "cast_spell", "shoot" — empty = default
-@export var impact_delay: int = 0 #time from ability anim start until ability impact
-@export var charge_delay: int = 0  #if any, time from ability anim start until tween start
 @export var animation_path: AnimationPath = AnimationPath.PROJECTILE #path ability anim tweens through
+@export var animation_fps: float = 12.0
+@export var charge_frame: int = 0		# frames after spawn before travel begins
+@export var impact_frame: int = 0		# frames after travel starts before damage resolves
+@export var unit_animation: UnitAnimation = UnitAnimation.ATTACK # e.g. "attack", "cast_spell", "shoot" — empty = default
+@export var impact_on_arrival: bool = false  # true = damage resolves when visual reaches target

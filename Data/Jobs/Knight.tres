@@ -31,7 +31,11 @@ portrait = ExtResource("1_jn4e3")
 sprite_frames = ExtResource("2_jn4e3")
 sprite_offset = Vector2(0, -2)
 flip_offset = Vector2(-15, 0)
-cast_impact_delay = 1000.0
+caster_impact_frames = Dictionary[int, int]({
+0: 47,
+1: 34,
+2: 27
+})
 hp_modifier = 1.2
 mp_modifier = 0.8
 attack_modifier = 1.2

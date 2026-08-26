@@ -4,6 +4,7 @@ extends Node
 # Resolves an ability from caster against a target (Unit or BattleObject).
 # Pure calculation — no animation, no HP mutation. Callers apply the result.
 func resolve(caster: Unit, target, ability: AbilityData) -> ActionResult:
+	print("attempting to resolve ability: ", ability.ability_name)
 	# early return if ability misses
 	var hit_roll = randf()
 	if hit_roll > ability.base_hit_chance:

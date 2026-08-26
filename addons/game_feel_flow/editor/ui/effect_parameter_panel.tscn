@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dqevdejid0b"]
+
+[ext_resource type="Script" uid="uid://dob6r031or56s" path="res://addons/game_feel_flow/editor/ui/effect_parameter_panel.gd" id="1_xxvdb"]
+
+[node name="EffectParameterPanel" type="VBoxContainer" unique_id=317505283]
+size_flags_horizontal = 3
+script = ExtResource("1_xxvdb")

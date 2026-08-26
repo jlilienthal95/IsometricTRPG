@@ -7,9 +7,11 @@ extends EditorScript
 const GENERATORS: Array[GDScript] = [
 	preload("res://Tools/GenerateJobRegistry.gd"),
 	preload("res://Tools/GenerateAbilityRegistry.gd"),
+	preload("res://Tools/GenerateAbilitySceneRegistry.gd"),
 	preload("res://Tools/GenerateEffectRegistry.gd"),
 	preload("res://Tools/GenerateEquipmentRegistry.gd"),
 	preload("res://Tools/GenerateConsiderationsList.gd"),
+	preload("res://Tools/GenerateAbilityAnimFPS.gd"),
 ]
 
 func _run() -> void:

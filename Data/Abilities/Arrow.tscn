@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dpvtv7dpvlys1"]
+
+[ext_resource type="Script" uid="uid://b7snhlbkpcmxf" path="res://Core/Battle/AbilityVisuals/ArrowVisual.gd" id="1_2q77i"]
+[ext_resource type="Texture2D" uid="uid://e7i8k8y2xu1i" path="res://Assets/Sprites/Jobs/Archer/Arrow.png" id="2_i8rmt"]
+
+[node name="Arrow" type="Node2D" unique_id=154261396]
+script = ExtResource("1_2q77i")
+metadata/_custom_type_script = "uid://b7snhlbkpcmxf"
+
+[node name="AbilitySprite" type="Sprite2D" parent="." unique_id=1279188318]
+position = Vector2(7, -9)
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("2_i8rmt")

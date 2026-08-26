@@ -45,7 +45,7 @@ func _test_store_apply_and_refresh() -> void:
 func _make_executor(grid: BattleGrid) -> EffectExecutor:
 	var executor = EffectExecutor.new()
 	add_child(executor)
-	executor.setup(grid, null, null)
+	executor.setup(grid, null, null, null)
 	return executor
 
 func _test_apply_and_neutralize() -> void:

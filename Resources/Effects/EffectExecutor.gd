@@ -122,6 +122,7 @@ func _play_apply_animation(target, effect_id: EffectId.Id) -> void:
 		await target.play_effect_apply_animation(effect_id)
 
 func _play_remove_animation(target, effect_id: EffectId.Id, reason: RemovalReason) -> void:
+	print("playing remove anim")
 	var effect_name = EffectId.Id.keys()[effect_id]
 	if target is BattleTileData and _tile_visual_manager != null:
 		await _tile_visual_manager.play_effect_remove_animation(target, effect_id, reason)
@@ -129,3 +130,9 @@ func _play_remove_animation(target, effect_id: EffectId.Id, reason: RemovalReaso
 
 func _play_immune_animation(target, effect_id: EffectId.Id) -> void:
 	pass
+	
+func apply_damage(actor: BattleActor, amount: int) -> void:
+	await actor.apply_damage(amount)
+
+func apply_heal(actor: BattleActor, amount: int) -> void:
+	await actor.apply_heal(amount)

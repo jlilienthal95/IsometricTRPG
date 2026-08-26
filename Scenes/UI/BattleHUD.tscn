@@ -6,14 +6,28 @@
 [ext_resource type="Script" uid="uid://cce84r87we5dk" path="res://Scenes/UI/HoverButton.gd" id="4_tbwvx"]
 [ext_resource type="FontFile" uid="uid://cu00oo4n4wtq3" path="res://Assets/Theme/MinoGram_Font/minogram_6x10.fnt" id="5_83cdx"]
 [ext_resource type="Script" uid="uid://xpth3bekisc0" path="res://Scenes/UI/BattleInfo.gd" id="5_wmss7"]
+[ext_resource type="Script" uid="uid://cxjovx5w0gss8" path="res://Scenes/Input/MouseDetectRect.gd" id="7_l7j8j"]
 
 [node name="BattleHUD" type="Control" unique_id=1260164239]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 320.0
 offset_bottom = 180.0
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 script = ExtResource("1_xilco")
+
+[node name="MouseDetectRect" type="Control" parent="." unique_id=1171404740]
+z_index = -1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_l7j8j")
+metadata/_custom_type_script = "uid://cxjovx5w0gss8"
 
 [node name="EquipmentMenu" type="PanelContainer" parent="." unique_id=25345652]
 visible = false
@@ -28,6 +42,7 @@ offset_top = -64.0
 offset_right = -4.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 
 [node name="EquipmentScroll" type="ScrollContainer" parent="EquipmentMenu" unique_id=2023976590]
@@ -54,6 +69,7 @@ offset_top = -64.0
 offset_right = -4.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ActionMenu" unique_id=98039181]
@@ -62,6 +78,7 @@ layout_mode = 2
 [node name="MoveButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=295700898]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 theme_override_font_sizes/font_size = 8
 text = "Move"
 script = ExtResource("4_tbwvx")
@@ -70,6 +87,7 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="AbilitiesButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=52847447]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 text = "Abilities"
 script = ExtResource("4_tbwvx")
@@ -78,6 +96,7 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="EquipmentButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=1684023085]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 text = "Equipment"
 script = ExtResource("4_tbwvx")
 metadata/_custom_type_script = "uid://cce84r87we5dk"
@@ -85,6 +104,7 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="WaitButton" type="Button" parent="ActionMenu/VBoxContainer" unique_id=448627905]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 text = "Wait"
 script = ExtResource("4_tbwvx")
 metadata/_custom_type_script = "uid://cce84r87we5dk"
@@ -102,6 +122,7 @@ offset_top = -64.0
 offset_right = -4.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 1
 
 [node name="JobAbilityScroll" type="ScrollContainer" parent="JobAbilityMenu" unique_id=418521758]
 clip_contents = false
@@ -128,6 +149,7 @@ offset_top = -64.0
 offset_right = -4.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="AbilitiesMenu" unique_id=1168510152]
@@ -137,6 +159,7 @@ theme = ExtResource("1_hcak5")
 [node name="FightButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=1242821209]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 theme = ExtResource("1_hcak5")
 text = "Fight"
 script = ExtResource("4_tbwvx")
@@ -145,6 +168,7 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="JobAbilityMenuButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=695248736]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 text = "Job Ability"
 script = ExtResource("4_tbwvx")
 metadata/_custom_type_script = "uid://cce84r87we5dk"
@@ -152,6 +176,7 @@ metadata/_custom_type_script = "uid://cce84r87we5dk"
 [node name="ItemsButton" type="Button" parent="AbilitiesMenu/VBoxContainer" unique_id=858068264]
 custom_minimum_size = Vector2(96, 16)
 layout_mode = 2
+mouse_filter = 1
 text = "Items"
 script = ExtResource("4_tbwvx")
 metadata/_custom_type_script = "uid://cce84r87we5dk"

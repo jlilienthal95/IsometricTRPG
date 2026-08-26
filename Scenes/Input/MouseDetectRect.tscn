@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://bk2flnuhk4a3b"]
+
+[ext_resource type="Script" uid="uid://cxjovx5w0gss8" path="res://Scenes/Input/MouseDetectRect.gd" id="1_6ex3x"]
+
+[node name="MouseDetectRect" type="Control" unique_id=1045722439]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6ex3x")
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

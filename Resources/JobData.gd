@@ -13,7 +13,10 @@ enum SpeedRank { SLOW, NORMAL, FAST }
 @export var sprite_offset: Vector2 = Vector2.ZERO
 @export var flip_offset: Vector2 = Vector2.ZERO
 @export var shadow_scale: Vector2 = Vector2.ONE
-@export var cast_impact_delay: float = 0.0	# time from caster anim start until ability anim start
+@export var caster_impact_frames: Dictionary[AbilityData.UnitAnimation, int] = {
+	AbilityData.UnitAnimation.ATTACK: 0,
+	AbilityData.UnitAnimation.CAST_SPELL: 0,
+}  # frame at which the caster spawns the effect
 
 # --- stat modifiers applied to unit base stats (multipliers) ---
 @export var hp_modifier: float = 1.0

@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cqbil5tm4ms3p"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_03jhx"]
+particle_flag_disable_z = true
+emission_shape = 2
+emission_sphere_radius = 0.01
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_max = 159.62
+angular_velocity_min = -140.62001
+angular_velocity_max = 67.499985
+radial_velocity_min = -144.52002
+radial_velocity_max = 89.83997
+gravity = Vector3(0, 150, 0)
+radial_accel_min = 11.219997
+radial_accel_max = 72.60999
+scale_min = 2.0
+scale_max = 2.25
+color = Color(1, 0, 0, 1)
+hue_variation_min = -2.2351742e-08
+hue_variation_max = 0.14999998
+
+[node name="HitParticles" type="GPUParticles2D" unique_id=1196560988]
+emitting = false
+amount = 15
+lifetime = 2.0
+one_shot = true
+explosiveness = 1.0
+collision_base_size = 0.0
+local_coords = true
+trail_enabled = true
+trail_lifetime = 0.06999999999999999
+trail_sections = 4
+trail_section_subdivisions = 8
+process_material = SubResource("ParticleProcessMaterial_03jhx")

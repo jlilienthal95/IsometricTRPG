@@ -13,9 +13,10 @@ signal ability_impact
 
 const WATER_SHADER = preload("res://Assets/Shaders/Unit_Water.gdshader")
 
-#var data: UnitData = null
-#var grid_position: Vector3i = Vector3i.ZERO
 var _default_material: Material = null
+
+@onready var gff_player: GFFPlayer = $VisualRoot/GFFPlayer
+
 
 func _ready() -> void:
 	unit_sprite.material = unit_sprite.material.duplicate()
@@ -58,7 +59,9 @@ func apply_damage(amount: int) -> void:
 	print("[Unit] apply_damage — ", data.name, " took ", amount, " new_hp: ", data.current_hp)
 	BattleEvents.hp_changed.emit(self, -amount, data.current_hp)
 	play_damage_count(amount)
-	await _flash_red()
+	gff_player.play("flash_and_particles")
+	_flash_red()
+	
 	if data.current_hp == 0:
 		await play_death()
 		print("actor_defeated emit start")
@@ -171,7 +174,7 @@ func play_attack_animation(cast_impact_delay: float, unit_anim: AbilityData.Unit
 	if data.is_dead:
 		return
 	match unit_anim:
-		AbilityData.UnitAnimation.SPELL: play_cast_spell()
+		AbilityData.UnitAnimation.CAST_SPELL: play_cast_spell()
 		AbilityData.UnitAnimation.ATTACK: play_attack()
 		_: play_attack()  # default fallback
 	await get_tree().create_timer(cast_impact_delay / 1000).timeout

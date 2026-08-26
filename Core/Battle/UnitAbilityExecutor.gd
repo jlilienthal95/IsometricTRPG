@@ -45,26 +45,81 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 
 	_execute_sequence()
 
-func _execute_sequence() -> void:
 	# all cinematic presentation is owned by the director — this executor only
 	# choreographs the ability itself (animations, projectiles, resolution)
+func _execute_sequence() -> void:
 	await _director.begin_sequence(_caster)
 	_face_target()
-	var cast_impact_delay = _caster.data.job.cast_impact_delay if _caster.data.job != null else 0.0
-	await _caster.play_attack_animation(cast_impact_delay, _ability.unit_animation)
-	await _execute_effect()
-	# wait time it takes from ability anim begin until timpact of ability, less any charge time if applicable
-	await get_tree().create_timer(float((_ability.impact_delay - _ability.charge_delay) / 1000.0)).timeout
-	await resolve_ability(_action_resolver)
-	# resolve_ability fully completes here including all rider effects
+
+	# 1. calculate all timing values up front
+	var caster_anim_fps = _get_caster_anim_fps()
+	var ability_anim_fps = _get_ability_anim_fps()
+	var caster_impact_delay = _caster.data.get_caster_impact_frame(_ability.unit_animation) / caster_anim_fps
+	var charge_delay = _ability.charge_frame / ability_anim_fps if _ability.charge_frame > 0 else 0.0
+	# impact_delay measured from effect anim start — subtract charge_delay
+	var impact_delay = (_ability.impact_frame / ability_anim_fps) - charge_delay if _ability.impact_frame > 0 else 0.0
+
+	print("[UAE:_execute_sequence] caster_anim_fps: ", caster_anim_fps)
+	print("[UAE:_execute_sequence] ability_anim_fps: ", ability_anim_fps)
+	print("[UAE:_execute_sequence] caster_impact_delay: ", caster_impact_delay)
+	print("[UAE:_execute_sequence] charge_delay: ", charge_delay)
+	print("[UAE:_execute_sequence] impact_delay (adjusted): ", impact_delay)
+
+	# 2. caster animation starts — await until caster impact frame
+	print("[UAE:_execute_sequence] starting caster animation")
+	_caster.play_attack_animation(caster_impact_delay, _ability.unit_animation)
+	await get_tree().create_timer(caster_impact_delay / Engine.time_scale).timeout
+	print("[UAE:_execute_sequence] caster impact frame reached — spawning effect")
+
+	# 3. spawn visual at caster impact frame
+	var effect = _launch_effect()
+	var visual_state := {"done": false}
+	if effect != null:
+		effect.visual_complete.connect(func(): visual_state["done"] = true)
+		print("[UAE:_execute_sequence] effect spawned: ", effect)
+	else:
+		print("[UAE:_execute_sequence] no effect to spawn")
+
+	# 4. charge delay — visual exists but travel hasn't started yet
+	if charge_delay > 0:
+		print("[UAE:_execute_sequence] waiting for charge delay: ", charge_delay)
+		await get_tree().create_timer(charge_delay / Engine.time_scale).timeout
+		print("[UAE:_execute_sequence] charge delay complete")
+
+	# 5. travel starts — fire and forget, runs independently of damage timing
+	if effect != null:
+		print("[UAE:_execute_sequence] starting travel")
+		effect.travel(_get_target_world_pos(), _ability, _camera)
+
+	# 6 & 7. for arrival-based abilities, wait for visual first then resolve
+	if _ability.impact_on_arrival:
+		if effect != null and not visual_state["done"]:
+			print("[UAE:_execute_sequence] waiting for visual arrival before damage")
+			await effect.visual_complete
+		print("[UAE:_execute_sequence] visual arrived — resolving ability")
+		await resolve_ability(_action_resolver)
+	else:
+		# frame-based impact — resolve at impact_delay then wait for visual cleanup
+		if impact_delay > 0:
+			print("[UAE:_execute_sequence] waiting for impact delay: ", impact_delay)
+			await get_tree().create_timer(impact_delay / Engine.time_scale).timeout
+		print("[UAE:_execute_sequence] impact frame reached — resolving ability")
+		await resolve_ability(_action_resolver)
+		if effect != null and not visual_state["done"]:
+			print("[UAE:_execute_sequence] waiting for visual_complete")
+			await effect.visual_complete
+	print("[UAE:_execute_sequence] visual complete")
+
+	# 8. clean up
 	_caster.play_idle()
-	# let every queued impact beat land inside the sequence before tearing down
 	await _director.wait_until_idle()
 	await _director.end_sequence()
+	_camera.pan_to(_caster.global_position)
 	_is_executing = false
+	print("[UAE:_execute_sequence] emitting ability_complete")
 	emit_signal("ability_complete")
 	_clear_context()
-
+	
 func _face_target() -> void:
 	if _single_target == null:
 		return
@@ -80,24 +135,25 @@ func _get_target_world_pos() -> Vector2:
 	return Vector2.ZERO
 
 func _execute_effect() -> void:
+	print("executing effect")
 	if _ability.animation_id == "":
 		return
-		
-	if AbilitySceneRegistry.SCENES.has(_ability.animation_id):
-		var effect: Node2D = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate()
-		get_parent().add_child(effect)
-		effect.global_position = _caster.global_position
-		effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
-		effect.z_index = Constants.MAX_ELEVATION * 4 + 3
-		_camera.follow(effect)
-		effect.play(_ability.animation_id)
-		# wait for ability/spell charge portion of anim, if applicable
-		if _ability.charge_delay != 0:
-			await get_tree().create_timer(_ability.charge_delay * .001).timeout
-		await _travel(effect)
-		#if is_instance_valid(effect):
-			#await effect
-			#effect.queue_free()
+	if not AbilitySceneRegistry.SCENES.has(_ability.animation_id):
+		return
+	
+	var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate() as AbilityVisual
+	if effect == null:
+		push_error("UnitAbilityExecutor: effect scene root is not an AbilityVisual — check scene: " + _ability.animation_id)
+		return
+	get_parent().add_child(effect)
+	effect.z_index = Constants.MAX_ELEVATION * 4 + 3
+	effect.global_position = _caster.global_position
+	effect.scale.x = abs(effect.scale.x) * _caster.unit_visual_root.scale.x
+
+	if _ability.charge_delay != 0:
+		await get_tree().create_timer(_ability.charge_delay * 0.001).timeout
+
+	await effect.travel(_get_target_world_pos(), _ability, _camera)
 
 # resolves the ability against its target(s).
 # Damage flows exclusively through target.apply_damage — that single call
@@ -138,56 +194,38 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 			_single_target.play_missed()
 	# TODO: handle multi_target resolution
 
-func _travel(effect: Node2D) -> void:
-	match _ability.animation_path:
-		AbilityData.AnimationPath.PROJECTILE:
-			var tween = create_tween()
-			tween.tween_property(effect, "global_position", _get_target_world_pos(), 0.4)
-			await tween.finished
-		AbilityData.AnimationPath.PROJECTILE_ARROW:
-			var start = effect.global_position
-			var end = _get_target_world_pos()
-			end.x -= 7
-			var distance = start.distance_to(end)
-			var max_range = _ability.max_range * Constants.TILE_WORLD_SIZE
-			
-			var ratio = distance / max_range
-			var clamped = clampf(ratio, 0.0, 1.0)
-			var arc_height = 40.0 * (clamped)
-			var duration = 0.625 + ratio * 0.4
-
-			#var arc_height = 40.0 * (1.0 - clampf(distance / max_range, 0.0, 1.0))
-			#var duration = 0.625 + (distance / max_range) * 0.4  # further = slightly longer
-			
-			_camera.zoom_for_projectile(distance, max_range)
-			var tween = create_tween()
-			var prev_pos = effect.global_position
-			tween.tween_method(func(t: float):
-				if not is_instance_valid(effect):
-					tween.kill()
-					return
-				var flat = start.lerp(end, t)
-				flat.y -= arc_height * 4.0 * t * (1.0 - t)
-				var direction = flat - prev_pos
-				if direction.length() > 0.01:
-					var angle = direction.angle()
-					# if arrow is flipped (facing left), mirror the rotation
-					if effect.scale.x < 0:
-						effect.get_child(0).rotation = PI - angle
-					else:
-						effect.get_child(0).rotation = angle
-				prev_pos = flat
-				effect.global_position = flat
-			, 0.0, 1.0, duration)
-			await tween.finished
-			_camera.stop_following()
-		AbilityData.AnimationPath.INSTANT:
-			effect.global_position = _get_target_world_pos()
-		AbilityData.AnimationPath.PATH:
-			_travel_path(effect)
+func _launch_effect() -> AbilityVisual:
+	if _ability.animation_id == "" or not AbilitySceneRegistry.SCENES.has(_ability.animation_id):
+		print("anim not found")
+		return null
+	var effect = AbilitySceneRegistry.SCENES[_ability.animation_id].instantiate() as AbilityVisual
+	if effect == null:
+		push_error("UnitAbilityExecutor: effect scene root is not an AbilityVisual — check scene: " + _ability.animation_id)
+		return null
+	effect.visible = false
+	get_parent().add_child(effect)
+	effect.spawn(_caster.global_position, _caster)
+	effect.visible = true
+	print("effect spawned at: ", effect.global_position)
+	return effect
 
 func _travel_path(effect: Node2D, path: Array[Vector2] = []) -> void:
 	pass # TODO: implement path-based travel
+	
+func _get_caster_anim_fps() -> float:
+	var sprite = _caster.get_node_or_null("VisualRoot/UnitSprite")
+	if sprite is AnimatedSprite2D and sprite.sprite_frames != null:
+		print("sprite found")
+		var anim_name = AbilityData.UnitAnimation.keys()[_ability.unit_animation].to_lower()
+		print("anim name: ", anim_name)
+		print("sprite frames: ", sprite.sprite_frames)
+		if sprite.sprite_frames.has_animation(anim_name):
+			print(anim_name, " found")
+			return sprite.sprite_frames.get_animation_speed(anim_name)
+	return 12.0  # fallback if sprite or animation not found
+
+func _get_ability_anim_fps() -> float:
+	return _ability.animation_fps if _ability.animation_fps > 0 else 12.0
 
 func _clear_context() -> void:
 	_caster = null

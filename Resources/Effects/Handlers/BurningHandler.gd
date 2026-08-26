@@ -12,4 +12,10 @@ func get_propagation_config() -> PropagationConfig:
 	config.damage_multiplier = 0.5
 	config.respects_weaknesses = true
 	config.min_ticks_before_spread = 1
+	
+	# --- terrain conversion ---
+	config.converts_terrain = BattleTileData.TerrainType.ASH
+	config.converts_on_threshold = true   # true = converts when ticks_active hits threshold
+	config.converts_instantly = false     # true = converts immediately on application
 	return config
+	

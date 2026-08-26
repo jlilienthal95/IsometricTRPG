@@ -1,0 +1,222 @@
+[gd_scene format=3 uid="uid://cnal6oij1hhdc"]
+
+[ext_resource type="Shader" uid="uid://kpydy86nqivi" path="res://Assets/hit_flash.gdshader" id="1_wpq1i"]
+[ext_resource type="Script" uid="uid://mlvkh6vsrb34" path="res://Scenes/Battle/BattleObject.gd" id="2_wpq1i"]
+[ext_resource type="Material" uid="uid://bxmxufi56ixdy" path="res://Assets/Shaders/UnitShaderMaterial.tres" id="3_ejmcp"]
+[ext_resource type="SpriteFrames" uid="uid://cb0sg4wgbbtyi" path="res://Data/Jobs/KnightFrames.tres" id="4_70i3g"]
+[ext_resource type="Texture2D" uid="uid://cmrw5iyl7q72j" path="res://Assets/Sprites/Jobs/Knight/shadow.png" id="5_rlev5"]
+[ext_resource type="Script" uid="uid://b6hb1c3t0eppb" path="res://addons/game_feel_flow/core/gff_player.gd" id="6_21xdx"]
+[ext_resource type="Script" uid="uid://q1rhxo4pw2yt" path="res://addons/game_feel_flow/core/gff_combo.gd" id="7_pc8h0"]
+[ext_resource type="Script" uid="uid://4uoyf4ncegfi" path="res://addons/game_feel_flow/core/gff_combo_entry.gd" id="8_vvkt8"]
+[ext_resource type="PackedScene" uid="uid://cqbil5tm4ms3p" path="res://Effects/HitParticles.tscn" id="9_c2goo"]
+[ext_resource type="Script" uid="uid://d0raprnpaulqm" path="res://addons/game_feel_flow/effects/particles/gff_particles.gd" id="10_pd2yp"]
+[ext_resource type="PackedScene" uid="uid://dwbu06odki00a" path="res://Scenes/Battle/DamageCount.tscn" id="11_7do4p"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_165ns"]
+shader = ExtResource("1_wpq1i")
+shader_parameter/flash_amount = 0.0
+shader_parameter/flash_color = Color(1, 0, 0, 1)
+
+[sub_resource type="Animation" id="Animation_63c20"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VisualRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, -5)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("VisualRoot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("VisualRoot:skew")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("DamageCount:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-57, -64)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("DamageCount:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_165ns"]
+resource_name = "damage_count"
+length = 2.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("DamageCount:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 1.75, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(-4, -17), Vector2(-4, -33), Vector2(-4, -33), Vector2(-4, -17)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("DamageCount:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.07, 0.2, 1.75, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_3o6xq"]
+resource_name = "missed"
+length = 0.8
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VisualRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.52, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, -5), Vector2(-36, -5), Vector2(-36, -5), Vector2(0, -5)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("VisualRoot:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.52, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.13962634, -0.13962634, 0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("VisualRoot:skew")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.13596906, 0.5206184, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, -0.13962634, -0.24434609527920617, -0.19198622, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_dg72p"]
+resource_name = "missed_face_left"
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_63c20"]
+_data = {
+&"RESET": SubResource("Animation_63c20"),
+&"damage_count": SubResource("Animation_165ns"),
+&"missed": SubResource("Animation_3o6xq"),
+&"missed_face_left": SubResource("Animation_dg72p")
+}
+
+[sub_resource type="Resource" id="Resource_kgp5a"]
+script = ExtResource("10_pd2yp")
+particle_scene = ExtResource("9_c2goo")
+emit_count = 20
+duration = 3.0
+restore_duration = 2.0
+metadata/_gff_expanded_groups = Array[String](["Particles Settings", "Restore", "Looping"])
+
+[sub_resource type="Resource" id="Resource_fq1be"]
+script = ExtResource("8_vvkt8")
+effect = SubResource("Resource_kgp5a")
+duration = 3.0
+
+[sub_resource type="Resource" id="Resource_6ksh5"]
+script = ExtResource("7_pc8h0")
+label = "GFFPlayer"
+entries = Array[ExtResource("8_vvkt8")]([SubResource("Resource_fq1be")])
+
+[node name="Object" type="Node2D" unique_id=1157963703]
+z_as_relative = false
+material = SubResource("ShaderMaterial_165ns")
+script = ExtResource("2_wpq1i")
+
+[node name="ObjectAnimation" type="AnimationPlayer" parent="." unique_id=734042749]
+libraries/ = SubResource("AnimationLibrary_63c20")
+
+[node name="VisualRoot" type="Node2D" parent="." unique_id=57226232]
+position = Vector2(0, -5)
+
+[node name="ObjectSprite" type="AnimatedSprite2D" parent="VisualRoot" unique_id=292865711]
+material = ExtResource("3_ejmcp")
+position = Vector2(-30.000002, -54.000004)
+scale = Vector2(0.6, 0.6)
+sprite_frames = ExtResource("4_70i3g")
+animation = &"attack_finisher"
+centered = false
+
+[node name="ObjectSpriteShadow" type="Sprite2D" parent="VisualRoot" unique_id=2222824]
+z_index = -1
+position = Vector2(-50, -51)
+texture = ExtResource("5_rlev5")
+centered = false
+
+[node name="GFFPlayer" type="Node" parent="VisualRoot" unique_id=440990113]
+script = ExtResource("6_21xdx")
+default_combo_index = -1
+combo_dictionary = Dictionary[String, ExtResource("7_pc8h0")]({
+"flash_and_particles": SubResource("Resource_6ksh5")
+})
+active_combo_key = "flash_and_particles"
+metadata/_custom_type_script = "uid://b6hb1c3t0eppb"
+metadata/_gff_inspector_selected_combo = "flash_and_particles"
+metadata/_gff_inspector_expanded_entry = -1
+
+[node name="DamageCount" parent="." unique_id=783185985 instance=ExtResource("11_7do4p")]
+modulate = Color(1, 1, 1, 0)
+offset_left = -57.0
+offset_top = -64.0
+offset_right = -57.0
+offset_bottom = -64.0
+scale = Vector2(0.25, 0.25)

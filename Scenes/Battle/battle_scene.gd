@@ -23,6 +23,10 @@ var test_scenario: BattleScenario = null
 @onready var _effect_executor: EffectExecutor = $EffectExecutor
 @onready var _turn_queue: TurnQueue = $TurnQueue
 @onready var _ai_brain: AIBrain = $AIBrain
+@onready var _mouse_detect_rect: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect
+@onready var _mouse_detect_rect2: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect2
+@onready var _mouse_detect_rect3: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect3
+@onready var _mouse_detect_rect4: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect4
 
 # units to spawn — preloaded so exports can never fail to find them
 # TODO: replace with proper spawn system driven by battle/GameState configuration
@@ -46,6 +50,10 @@ var _cinematic_director: CinematicDirector = null
 # =============================================================================
 # SETUP
 # =============================================================================
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		print("input received by battle_scene — hovered control: ", get_viewport().gui_get_hovered_control())
 
 func _ready() -> void:
 	randomize()
@@ -81,6 +89,8 @@ func _setup_systems() -> void:
 	_input_handler.cell_selected.connect(_on_cell_selected)
 	_input_handler.cell_hovered.connect(_on_cell_hovered)
 	_input_handler.cell_cancelled.connect(_on_cell_cancelled)
+	
+	_mouse_detect_rect.setup(_battle_camera, _input_handler)
 
 	# cinematic director — reacts to BattleEvents on its own once set up
 	_cinematic_director = CinematicDirector.new()
@@ -137,12 +147,28 @@ func _spawn_units() -> void:
 	
 	var player_units: Array[BattleActor] = [marta, auburn]
 	var enemy_units: Array[BattleActor] = [theo]
-
+	
+	for marker in get_tree().get_nodes_in_group("actor_markers"):
+		if not marker is ActorMarker or marker.actor_data == null:
+			continue
+		var cell = world_to_grid(marker.global_position)
 	# NOTE: units are resolved inside _spawn_unit, BEFORE the turn queue is
 	# built — the queue orders by resolved speed rank, so resolution must
 	# already have happened.
-	_turn_queue.setup(player_units, enemy_units)
 	
+		if marker.actor_data is UnitData:
+			var unit = _spawn_unit(cell, marker.actor_data)
+			match marker.actor_type:
+				BattleActorData.Type.PLAYER:
+					player_units.append(unit)
+				BattleActorData.Type.ENEMY:
+					enemy_units.append(unit)
+				BattleActorData.Type.NEUTRAL:
+					pass  # on field but not in either queue
+		elif marker.actor_data is ObjectData:
+			_spawn_object(cell, marker.actor_data, marker.actor_data.scene)
+	
+	_turn_queue.setup(player_units, enemy_units)
 	#TODO: Uncomment this before release/export
 	#await _battle_ui.on_battle_start()
 	BattleManager.call_deferred("start_battle", player_units, enemy_units)
@@ -160,7 +186,7 @@ func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> BattleActor:
 	return unit
 
 # instantiates a BattleObject and places it on the grid — mirror of _spawn_unit
-func spawn_object(cell: Vector3i, object_data: ObjectData, scene: PackedScene) -> BattleObject:
+func _spawn_object(cell: Vector3i, object_data: ObjectData, scene: PackedScene) -> BattleObject:
 	var object: BattleObject = scene.instantiate()
 	object.global_position = grid_to_world(cell)
 	add_child(object)
@@ -204,7 +230,7 @@ func _spawn_from_scenario(scenario: BattleScenario) -> void:
 		for spec in scenario.object_specs:
 			if open_cells.is_empty():
 				break
-			spawn_object(open_cells.pop_back(), spec, object_scene)
+			_spawn_object(open_cells.pop_back(), spec, object_scene)
 	elif not scenario.object_specs.is_empty():
 		push_warning("BattleTestRunner: no BattleObject.tscn found — skipping %d object spawns" % scenario.object_specs.size())
 
@@ -217,13 +243,27 @@ func _spawn_from_scenario(scenario: BattleScenario) -> void:
 
 # converts a grid cell (Vector3i) to a world position using the correct elevation layer
 func grid_to_world(cell: Vector3i) -> Vector2:
+	#fetch BattleTileData from cell vector
 	var tile = _battle_grid.get_tile(cell)
 	if tile == null:
 		return Vector2.ZERO
-	var layer = _terrain_layers.get_node("Elevation" + str(cell.z))
-	var world_pos = layer.to_global(layer.map_to_local(Vector2i(cell.x, cell.y)))
+	var layer: TileMapLayer = _terrain_layers.get_node("Elevation" + str(cell.z))
+	var local_pos = layer.map_to_local(Vector2i(cell.x, cell.y))
+	var world_pos = layer.to_global(local_pos)
 	world_pos.y -= Constants.TILE_ORIGIN_OFFSET
 	return world_pos
+
+# converts a world position (Vector2) to a grid cell (Vector3i) using the highest elevation layer
+func world_to_grid(world_pos: Vector2) -> Vector3i:
+	world_pos.y += Constants.TILE_ORIGIN_OFFSET
+	var elevation = _battle_grid.get_tile_at_highest_elevation(Vector2i(world_pos))
+	var layer: TileMapLayer = _terrain_layers.get_node("Elevation" + str(elevation))
+	var local_pos = layer.to_local(world_pos)
+	var tile = _battle_grid.get_tile(local_pos)
+	if tile == null:
+		return Vector3i.ZERO
+	return tile
+
 
 # finds the first valid reachable Vector3i cell matching the clicked Vector2i position
 # returns null if no valid cell is found — always reads from _turn_context, so the check
@@ -322,11 +362,11 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 				print("skipping and starting next turn.")
 				BattleManager.end_turn()
 				return
-			await _cinematic_director.begin_sequence(null)
+
 			var processor = TerrainTurnProcessor.new()
 			await processor.process_terrain_turn(_battle_grid, _effect_executor, _cinematic_director)
 			await _cinematic_director.wait_until_idle()
-			await get_tree().create_timer(1.0).timeout
+			await get_tree().create_timer(0.5).timeout
 			await _cinematic_director.end_sequence()
 			await get_tree().create_timer(0.5).timeout
 			BattleManager.end_turn()

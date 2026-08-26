@@ -34,7 +34,7 @@ func get_neutralizes() -> Array[EffectId.Id]:
 # to type-specific hooks. Subclasses override _resolve_* not this.
 # =============================================================================
 
-func resolve(target, instance: EffectInstance, context) -> void:
+func resolve(target, instance: EffectInstance, context: EffectContext) -> void:
 	# neutralization check — generic, runs for all targets
 	var neutralizers = EffectRules.NEUTRALIZE_MAP.get(get_effect_id(), [])
 	for neutralizer in neutralizers:
@@ -64,17 +64,23 @@ func resolve(target, instance: EffectInstance, context) -> void:
 # TYPE-SPECIFIC HOOKS — override in subclasses
 # =============================================================================
 
-func _resolve_unit(unit: Unit, instance: EffectInstance, context) -> void:
+@warning_ignore("unused_parameter")
+func _resolve_unit(unit: Unit, instance: EffectInstance, context: EffectContext) -> void:
 	await _resolve_actor_damage(unit, context)
 
-func _resolve_object(object: BattleObject, instance: EffectInstance, context) -> void:
+@warning_ignore("unused_parameter")
+func _resolve_object(object: BattleObject, instance: EffectInstance, context: EffectContext) -> void:
 	await _resolve_actor_damage(object, context)
 
-func _resolve_tile(tile: BattleTileData, instance: EffectInstance, context) -> void:
+func _resolve_tile(tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
+	# if instant terrain conversion is necessary (like frozen), call conversion
+	if get_propagation_config().converts_instantly:
+		_call_tile_conversion(tile, context)
+		
 	if get_propagation_config().style != PropagationStyle.NONE:
 		await _resolve_tile_propagation(tile, instance, context)
 		
-func on_unit_turn_end(actor, instance: EffectInstance, context) -> void:
+func on_unit_turn_end(actor, instance: EffectInstance, context: EffectContext) -> void:
 	var config = get_propagation_config()
 	if config.spreads_to_tile_on_turn_end:
 		var tile = context.grid.get_tile(actor.grid_position)
@@ -91,36 +97,47 @@ func on_unit_turn_end(actor, instance: EffectInstance, context) -> void:
 func get_propagation_config() -> PropagationConfig:
 	return PropagationConfig.new()
 	
+@warning_ignore("unused_parameter")
 func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context) -> void:
 	await _spread_effect(actor, get_effect_id(), context)
 
 # override to define what happens when ticks_active hits the threshold
-func _on_threshold_reached(tile: BattleTileData, context) -> void:
+@warning_ignore("unused_parameter")
+func _on_threshold_reached(tile: BattleTileData, context: EffectContext) -> void:
 	pass
 
 # override to define per-neighbor interactions at tick >= 2
-func _on_neighbor_tick(tile: BattleTileData, neighbor_tile: BattleTileData, context) -> void:
+@warning_ignore("unused_parameter")
+func _on_neighbor_tick(tile: BattleTileData, neighbor_tile: BattleTileData, context: EffectContext) -> void:
 	pass
 
 # generic spreading pipeline — call from _resolve_tile in subclasses that spread.
 # handles threshold expiry, propagation style, neighbor tick interactions,
 # and occupant spreading. subclasses only need to override the hooks above.
-func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, context) -> void:
+func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
 	var effect_id = get_effect_id()
 	var config = get_propagation_config()
 
-	# decrement-first effects expire before propagating — prevents re-spreading
+	# decrement-first effects expire before propagating — prevents instant effects re-spreading
 	if config.decrement_before_propagation:
 		if instance.rounds_remaining > 0:
 			instance.rounds_remaining -= 1
 		if instance.rounds_remaining == 0:
+			@warning_ignore("redundant_await")
 			await _on_threshold_reached(tile, context)
 			await context.executor.remove_effect(tile, effect_id, EffectExecutor.RemovalReason.EXPIRED)
+			# TODO: tile conversion goes here
+			if get_propagation_config().converts_on_threshold:
+				_call_tile_conversion(tile, context)
 			return
 	else:
 		if instance.ticks_active >= EffectRules.DURATION_THRESHOLD_TICKS.get(effect_id, 999):
+			@warning_ignore("redundant_await")
 			await _on_threshold_reached(tile, context)
 			await context.executor.remove_effect(tile, effect_id, EffectExecutor.RemovalReason.EXPIRED)
+			if get_propagation_config().converts_on_threshold:
+				print("attempting conversion")
+				_call_tile_conversion(tile, context)
 			return
 
 	# skip propagation until min_ticks_before_spread is reached
@@ -139,10 +156,13 @@ func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, c
 			for cell in new_cells:
 				var neighbor_tile = context.grid.get_tile(cell)
 				if neighbor_tile != null:
+					# if effect only propagates through liquid and terrain is not liquid, skip
+					if config.spreads_to_liquid_only and not EffectRules.LIQUID_TERRAIN.has(neighbor_tile.terrain_type):
+						continue
 					await _spread_effect(neighbor_tile, effect_id, context)
 		EffectHandler.PropagationStyle.INSTANT:
-			var neighbors = context.grid.get_effect_neighbors(tile.cell, config.propagates_vertically)
-			for cell in neighbors:
+			var instant_neighbors = context.grid.get_effect_neighbors(tile.cell, config.propagates_vertically)
+			for cell in instant_neighbors:
 				var neighbor_tile = context.grid.get_tile(cell)
 				if neighbor_tile != null and susceptible.has(neighbor_tile.terrain_type):
 					await _spread_effect(neighbor_tile, effect_id, context)
@@ -156,6 +176,7 @@ func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, c
 		for cell in neighbors:
 			var neighbor_tile = context.grid.get_tile(cell)
 			if neighbor_tile != null:
+				@warning_ignore("redundant_await")
 				await _on_neighbor_tick(tile, neighbor_tile, context)
 
 	if config.spreads_to_occupants:
@@ -165,7 +186,8 @@ func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, c
 # SHARED HELPERS
 # =============================================================================
 
-func _resolve_actor_damage(actor: BattleActor, context) -> void:
+@warning_ignore("unused_parameter")
+func _resolve_actor_damage(actor: BattleActor, context: EffectContext) -> void:
 	var config = get_propagation_config()
 	if not config.deals_damage:
 		return
@@ -173,12 +195,13 @@ func _resolve_actor_damage(actor: BattleActor, context) -> void:
 	if config.respects_weaknesses and actor.data.weaknesses.has(get_effect_id()):
 		base_amount *= 2
 	var damage = EffectDamageResolver.resolve(actor, get_effect_id(), base_amount)
-	await actor.apply_damage(damage)
+	@warning_ignore("redundant_await")
+	await context.executor.apply_damage(actor,damage)
 
 # safe spread — applies effect to target only if it doesn't already have it.
 # use this instead of context.executor.apply_effect directly when spreading
 # to neighbors so the duplicate-effect guard is never forgotten.
-func _spread_effect(target, effect_id: EffectId.Id, context, ticks: int = -1) -> void:
+func _spread_effect(target, effect_id: EffectId.Id, context: EffectContext, ticks: int = -1) -> void:
 	if target == null:
 		return
 	if target.has_effect(effect_id):
@@ -189,7 +212,7 @@ func _spread_effect(target, effect_id: EffectId.Id, context, ticks: int = -1) ->
 # spreads this effect to whoever occupies the given tile, respecting
 # susceptible terrain rules — only ignites the occupant if the tile
 # terrain is susceptible to this effect.
-func _spread_to_occupant(tile: BattleTileData, effect_id: EffectId.Id, context) -> void:
+func _spread_to_occupant(tile: BattleTileData, effect_id: EffectId.Id, context: EffectContext) -> void:
 	var occupant = context.grid.get_actor_at(tile.cell)
 	if occupant == null:
 		return
@@ -199,8 +222,11 @@ func _spread_to_occupant(tile: BattleTileData, effect_id: EffectId.Id, context) 
 
 # centralised turn-end dispatch — call from on_unit_turn_end instead of
 # hand-rolling the if/elif so the await can never be accidentally omitted.
-func _dispatch_turn_end(actor, instance: EffectInstance, context) -> void:
+func _dispatch_turn_end(actor, instance: EffectInstance, context: EffectContext) -> void:
 	if actor is Unit:
 		await _resolve_unit(actor, instance, context)
 	elif actor is BattleObject:
 		await _resolve_object(actor, instance, context)
+
+func _call_tile_conversion(tile: BattleTileData, context: EffectContext) -> void:
+	context.executor.convert_terrain(tile, get_propagation_config().converts_terrain)

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://c6f6wgys31hub"]
+
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_q45or"]
+
+[resource]
+script = ExtResource("1_q45or")
+ability_name = "Freeze"
+description = "Wield the power of ice and watch the land become tundra before your eyes."
+ability_type = 1
+effects = Dictionary[int, int]({
+5: 3
+})
+mp_cost = 10
+max_range = 4
+area_of_effect = 1
+ignores_elevation = true
+base_power = 0.8
+element = 10
+animation_id = "freeze"
+animation_path = 2
+animation_fps = 8.0
+impact_frame = 15
+unit_animation = 2
+metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

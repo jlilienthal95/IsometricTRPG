@@ -8,6 +8,7 @@ extends RefCounted
 # tick happens to produce; it never forces a beat to occur.
 func process_terrain_turn(grid: BattleGrid, effect_executor: EffectExecutor, director: CinematicDirector) -> void:
 	var context = EffectContext.create(grid, effect_executor)
+	
 	var cell_work: Array = []
 	for effect_id in grid.active_effect_cells.keys():
 		for cell in grid.get_cells_with_effect(effect_id):
@@ -17,11 +18,19 @@ func process_terrain_turn(grid: BattleGrid, effect_executor: EffectExecutor, dir
 		for object in grid.get_objects_with_effect(effect_id):
 			object_work.append([effect_id, object])
 
+	var sequence_opened := false
+
 	for entry in cell_work:
+		if not sequence_opened:
+			await director.begin_sequence_at_cell(entry[1])
+			sequence_opened = true
 		await _process_cell(grid, entry[1], entry[0], effect_executor, context)
 		await director.wait_until_idle()
 
 	for entry in object_work:
+		if not sequence_opened:
+			await director.begin_sequence(entry[1])
+			sequence_opened = true
 		await _process_object(entry[1], entry[0], effect_executor, context)
 		await director.wait_until_idle()
 

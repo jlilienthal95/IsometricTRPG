@@ -53,12 +53,10 @@ func hide_info() -> void:
 	hide()
 
 func start_marquee() -> void:
-	print("starting marquee")
 	var content_width = info_scroll.get_child(0).size.x
 	var visible_width = info_scroll.size.x
 	_marquee_overflow = content_width - visible_width
 	if _marquee_overflow <= 0:
-		print("no overflow to scroll")
 		_marquee_state = MarqueeState.IDLE
 		return
 	reset_marquee()
@@ -70,6 +68,5 @@ func stop_marquee() -> void:
 	reset_marquee()
 	
 func reset_marquee() -> void:
-	print("resetting marquee...")
 	info_scroll.scroll_horizontal = 0
 	_marquee_position = 0.0

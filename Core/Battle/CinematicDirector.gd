@@ -28,14 +28,17 @@ func setup(ui: BattleUI, camera: BattleCamera, get_world_pos: Callable) -> void:
 
 func begin_sequence(focus = null) -> void:
 	_ui.fade_out()
-	_sequence_depth += 1
-	if _sequence_depth == 1:
-		await _ui.fade_bars_in()
-		await _camera.zoom_in()
 	if not focus == null and focus is Node2D:
 		await _camera.pan_to(focus.global_position)
 	elif focus is Vector2:
 		await _camera.pan_to(focus)
+	_sequence_depth += 1
+	if _sequence_depth == 1:
+		await _ui.fade_bars_in()
+		await _camera.zoom_in()
+
+func begin_sequence_at_cell(cell: Vector3i) -> void:
+	await begin_sequence(_get_world_pos.call(cell))
 
 func end_sequence() -> void:
 	_sequence_depth = maxi(0, _sequence_depth - 1)
@@ -56,6 +59,7 @@ func wait_until_idle() -> void:
 
 func _on_turn_changed(_unit) -> void:
 	_beat_queue.clear()
+	
 
 # =============================================================================
 # REACTIVE BEATS
@@ -150,7 +154,7 @@ func _on_tile_effect_removed(target: BattleTileData, effect_id: EffectId.Id, rea
 	var effect_name = EffectId.Id.keys()[effect_id]
 	var world_pos = _get_world_pos.call(target.cell)
 	var unit_on_tile = target.unit_ref
-	var depth_at_enqueue = _sequence_depth
+	#var depth_at_enqueue = _sequence_depth
 	_enqueue(func():
 		print("[CD:tile_effect_removed_beat] executing — effect: ", effect_name, " cell: ", target.cell, " depth: ", _sequence_depth)
 		var focus = unit_on_tile if unit_on_tile != null and is_instance_valid(unit_on_tile) else world_pos

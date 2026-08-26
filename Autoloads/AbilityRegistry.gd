@@ -8,6 +8,7 @@ const ABILITIES: Array[AbilityData] = [
 	preload("res://Data/Abilities/Fight_Knight.tres"),
 	preload("res://Data/Abilities/Fight_Pirate.tres"),
 	preload("res://Data/Abilities/Flame.tres"),
+	preload("res://Data/Abilities/Freeze.tres"),
 	preload("res://Data/Abilities/Last_Ditch_Effort.tres"),
 	preload("res://Data/Abilities/Spark.tres"),
 ]

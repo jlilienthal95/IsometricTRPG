@@ -26,6 +26,7 @@ const HANDLER_SCRIPTS: Array[GDScript] = [
 	preload("res://Resources/Effects/Handlers/DisableHandler.gd"),
 	preload("res://Resources/Effects/Handlers/DiseasedHandler.gd"),
 	preload("res://Resources/Effects/Handlers/DoomHandler.gd"),
+	preload("res://Resources/Effects/Handlers/ElectrifiedConductedHandler.gd"),
 	preload("res://Resources/Effects/Handlers/ElectrifiedHandler.gd"),
 	preload("res://Resources/Effects/Handlers/FeatherHandler.gd"),
 	preload("res://Resources/Effects/Handlers/FloatHandler.gd"),

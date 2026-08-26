@@ -11,4 +11,6 @@ max_elevation_difference = 4
 base_power = 0.7
 animation_id = "arrow"
 animation_path = 1
+animation_fps = 8.0
+impact_on_arrival = true
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

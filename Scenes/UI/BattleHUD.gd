@@ -88,6 +88,7 @@ func _generate_equipment_buttons(equipment: Array[EquipmentData]) -> void:
 	_equipment_reset()
 	for item in equipment:
 		var button = HoverButton.new()
+		button.mouse_filter = Control.MOUSE_FILTER_PASS
 		button.text = item.equipment_name
 		button.custom_minimum_size.x = Constants.ACTION_BUTTON_X
 		button.custom_minimum_size.y = Constants.ACTION_BUTTON_Y
@@ -98,6 +99,7 @@ func _generate_job_ability_buttons(abilities: Array[AbilityData]) -> void:
 	for ability in abilities:
 		var button = job_ability_button.instantiate()
 		var mp_cost = ability.mp_cost
+		button.mouse_filter = Control.MOUSE_FILTER_PASS
 		button.get_node("./ActionLabel").text = ability.ability_name.replace("_", " ")
 		button.focused.connect(_on_button_focused)
 		button.unfocused.connect(_on_button_unfocused)
@@ -133,11 +135,14 @@ func _on_button_focused(button: HoverButton) -> void:
 			var desc_id = UiDescriptions.action_description[text]
 			battle_info.display(UiDescriptions.get_action_description(desc_id))
 		BattleManager.BattleState.JOB_ABILITIES_SELECT:
-			var text = button.get_node("./ActionLabel").text.replace(" ", "_")
-			for ability: AbilityData in AbilityRegistry.ABILITIES:
-				if ability.ability_name == text:
-					battle_info.display(ability.description)
-					break
+			if button != null:
+				var label = button.get_node("./ActionLabel")
+				if label != null:
+					var text = label.text.replace(" ", "_")
+					for ability: AbilityData in AbilityRegistry.ABILITIES:
+						if ability.ability_name == text:
+							battle_info.display(ability.description)
+							break
 		BattleManager.BattleState.EQUIPMENT_SELECT:
 			var text = button.text.replace(" ", "_")
 			for equipment: EquipmentData in EquipmentRegistry.EQUIPMENT:

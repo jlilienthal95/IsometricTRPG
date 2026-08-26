@@ -9,6 +9,7 @@
 [ext_resource type="Resource" uid="uid://c20dmhatwxj1w" path="res://Data/Abilities/Last_Ditch_Effort.tres" id="5_lde"]
 [ext_resource type="Resource" uid="uid://cxeopt4v5rj1a" path="res://Data/Abilities/Spark.tres" id="6_spark"]
 [ext_resource type="Resource" uid="uid://djf78acv3ye0q" path="res://Data/Abilities/Flame.tres" id="7_flame"]
+[ext_resource type="Resource" uid="uid://c6f6wgys31hub" path="res://Data/Abilities/Freeze.tres" id="8_p0dbs"]
 
 [sub_resource type="Resource" id="Resource_p0dbs"]
 script = ExtResource("1_ji5i0")
@@ -37,7 +38,7 @@ base_move_range = 4
 current_exp = 9999
 equipped_weapon = ExtResource("3_weapon")
 equipped_armor = ExtResource("4_armor")
-granted_abilities = Array[ExtResource("3_js5hq")]([ExtResource("5_lde"), ExtResource("6_spark"), ExtResource("7_flame")])
+granted_abilities = Array[ExtResource("3_js5hq")]([ExtResource("5_lde"), ExtResource("6_spark"), ExtResource("7_flame"), ExtResource("8_p0dbs")])
 is_player_controlled = true
 type = 0
 metadata/_custom_type_script = "uid://ldc6ph2g5wim"
