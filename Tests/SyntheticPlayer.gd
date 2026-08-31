@@ -40,7 +40,7 @@ func teardown() -> void:
 
 func _on_active_unit_changed(actor) -> void:
 	print("[SP] active_unit_changed received — actor: ", actor, " is_unit: ", actor is Unit)
-	if not (actor is Unit) or not actor.data.is_player_controlled:
+	if not (actor is Unit) or actor.data.type != BattleActorData.Type.PLAYER:
 		print("[SP] skipping — not player controlled")
 		return
 	print("[SP] taking turn for: ", actor.data.name)

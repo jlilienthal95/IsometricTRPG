@@ -152,9 +152,10 @@ func _set_flash_amount(amount: float) -> void:
 
 func _cleanup_flash_material() -> void:
 	for entry in _material_backups:
-		var item: CanvasItem = entry.get("item")
+		var item = entry.get("item")
 		if is_instance_valid(item):
 			item.material = entry.get("material")
+			
 	_material_backups.clear()
 	_owned_materials.clear()
 	_flash_host = null

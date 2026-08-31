@@ -1,6 +1,12 @@
 class_name ElectrifiedHandler
 extends EffectHandler
 
+# ELECTRIFIED: spreads INSTANTLY to all susceptible neighbors the moment it
+# ticks (as opposed to BurningHandler's GRADUAL one-tile-per-tick spread),
+# including vertically and onto any occupant standing on a newly-electrified
+# tile (spreads_to_occupants) — see ElectrifiedConductedHandler for the
+# variant applied to an occupant that got hit this way.
+
 const EFFECT = EffectId.Id.ELECTRIFIED
 
 func get_propagation_config() -> PropagationConfig:

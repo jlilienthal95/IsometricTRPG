@@ -72,7 +72,6 @@ static func _generate_unit_data(rng: RandomNumberGenerator, unit_name: String, i
 	var data: UnitData = UnitData.new()
 	data.name = unit_name
 	data.type = BattleActorData.Type.PLAYER if is_player else BattleActorData.Type.ENEMY
-	data.is_player_controlled = is_player
 
 	if not JobRegistry.JOBS.is_empty():
 		data.job = JobRegistry.JOBS[rng.randi_range(0, JobRegistry.JOBS.size() - 1)]

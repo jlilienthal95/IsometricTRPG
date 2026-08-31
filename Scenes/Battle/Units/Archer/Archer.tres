@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="JobData" format=3 uid="uid://da8jwqcs7lexr"]
+
+[ext_resource type="Script" uid="uid://dwsnvmlbqqnbs" path="res://Resources/AbilityData.gd" id="1_48iln"]
+[ext_resource type="Resource" uid="uid://dw31v3bfg3y8c" path="res://Data/Abilities/Fight_Archer.tres" id="2_bqgeu"]
+[ext_resource type="Script" uid="uid://bkpjwyj1tu52l" path="res://Core/AI/AIProfile.gd" id="2_fk3u4"]
+[ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_pk5v1"]
+[ext_resource type="PackedScene" path="res://Scenes/Battle/Units/Archer/Archer.tscn" id="9_scene"]
+
+[sub_resource type="Resource" id="Resource_mikfo"]
+script = ExtResource("2_fk3u4")
+weights = {
+"ally_proximity": 0.0,
+"buff_value": 0.0,
+"debuff_value": 0.0,
+"destination_safety": 1.0,
+"distance_to_threat": 0.5,
+"effect_synergy": 0.0,
+"expected_damage": 2.0,
+"healing_value": 0.0,
+"kill_potential": 2.0,
+"resource_efficiency": 0.5,
+"target_weakness": 0.0
+}
+metadata/_custom_type_script = "uid://bkpjwyj1tu52l"
+
+[resource]
+script = ExtResource("2_pk5v1")
+job_name = "Archer"
+job_id = 2
+scene = ExtResource("9_scene")
+caster_impact_frames = Dictionary[int, int]({
+0: 20,
+1: 55,
+2: 0
+})
+ai_profile = SubResource("Resource_mikfo")
+speed_rank = 0
+fight_ability = ExtResource("2_bqgeu")
+metadata/_custom_type_script = "uid://ct2virpcpm7ny"

@@ -21,13 +21,12 @@ func setup(camera: BattleCamera, input_handler: InputHandler) -> void:
 #func _process(_delta: float) -> void:
 	##var hovered = get_viewport().gui_get_hovered_control()
 	##if hovered != null:
-		##print("hovered control: ", hovered.name)
 	#if _camera == null or _input_handler == null:
 		#return
 	#var mouse = get_viewport().get_mouse_position()
 	#var screen = get_viewport_rect().size
 	#var in_zone = not INVALID_STATES.has(BattleManager.current_state) and \
-		#BattleManager.active_unit.data.is_player_controlled and \
+		#BattleManager.active_unit.data.type == BattleActorData.Type.PLAYER and \
 		#not _is_ui_blocking() and \
 		#not _is_in_deadzone(mouse, screen) and \
 		#_is_in_arc_zone(mouse, screen)

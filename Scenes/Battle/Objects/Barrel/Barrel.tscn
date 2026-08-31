@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://b8sq0nktv53ux"]
+
+[ext_resource type="PackedScene" uid="uid://cnal6oij1hhdc" path="res://Scenes/Battle/Objects/Object.tscn" id="1_f35w6"]
+[ext_resource type="SpriteFrames" uid="uid://bq5ueu2avgllc" path="res://Scenes/Battle/Objects/Barrel/BarrelFrames.tres" id="2_6xcas"]
+[ext_resource type="Script" uid="uid://q1rhxo4pw2yt" path="res://addons/game_feel_flow/core/gff_combo.gd" id="3_dyqn5"]
+[ext_resource type="Script" uid="uid://4uoyf4ncegfi" path="res://addons/game_feel_flow/core/gff_combo_entry.gd" id="4_n8kwy"]
+[ext_resource type="Script" uid="uid://cw1adefvk3suo" path="res://addons/game_feel_flow/effects/curved/gff_effect_common.gd" id="5_si8oi"]
+[ext_resource type="Script" uid="uid://unt2fquv8c1j" path="res://addons/game_feel_flow/core/targets/gff_color_target.gd" id="6_n8kwy"]
+[ext_resource type="Script" uid="uid://fyjcrjchjdog" path="res://addons/game_feel_flow/core/targets/gff_position_target.gd" id="6_suy12"]
+[ext_resource type="Script" uid="uid://b58y4glp3isku" path="res://addons/game_feel_flow/core/tweeners/gff_shake_tweener.gd" id="7_8h3ll"]
+[ext_resource type="Script" uid="uid://dppkh7i06kuii" path="res://addons/game_feel_flow/core/tweeners/gff_flash_tweener.gd" id="7_si8oi"]
+[ext_resource type="PackedScene" uid="uid://cqbil5tm4ms3p" path="res://Effects/HitParticles.tscn" id="8_cg1ed"]
+[ext_resource type="Script" uid="uid://d0raprnpaulqm" path="res://addons/game_feel_flow/effects/particles/gff_particles.gd" id="9_c05sv"]
+
+[sub_resource type="Resource" id="Resource_suy12"]
+script = ExtResource("6_n8kwy")
+target_color = Color(0.9824219, 0.005756378, 0.005756378, 1)
+
+[sub_resource type="Resource" id="Resource_8h3ll"]
+script = ExtResource("7_si8oi")
+
+[sub_resource type="Resource" id="Resource_cg1ed"]
+script = ExtResource("5_si8oi")
+target = SubResource("Resource_suy12")
+tweener = SubResource("Resource_8h3ll")
+metadata/_gff_expanded_groups = Array[String](["Tweener Settings"])
+
+[sub_resource type="Resource" id="Resource_c05sv"]
+script = ExtResource("4_n8kwy")
+effect = SubResource("Resource_cg1ed")
+track_idx = 2
+
+[sub_resource type="Resource" id="Resource_ac7vq"]
+script = ExtResource("6_suy12")
+
+[sub_resource type="Resource" id="Resource_xrjpa"]
+script = ExtResource("7_8h3ll")
+
+[sub_resource type="Resource" id="Resource_0mlfa"]
+script = ExtResource("5_si8oi")
+target = SubResource("Resource_ac7vq")
+tweener = SubResource("Resource_xrjpa")
+metadata/_gff_expanded_groups = Array[String](["Tweener Settings"])
+
+[sub_resource type="Resource" id="Resource_8axa0"]
+script = ExtResource("4_n8kwy")
+effect = SubResource("Resource_0mlfa")
+track_idx = 2
+
+[sub_resource type="Resource" id="Resource_kgp5a"]
+script = ExtResource("9_c05sv")
+particle_scene = ExtResource("8_cg1ed")
+emit_count = 20
+duration = 3.0
+restore_duration = 2.0
+metadata/_gff_expanded_groups = Array[String](["Particles Settings", "Restore", "Looping"])
+
+[sub_resource type="Resource" id="Resource_fq1be"]
+script = ExtResource("4_n8kwy")
+effect = SubResource("Resource_kgp5a")
+duration = 3.0
+
+[sub_resource type="Resource" id="Resource_6ksh5"]
+script = ExtResource("3_dyqn5")
+label = "GFFPlayer"
+entries = Array[ExtResource("4_n8kwy")]([SubResource("Resource_c05sv"), SubResource("Resource_8axa0"), SubResource("Resource_fq1be")])
+
+[node name="Barrel" unique_id=1157963703 instance=ExtResource("1_f35w6")]
+
+[node name="VisualRoot" parent="." index="1" unique_id=57226232]
+scale = Vector2(0.8, 0.8)
+
+[node name="ObjectSprite" parent="VisualRoot" index="0" unique_id=292865711]
+position = Vector2(-16, -19.5)
+sprite_frames = ExtResource("2_6xcas")
+autoplay = "idle"
+
+[node name="GFFPlayer" parent="VisualRoot" index="1" unique_id=440990113]
+default_combo_index = 0
+combo_dictionary = Dictionary[String, ExtResource("3_dyqn5")]({
+"hit": SubResource("Resource_6ksh5")
+})
+active_combo_key = "hit"
+metadata/_gff_inspector_selected_combo = "hit"

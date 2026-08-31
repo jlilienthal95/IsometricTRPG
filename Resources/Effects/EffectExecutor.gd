@@ -6,12 +6,14 @@ signal effect_resolved
 enum RemovalReason { EXPIRED, NEUTRALIZED }
 
 var _grid: BattleGrid = null
+var _unit_mover: UnitMover = null
 var _camera: BattleCamera = null
 var _director: CinematicDirector
 var _tile_visual_manager: TileVisualManager = null
 
-func setup(grid: BattleGrid, camera: BattleCamera, director: CinematicDirector, tile_visual_manager) -> void:
+func setup(grid: BattleGrid, mover: UnitMover, camera: BattleCamera, director: CinematicDirector, tile_visual_manager) -> void:
 	_grid = grid
+	_unit_mover = mover
 	_camera = camera
 	_director = director
 	_tile_visual_manager = tile_visual_manager
@@ -56,7 +58,7 @@ func apply_effect(target, effect_id: EffectId.Id, ticks: int = -1) -> void:
 			if instance != null:
 				var handler = EffectRegistry.get_handler(effect_id)
 				if handler != null:
-					var context = EffectContext.create(_grid, self)
+					var context = EffectContext.create(_grid, _unit_mover, self)
 					await handler.resolve(target, instance, context)
 		else:
 			BattleEvents.effect_applied.emit(target, effect_id)
@@ -72,7 +74,6 @@ func apply_effect_to_unit_and_tile(unit: Unit, effect_id: EffectId.Id, context: 
 
 # removes an effect from a target — mutates, then plays the animation matching the reason
 func remove_effect(target, effect_id: EffectId.Id, reason: RemovalReason = RemovalReason.EXPIRED) -> void:
-	print("[EE:remove_effect] about to emit tile_effect_removed — target is tile: ", target is BattleTileData)
 	var effect_name = EffectId.Id.keys()[effect_id]
 	target.remove_effect(effect_id)
 	if target is BattleTileData:
@@ -84,7 +85,7 @@ func remove_effect(target, effect_id: EffectId.Id, reason: RemovalReason = Remov
 func apply_tile_entry_effects(actor: BattleActor, tile: BattleTileData) -> void:
 	if tile == null or tile.active_effects.is_empty():
 		return
-	var context = EffectContext.create(_grid, self)
+	var context = EffectContext.create(_grid, _unit_mover, self)
 	for instance in tile.active_effects.duplicate():
 		var handler = EffectRegistry.get_handler(instance.effect_id)
 		if handler != null:
@@ -122,7 +123,6 @@ func _play_apply_animation(target, effect_id: EffectId.Id) -> void:
 		await target.play_effect_apply_animation(effect_id)
 
 func _play_remove_animation(target, effect_id: EffectId.Id, reason: RemovalReason) -> void:
-	print("playing remove anim")
 	var effect_name = EffectId.Id.keys()[effect_id]
 	if target is BattleTileData and _tile_visual_manager != null:
 		await _tile_visual_manager.play_effect_remove_animation(target, effect_id, reason)

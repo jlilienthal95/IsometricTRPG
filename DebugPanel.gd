@@ -56,6 +56,39 @@ func _build_effect_palette() -> void:
 		_effect_buttons.add_child(hbox)
 
 func refresh_tile_info(tile: BattleTileData) -> void:
+	_tile_info.text = "[b]Selected Tile[/b]\n" + _format_tile_body(tile)
+	_walkable_check.set_block_signals(true)
+	_walkable_check.button_pressed = tile.is_walkable
+	_walkable_check.set_block_signals(false)
+
+# multi-tile equivalent of refresh_tile_info — call this instead when
+# _selected_cells.size() != 1. Shows a per-tile breakdown rather than
+# picking one tile to represent the whole selection, since a click-drag
+# selection can easily span mixed terrain/effects and silently displaying
+# only the last-touched tile's info would be misleading.
+func refresh_selection_info(cells: Array[Vector3i], grid: BattleGrid) -> void:
+	if cells.is_empty():
+		_tile_info.text = "[b]No tile selected[/b]"
+		return
+	if cells.size() == 1:
+		var tile = grid.get_tile(cells[0])
+		if tile != null:
+			refresh_tile_info(tile)
+		return
+
+	var body = "[b]%d Tiles Selected[/b]" % cells.size()
+	for cell in cells:
+		var tile = grid.get_tile(cell)
+		if tile == null:
+			continue
+		body += "\n\n[b]" + str(cell) + "[/b]\n" + _format_tile_body(tile)
+	_tile_info.text = body
+	# walkable checkbox has no single value to show across a mixed
+	# selection — leave it as whatever it last was rather than guessing
+
+# shared formatter — the per-tile detail block used by both the single-tile
+# and multi-tile displays, so they can never drift out of sync with each other.
+func _format_tile_body(tile: BattleTileData) -> String:
 	var terrain_name = BattleTileData.TerrainType.keys()[tile.terrain_type]
 	var effects_text = ""
 	for instance in tile.active_effects:
@@ -64,10 +97,7 @@ func refresh_tile_info(tile: BattleTileData) -> void:
 			str(instance.ticks_active) + " ticks)"
 	if effects_text == "":
 		effects_text = "\n  none"
-	_tile_info.text = "[b]Selected Tile[/b]\nCell: " + str(tile.cell) + \
+	return "Cell: " + str(tile.cell) + \
 		"\nTerrain: " + terrain_name + \
 		"\nWalkable: " + str(tile.is_walkable) + \
 		"\nEffects:" + effects_text
-	_walkable_check.set_block_signals(true)
-	_walkable_check.button_pressed = tile.is_walkable
-	_walkable_check.set_block_signals(false)

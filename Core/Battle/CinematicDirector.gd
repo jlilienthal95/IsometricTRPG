@@ -131,7 +131,7 @@ func _on_tile_effect_applied(target: BattleTileData, effect_id: EffectId.Id, pla
 	var world_pos = _get_world_pos.call(target.cell)
 	var unit_on_tile = target.unit_ref
 	_enqueue(func():
-		print("[CD:tile_effect_beat] executing — effect: ", effect_name, " cell: ", target.cell, " depth: ", _sequence_depth)
+		DebugLog.effects("tile_effect_beat: %s at %s (depth %d)" % [effect_name, target.cell, _sequence_depth])
 		var focus = unit_on_tile if unit_on_tile != null and is_instance_valid(unit_on_tile) else world_pos
 		if _sequence_depth == 0:
 			# outside terrain turn sequence — self wrap
@@ -147,38 +147,29 @@ func _on_tile_effect_applied(target: BattleTileData, effect_id: EffectId.Id, pla
 				await _camera.pan_to(focus)
 			await get_tree().create_timer(0.1).timeout
 			await play_visual.call()
-		print("[CD:tile_effect_beat] complete")
 	)
 
 func _on_tile_effect_removed(target: BattleTileData, effect_id: EffectId.Id, reason: int, play_visual: Callable) -> void:
 	var effect_name = EffectId.Id.keys()[effect_id]
 	var world_pos = _get_world_pos.call(target.cell)
 	var unit_on_tile = target.unit_ref
-	#var depth_at_enqueue = _sequence_depth
 	_enqueue(func():
-		print("[CD:tile_effect_removed_beat] executing — effect: ", effect_name, " cell: ", target.cell, " depth: ", _sequence_depth)
+		DebugLog.effects("tile_effect_removed_beat: %s at %s (depth %d)" % [effect_name, target.cell, _sequence_depth])
 		var focus = unit_on_tile if unit_on_tile != null and is_instance_valid(unit_on_tile) else world_pos
-		print("[CD:tile_effect_removed_beat] focus determined: ", focus)
 		if _sequence_depth == 0:
-			print("[CD:tile_effect_removed_beat] self-wrapping sequence")
+			# outside terrain turn sequence — self wrap
 			await begin_sequence(focus)
-			print("[CD:tile_effect_removed_beat] sequence begun")
 			await play_visual.call()
-			print("[CD:tile_effect_removed_beat] visual complete")
 			await get_tree().create_timer(DELAY_SHORT).timeout
 			await end_sequence()
 		else:
-			print("[CD:tile_effect_removed_beat] inside sequence — panning")
+			# inside terrain turn sequence — just pan and play
 			if focus is Node2D:
 				await _camera.pan_to(focus.global_position)
 			elif focus is Vector2:
 				await _camera.pan_to(focus)
-			print("[CD:tile_effect_removed_beat] pan complete")
 			await get_tree().create_timer(DELAY_SHORT).timeout
-			print("[CD:tile_effect_removed_beat] calling play_visual")
 			await play_visual.call()
-			print("[CD:tile_effect_removed_beat] play_visual complete")
-		print("[CD:tile_effect_removed_beat] complete")
 	)
 	
 # =============================================================================

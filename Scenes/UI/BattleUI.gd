@@ -78,10 +78,6 @@ func on_turn_changed(unit: Unit) -> void:
 func _on_turn_ended() -> void:
 	fade_out()
 
-func refresh_character_info(actor: BattleActor) -> void:
-	print("refreshing character_info, new actor: ", actor.data.name)
-	character_info.setup(actor)
-
 func refresh_hud() -> void:
 	battle_hud.refresh()
 

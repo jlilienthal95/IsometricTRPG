@@ -11,10 +11,13 @@ const NEUTRAL_BG = preload("res://Assets/UI/Windows/Character_Info_Window_Neutra
 @onready var hp_bar: ProgressBarScene = $HpBar
 @onready var hp_count: Label = $HpCount
 @onready var hp_max_count: Label = $HpMaxCount
+@onready var mp_accent: Label = $MpAccent
 @onready var mp_bar: ProgressBarScene = $MpBar
 @onready var mp_count: Label = $MpCount
 @onready var mp_max_count: Label = $MpMaxCount
+@onready var mp_divider: Label = $MpDivider
 @onready var lvl_count: Label = $LvlCount
+@onready var lvl_accent: Label = $LvlAccent
 
 var _fade_tween: Tween = null
 
@@ -87,6 +90,7 @@ func _render(actor: BattleActor) -> void:
 
 	if actor.data is UnitData:
 		var unit_data := actor.data as UnitData
+		_show_unit_details()
 		mp_bar.show()
 		mp_bar.setup(unit_data.current_mp, unit_data.max_mp)
 		mp_count.text = str(unit_data.current_mp)
@@ -95,12 +99,9 @@ func _render(actor: BattleActor) -> void:
 		lvl_count.text = str(unit_data.current_lvl)
 		portrait_rect.texture = unit_data.job.portrait if unit_data.job != null else null
 	else:
-		mp_bar.hide()
-		mp_count.text = ""
-		mp_max_count.text = ""
-		lvl_count.text = ""
-		name_label.text = actor.data.object_name if actor.data is ObjectData else ""
-		portrait_rect.texture = null
+		_hide_unit_details()
+		name_label.text = actor.data.object_name if actor.data is BattleObjectData else ""
+		portrait_rect.texture = actor.data.portrait
 	show()
 	await fade_in()
 
@@ -124,6 +125,20 @@ func _clear_info() -> void:
 	mp_count.text = ""
 	mp_max_count.text = ""
 	lvl_count.text = ""
+	
+func _hide_unit_details() -> void:
+	mp_bar.hide()
+	mp_count.text = ""
+	mp_max_count.text = ""
+	mp_accent.text = ""
+	mp_divider.text = ""
+	lvl_count.text = ""
+	lvl_accent.text = ""
+
+func _show_unit_details() -> void:
+	mp_accent.text = "MP"
+	mp_divider.text = "/"
+	lvl_accent.text = "LV"
 
 func hide_window() -> void:
 	await fade_out()

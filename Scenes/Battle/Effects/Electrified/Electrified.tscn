@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://72d704x0t1lb"]
+
+[ext_resource type="SpriteFrames" uid="uid://dmbrlmae2wuwx" path="res://Scenes/Battle/Effects/Electrified/Electrified.tres" id="1_1e4qp"]
+[ext_resource type="Script" path="res://Scenes/Battle/Effects/TileEffectVisual.gd" id="2_mjpxt"]
+
+[node name="Electrified" type="AnimatedSprite2D" unique_id=2127302909]
+z_index = 65
+z_as_relative = false
+position = Vector2(0, 7)
+rotation = 1.5707964
+scale = Vector2(0.3, 0.3)
+sprite_frames = ExtResource("1_1e4qp")
+animation = &"electrified"
+autoplay = "electrified"
+script = ExtResource("2_mjpxt")
+
+[node name="Node2D" type="Node2D" parent="." unique_id=955625119]

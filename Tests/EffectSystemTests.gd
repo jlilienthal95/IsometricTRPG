@@ -48,6 +48,12 @@ func _make_executor(grid: BattleGrid) -> EffectExecutor:
 	executor.setup(grid, null, null, null)
 	return executor
 
+func _make_mover(grid: BattleGrid) -> UnitMover:
+	var mover = UnitMover.new()
+	add_child(mover)
+	mover.setup(grid)
+	return mover
+
 func _test_apply_and_neutralize() -> void:
 	var grid = TestSuite.make_flat_grid(3, 3)
 	add_child(grid)
@@ -70,8 +76,9 @@ func _test_tick_lifecycle() -> void:
 	var grid = TestSuite.make_flat_grid(3, 3)
 	add_child(grid)
 	var executor = _make_executor(grid)
+	var mover = _make_mover(grid)
 	var tile = grid.get_tile(Vector3i(0, 0, 0))	# NORMAL terrain: burning won't spread/convert
-	var context = EffectContext.create(grid, executor)
+	var context = EffectContext.create(grid, mover, executor)
 
 	await executor.apply_effect(tile, EffectId.Id.SOAKED, 2)
 	var inst = tile.get_effect(EffectId.Id.SOAKED)
@@ -94,7 +101,8 @@ func _test_burning_spread_step_by_step() -> void:
 	var grid = TestSuite.make_flat_grid(3, 3, BattleTileData.TerrainType.WOOD)
 	add_child(grid)
 	var executor = _make_executor(grid)
-	var context = EffectContext.create(grid, executor)
+	var mover = _make_mover(grid)
+	var context = EffectContext.create(grid, mover, executor)
 	var center = grid.get_tile(Vector3i(1, 1, 0))
 
 	await executor.apply_effect(center, EffectId.Id.BURNING)
@@ -124,7 +132,8 @@ func _test_object_effects() -> void:
 	var grid = TestSuite.make_flat_grid(2, 2)
 	add_child(grid)
 	var executor = _make_executor(grid)
-	var context = EffectContext.create(grid, executor)
+	var mover = _make_mover(grid)
+	var context = EffectContext.create(grid, mover, executor)
 
 	var object = BattleObject.new()
 	add_child(object)
@@ -138,4 +147,17 @@ func _test_object_effects() -> void:
 	var hp_before = object.data.current_hp
 	var inst = object.get_effect(EffectId.Id.BURNING)
 	await executor.process_tick(object, inst, context, false)
-	check(object.data.current_hp < hp_before, "object: burning tick dealt damage (%d -> %d)" % [hp_before, object.data.current_hp])
+	# exact expected range, not just "some damage happened": burning's
+	# damage_multiplier is 0.5 (BurningHandler.get_propagation_config), so
+	# base_amount = int(Constants.BASE_DAMAGE_UNIT * 0.5) = 5, and
+	# EffectDamageResolver applies +/-20% variance (int(5*0.2)=1) with no
+	# weakness bonus (this test object has none configured) — so the actual
+	# damage must land in [4, 5], not merely "greater than zero"
+	var base_amount := int(Constants.BASE_DAMAGE_UNIT * 0.5)
+	var variance := int(base_amount * EffectDamageResolver.VARIANCE_PERCENT)
+	var expected_min := base_amount - variance
+	var expected_max := base_amount
+	var actual_damage := hp_before - object.data.current_hp
+	check(actual_damage >= expected_min and actual_damage <= expected_max,
+		"object: burning tick damage within exact expected variance range",
+		"expected [%d, %d], got %d (hp %d -> %d)" % [expected_min, expected_max, actual_damage, hp_before, object.data.current_hp])

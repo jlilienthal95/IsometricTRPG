@@ -6,8 +6,8 @@ extends RefCounted
 # camera presentation is purely reactive (BattleEvents -> CinematicDirector).
 # wait_until_idle() between ticks only serializes whatever reactive beats a
 # tick happens to produce; it never forces a beat to occur.
-func process_terrain_turn(grid: BattleGrid, effect_executor: EffectExecutor, director: CinematicDirector) -> void:
-	var context = EffectContext.create(grid, effect_executor)
+func process_terrain_turn(grid: BattleGrid, mover: UnitMover, effect_executor: EffectExecutor, director: CinematicDirector) -> void:
+	var context = EffectContext.create(grid, mover, effect_executor)
 	
 	var cell_work: Array = []
 	for effect_id in grid.active_effect_cells.keys():

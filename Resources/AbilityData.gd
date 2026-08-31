@@ -2,6 +2,7 @@ class_name AbilityData
 extends Resource
 
 enum AbilityType { PHYSICAL, MAGICAL, HEALING, STATUS, MOVEMENT }
+enum Intent { OFFENSIVE, SUPPORT }
 enum TargetType { SINGLE_ENEMY, SINGLE_ALLY, SELF, AREA_ENEMY, AREA_ALLY, AREA_ALL }
 enum RangeShape { STRAIGHT, DIAGONAL, ALL_DIRECTIONS, CROSS, AREA }
 enum AnimationPath { PROJECTILE, PROJECTILE_ARROW, INSTANT, PATH }
@@ -11,6 +12,7 @@ enum UnitAnimation { ATTACK, ATTACK_FINISHER, CAST_SPELL, }
 @export var ability_id: int = 0		# permanent, never reuse — used only for save serialization
 @export var description: String = ""
 @export var ability_type: AbilityType = AbilityType.PHYSICAL
+@export var intent: Intent = Intent.OFFENSIVE
 @export var effects: Dictionary[EffectId.Id, int] = {} # Effect: Turns
 @export var target_type: TargetType = TargetType.SINGLE_ENEMY
 

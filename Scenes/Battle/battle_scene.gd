@@ -24,15 +24,12 @@ var test_scenario: BattleScenario = null
 @onready var _turn_queue: TurnQueue = $TurnQueue
 @onready var _ai_brain: AIBrain = $AIBrain
 @onready var _mouse_detect_rect: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect
-@onready var _mouse_detect_rect2: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect2
-@onready var _mouse_detect_rect3: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect3
-@onready var _mouse_detect_rect4: MouseDetectRect = $CanvasLayer/BattleUI/BattleHUD/MouseDetectRect4
 
 # units to spawn — preloaded so exports can never fail to find them
 # TODO: replace with proper spawn system driven by battle/GameState configuration
-const MARTA_DATA = preload("res://Data/Units/Marta.tres")
-const THEO_DATA = preload("res://Data/Units/Theo.tres")
-const AUBURN_DATA = preload("res://Data/Units/Auburn.tres")
+const MARTA_DATA = preload("res://Scenes/Battle/Units/Marta/Marta.tres")
+const THEO_DATA = preload("res://Scenes/Battle/Units/Theo/Theo.tres")
+const AUBURN_DATA = preload("res://Scenes/Battle/Units/Auburn/Auburn.tres")
 
 # --- state ---
 # _turn_context is the single source of truth for "who's acting" plus all pathfinding
@@ -51,10 +48,6 @@ var _cinematic_director: CinematicDirector = null
 # SETUP
 # =============================================================================
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		print("input received by battle_scene — hovered control: ", get_viewport().gui_get_hovered_control())
-
 func _ready() -> void:
 	randomize()
 	_build_grid()
@@ -62,7 +55,7 @@ func _ready() -> void:
 	if test_scenario != null:
 		_spawn_from_scenario(test_scenario)
 	else:
-		_spawn_units()
+		_spawn_actors()
 
 # builds the logical grid from all elevation layers and sets their z indices
 func _build_grid() -> void:
@@ -78,7 +71,7 @@ func _build_grid() -> void:
 			continue
 		var elevation = num_str.to_int()
 		var z_offset = layer.get_meta("z_offset", 0)
-		layer.z_index = elevation * 4 + z_offset
+		layer.z_index = elevation * Constants.Z_INDEX_LAYER_STRIDE + z_offset
 		_battle_grid.build_from_tilemap(layer, elevation)
 	_battle_grid.build_occlusion_map()
 
@@ -123,10 +116,10 @@ func _setup_systems() -> void:
 	_unit_mover.setup(_battle_grid)
 
 	# unit ability executor
-	_unit_ability_executor.setup(_battle_grid, _cinematic_director)
+	_unit_ability_executor.setup(_battle_grid, _unit_mover, _cinematic_director)
 
 	# effect executor
-	_effect_executor.setup(_battle_grid, _battle_camera, _cinematic_director, _tile_visual_manager)
+	_effect_executor.setup(_battle_grid, _unit_mover, _battle_camera, _cinematic_director, _tile_visual_manager)
 
 	_battle_grid.tile_occupancy_changed.connect(func(tile, actor, entered):
 		_tile_visual_manager.refresh(tile)
@@ -137,46 +130,87 @@ func _setup_systems() -> void:
 	# ai systems
 	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _input_handler)
 	
-	print("systems ready")
+	DebugLog.battle_state("battle_scene systems ready")
 
 # TODO: replace with proper spawn system driven by battle/GameState configuration
-func _spawn_units() -> void:
-	var marta = _spawn_unit(Vector3i(-8, 0, 1), MARTA_DATA)
-	var theo = _spawn_unit(Vector3i(-11, -14, 4), THEO_DATA)
-	var auburn = _spawn_unit(Vector3i(-7, 0, 1), AUBURN_DATA)
-	
-	var player_units: Array[BattleActor] = [marta, auburn]
-	var enemy_units: Array[BattleActor] = [theo]
-	
+#
+# Walks every ActorMarker placed in the map, resolves it to a grid cell, and
+# spawns whatever BattleActorData it holds — a Unit or a BattleObject, treated
+# symmetrically here. Affiliation (player/enemy/neutral) is read directly from
+# the actor's own data (BattleActorData.type), never from a second field on
+# the marker — a marker used to carry its own separate actor_type export that
+# defaulted to PLAYER and was never actually wired to the authored data, so
+# every spawned actor silently registered as a player regardless of what its
+# .tres said. Only Units currently join the turn queue (objects don't take
+# turns), but both types go through the same affiliation read so a future
+# object-based win condition (e.g. PROTECT_ONE on a barrel) has a real type
+# to check instead of assuming "not player-controlled" means "enemy" — see
+# BattleActorData.Type, which has three values, not two.
+func _spawn_actors() -> void:
+	var player_units: Array[BattleActor] = []
+	var enemy_units: Array[BattleActor] = []
+
 	for marker in get_tree().get_nodes_in_group("actor_markers"):
-		if not marker is ActorMarker or marker.actor_data == null:
+		if not marker is ActorMarker:
 			continue
-		var cell = world_to_grid(marker.global_position)
-	# NOTE: units are resolved inside _spawn_unit, BEFORE the turn queue is
-	# built — the queue orders by resolved speed rank, so resolution must
-	# already have happened.
-	
+		if marker.actor_data == null:
+			push_warning("battle_scene: ActorMarker '%s' has no actor_data assigned — skipping" % marker.name)
+			continue
+
+		var elevation := int(marker.get_parent().name.trim_prefix("Elevation"))
+		var cell := world_to_grid(marker.global_position, elevation)
+		print("[SPAWN] marker: %s | global_pos: %s | elevation: %d | resolved_cell: %s" % [
+			marker.name,
+			marker.global_position,
+			elevation,
+			cell
+		])
+
 		if marker.actor_data is UnitData:
-			var unit = _spawn_unit(cell, marker.actor_data)
-			match marker.actor_type:
-				BattleActorData.Type.PLAYER:
-					player_units.append(unit)
-				BattleActorData.Type.ENEMY:
-					enemy_units.append(unit)
-				BattleActorData.Type.NEUTRAL:
-					pass  # on field but not in either queue
-		elif marker.actor_data is ObjectData:
-			_spawn_object(cell, marker.actor_data, marker.actor_data.scene)
-	
+			var unit_data: UnitData = marker.actor_data
+			var unit: Unit = _spawn_unit(cell, unit_data)
+			if unit == null:
+				push_error("battle_scene: _spawn_unit returned null for '%s'" % unit_data.name)
+				continue
+			_register_by_affiliation(unit, unit_data.type, player_units, enemy_units)
+
+		elif marker.actor_data is BattleObjectData:
+			var object_data: BattleObjectData = marker.actor_data.duplicate_for_instance()
+			var object := _spawn_object(cell, object_data, object_data.scene)
+			if object == null:
+				push_error("battle_scene: _spawn_object returned null for '%s'" % object_data.object_name)
+				# objects don't join player_units/enemy_units — they don't take turns —
+				# but they still exist on the grid and are affiliation-aware for
+				# win-condition checks (see BattleManager.current_win_condition)
+
+		else:
+			push_warning("battle_scene: ActorMarker '%s' has unrecognized actor_data type" % marker.name)
+
 	_turn_queue.setup(player_units, enemy_units)
 	#TODO: Uncomment this before release/export
 	#await _battle_ui.on_battle_start()
 	BattleManager.call_deferred("start_battle", player_units, enemy_units)
 
+# sorts a newly spawned unit into the correct turn-queue array based on its
+# authored affiliation. Neutral units join neither queue and never take a turn,
+# which is intentional (a NEUTRAL unit is not a lesser "not player" default —
+# it's a distinct, deliberate third state — see BattleActorData.Type).
+func _register_by_affiliation(unit: Unit, type: BattleActorData.Type, player_units: Array[BattleActor], enemy_units: Array[BattleActor]) -> void:
+	match type:
+		BattleActorData.Type.PLAYER:
+			player_units.append(unit)
+		BattleActorData.Type.ENEMY:
+			enemy_units.append(unit)
+		BattleActorData.Type.NEUTRAL:
+			pass  # neutral units are on the grid but don't take turns
+
 # instantiates a Unit scene, resolves its stats, and places it on the grid
+# uses unit_data.get_scene() (unit override -> job scene -> generic Unit.tscn)
+# rather than a single hardcoded scene, so each job/unit can carry its own
+# inherited scene instead of swapping sprite_frames at runtime
 func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> BattleActor:
-	var unit_scene = preload("res://Scenes/Battle/Unit.tscn")
-	var unit: BattleActor = unit_scene.instantiate()
+	var unit_scene: PackedScene = unit_data.get_scene()
+	var unit: Unit = unit_scene.instantiate()
 	unit_data.resolve()
 	unit.global_position = grid_to_world(cell)
 	add_child(unit)
@@ -186,12 +220,21 @@ func _spawn_unit(cell: Vector3i, unit_data: UnitData) -> BattleActor:
 	return unit
 
 # instantiates a BattleObject and places it on the grid — mirror of _spawn_unit
-func _spawn_object(cell: Vector3i, object_data: ObjectData, scene: PackedScene) -> BattleObject:
+func _spawn_object(cell: Vector3i, object_data: BattleObjectData, scene: PackedScene) -> BattleObject:
 	var object: BattleObject = scene.instantiate()
-	object.global_position = grid_to_world(cell)
+	var visual_pos := grid_to_world(Vector3i(cell.x, cell.y, cell.z))
+	object.global_position = visual_pos
 	add_child(object)
-	object.setup(object_data, cell)
+	object.setup(object_data, cell, _battle_grid)
 	_battle_grid.place_object(object, cell)
+	
+	print("[SPAWN] object: %s | grid_cell: %s | visual_pos: %s | tile_origin: %s" % [
+		object_data.object_name,
+		cell,
+		visual_pos,
+		grid_to_world(cell)
+	])
+	
 	return object
 	
 func _spawn_from_scenario(scenario: BattleScenario) -> void:
@@ -224,7 +267,7 @@ func _spawn_from_scenario(scenario: BattleScenario) -> void:
 			unit.data.apply_effect(seed_effect)
 		enemy_units.append(unit)
 
-	var object_scene_path := "res://Scenes/Battle/BattleObject.tscn"
+	var object_scene_path := "res://Scenes/Battle/Objects/Object.tscn"
 	if ResourceLoader.exists(object_scene_path):
 		var object_scene: PackedScene = load(object_scene_path)
 		for spec in scenario.object_specs:
@@ -254,16 +297,24 @@ func grid_to_world(cell: Vector3i) -> Vector2:
 	return world_pos
 
 # converts a world position (Vector2) to a grid cell (Vector3i) using the highest elevation layer
-func world_to_grid(world_pos: Vector2) -> Vector3i:
+func world_to_grid(world_pos: Vector2, elevation: int) -> Vector3i:
 	world_pos.y += Constants.TILE_ORIGIN_OFFSET
-	var elevation = _battle_grid.get_tile_at_highest_elevation(Vector2i(world_pos))
-	var layer: TileMapLayer = _terrain_layers.get_node("Elevation" + str(elevation))
-	var local_pos = layer.to_local(world_pos)
-	var tile = _battle_grid.get_tile(local_pos)
+	var layer: TileMapLayer = _terrain_layers.get_node(
+		"Elevation" + str(elevation)
+	)
+	var local_pos := layer.to_local(world_pos)
+	var cell_2d := layer.local_to_map(local_pos)
+	
+	var cell := Vector3i(
+		cell_2d.x,
+		cell_2d.y,
+		elevation
+	)
+	var tile = _battle_grid.get_tile(cell)
 	if tile == null:
 		return Vector3i.ZERO
-	return tile
 
+	return cell
 
 # finds the first valid reachable Vector3i cell matching the clicked Vector2i position
 # returns null if no valid cell is found — always reads from _turn_context, so the check
@@ -298,7 +349,10 @@ func _on_cell_hovered(cell: Vector2i) -> void:
 		_cursor.show_cursor()
 	_cursor.move_cursor(destination)
 	
-	var actor: BattleActor = _battle_grid.get_unit_at(Vector3i(cell.x, cell.y, tile.elevation))
+	# get_actor_at checks both units AND objects (unit takes priority if both
+	# somehow occupy the same cell) — using get_unit_at here would silently
+	# never show CharacterInfo for objects at all
+	var actor: BattleActor = _battle_grid.get_actor_at(Vector3i(cell.x, cell.y, tile.elevation))
 	if actor != null:
 		_character_info.set_hovered_actor(actor)
 	else:
@@ -341,7 +395,6 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 		BattleManager.BattleState.MOVE_SELECT:
 			# move range was already computed atomically in _turn_context when the unit
 			# became active — just display it, never recompute against a separate variable
-			print("showing move range")
 			_tile_visual_manager.show_move_range(_turn_context.reachable_move_cells, grid_to_world)
 			await get_tree().create_timer(1).timeout
 		BattleManager.BattleState.ACTION_SELECT:
@@ -358,13 +411,12 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 				_previous_cell = Vector3i(999,999,999)
 		BattleManager.BattleState.TERRAIN_TURN:
 			if _battle_grid.active_effect_cells.is_empty() and _battle_grid.active_effect_objects.is_empty():
-				print("current turn: terrain")
-				print("skipping and starting next turn.")
+				DebugLog.battle_state("terrain turn has nothing to tick — skipping straight to next turn")
 				BattleManager.end_turn()
 				return
 
 			var processor = TerrainTurnProcessor.new()
-			await processor.process_terrain_turn(_battle_grid, _effect_executor, _cinematic_director)
+			await processor.process_terrain_turn(_battle_grid, _unit_mover, _effect_executor, _cinematic_director)
 			await _cinematic_director.wait_until_idle()
 			await get_tree().create_timer(0.5).timeout
 			await _cinematic_director.end_sequence()
@@ -383,7 +435,6 @@ func _on_active_unit_changed(unit: Unit) -> void:
 
 	_battle_camera.pan_to(grid_to_world(unit.grid_position))
 	#_previous_unit = unit
-	#print("_on_active_unit_changed, _previous_unit: ", _previous_unit.data.name)
 	_previous_cell = Vector3i(999,999,999)
 # =============================================================================
 # ABILITY / MOVEMENT EXECUTION

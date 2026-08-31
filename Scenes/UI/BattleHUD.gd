@@ -69,7 +69,7 @@ func refresh() -> void:
 # button states always mirror the data without manual refresh calls scattered
 # around the codebase
 func on_turn_changed(unit: Unit) -> void:
-	if unit.data.is_player_controlled:
+	if unit.data.type == BattleActorData.Type.PLAYER:
 		show()
 		if _active_unit != null:
 			if _active_unit.move_consumed.is_connected(refresh):
@@ -123,7 +123,6 @@ func _on_fight_pressed() -> void:
 		return
 	var fight = _active_unit.data.job.fight_ability
 	if fight == null:
-		print("error")
 		push_error("BattleHUD: job '%s' has no fight_ability assigned" % _active_unit.data.job.job_name)
 		return
 	BattleManager.select_ability(fight)

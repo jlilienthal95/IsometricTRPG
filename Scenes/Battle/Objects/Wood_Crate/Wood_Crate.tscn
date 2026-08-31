@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://dwu03aom7lthc"]
+
+[ext_resource type="PackedScene" uid="uid://cnal6oij1hhdc" path="res://Scenes/Battle/Objects/Object.tscn" id="1_qes4j"]
+[ext_resource type="Texture2D" uid="uid://bk7h64stg7d01" path="res://Scenes/Battle/Objects/Wood_Crate/Wood_Crate.png" id="2_1kgp3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wfjt2"]
+atlas = ExtResource("2_1kgp3")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3ltfo"]
+animations = [{
+"frames": [],
+"loop": false,
+"name": &"death",
+"speed": 30.0
+}, {
+"frames": [],
+"loop": false,
+"name": &"hit",
+"speed": 30.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wfjt2")
+}],
+"loop": false,
+"name": &"idle",
+"speed": 30.0
+}]
+
+[node name="WoodCrate" unique_id=1157963703 instance=ExtResource("1_qes4j")]
+
+[node name="ObjectSprite" parent="VisualRoot" parent_id_path=PackedInt32Array(57226232) index="0" unique_id=292865711]
+position = Vector2(-16, -19)
+sprite_frames = SubResource("SpriteFrames_3ltfo")

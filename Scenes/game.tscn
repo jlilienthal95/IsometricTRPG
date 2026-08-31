@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ufftbus5plev"]
 
 [ext_resource type="PackedScene" uid="uid://mpvvfa1v586r" path="res://Scenes/Battle/Maps/testmap.tscn" id="1_ebmjs"]
-[ext_resource type="PackedScene" uid="uid://whn3ehlnh1fk" path="res://Scenes/Battle/Unit.tscn" id="2_qxrlw"]
+[ext_resource type="PackedScene" uid="uid://whn3ehlnh1fk" path="res://Scenes/Battle/Units/Unit.tscn" id="2_qxrlw"]
 
 [node name="Game" type="Node2D" unique_id=1445532681]
 

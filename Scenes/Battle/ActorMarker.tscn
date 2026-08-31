@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bd46d586jic8s"]
+
+[ext_resource type="Script" uid="uid://cx1sv0invhqnq" path="res://Scenes/Battle/ActorMarker.gd" id="1_4c7xa"]
+
+[node name="ActorMarker" type="Node2D" unique_id=1680440495]
+z_index = 1000
+z_as_relative = false
+script = ExtResource("1_4c7xa")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=77612584]
+z_index = 1000
+z_as_relative = false

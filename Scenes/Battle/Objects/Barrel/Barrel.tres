@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BattleObjectData" format=3 uid="uid://0p5a4c25r15j"]
+
+[ext_resource type="PackedScene" uid="uid://b8sq0nktv53ux" path="res://Scenes/Battle/Objects/Barrel/Barrel.tscn" id="1_jtemy"]
+[ext_resource type="Texture2D" uid="uid://b0ddmiqr24jm3" path="res://Assets/Sprites/Objects/Barrel.png" id="1_lju20"]
+[ext_resource type="Script" uid="uid://cvs4v7tedqcxg" path="res://Resources/BattleObjectData.gd" id="3_ctt0s"]
+
+[resource]
+script = ExtResource("3_ctt0s")
+object_name = "Barrel"
+scene = ExtResource("1_jtemy")
+portrait = ExtResource("1_lju20")
+is_walkable = true
+base_max_hp = 25
+metadata/_custom_type_script = "uid://cvs4v7tedqcxg"

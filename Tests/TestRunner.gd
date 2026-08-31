@@ -11,6 +11,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://Tests/PathfinderTests.gd"),
 	preload("res://Tests/EffectSystemTests.gd"),
 	preload("res://Tests/MovementExecutionTests.gd"),
+	preload("res://Tests/AbilityTimingTests.gd"),
 ]
 
 func _ready() -> void:

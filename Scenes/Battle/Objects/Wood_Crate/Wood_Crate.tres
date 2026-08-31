@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BattleObjectData" format=3 uid="uid://fs08aitti2jf"]
+
+[ext_resource type="Texture2D" uid="uid://bk7h64stg7d01" path="res://Scenes/Battle/Objects/Wood_Crate/Wood_Crate.png" id="1_6clro"]
+[ext_resource type="Script" uid="uid://cvs4v7tedqcxg" path="res://Resources/BattleObjectData.gd" id="1_fjve3"]
+[ext_resource type="PackedScene" uid="uid://dwu03aom7lthc" path="res://Scenes/Battle/Objects/Wood_Crate/Wood_Crate.tscn" id="2_urp2o"]
+
+[resource]
+script = ExtResource("1_fjve3")
+object_name = "Wood Crate"
+scene = ExtResource("2_urp2o")
+portrait = ExtResource("1_6clro")
+is_walkable = true
+base_max_hp = 45
+metadata/_custom_type_script = "uid://cvs4v7tedqcxg"

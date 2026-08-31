@@ -1,0 +1,28 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://bq5ueu2avgllc"]
+
+[ext_resource type="Texture2D" uid="uid://b0ddmiqr24jm3" path="res://Assets/Sprites/Objects/Barrel.png" id="1_b5qrk"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_03gbg"]
+atlas = ExtResource("1_b5qrk")
+region = Rect2(0, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [],
+"loop": false,
+"name": &"death",
+"speed": 30.0
+}, {
+"frames": [],
+"loop": false,
+"name": &"hit",
+"speed": 30.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_03gbg")
+}],
+"loop": false,
+"name": &"idle",
+"speed": 30.0
+}]

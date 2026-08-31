@@ -8,6 +8,17 @@ extends BattleActorData
 @export var job: JobData = null
 
 # =============================================================================
+# VISUALS — unit-first, job-fallback (same pattern as stats below).
+# Leave unset to just use the job's scene as-is (the common case — most units
+# of the same job look identical). Set only when THIS unit needs to look
+# different from its job's default (a unique boss sprite, a palette swap,
+# etc). scene_override should itself be a scene that inherits from the job's
+# scene (or from Unit.tscn directly) and overrides only what actually differs
+# — same pattern as every other inherited actor scene in the project.
+# =============================================================================
+@export var scene_override: PackedScene = null
+
+# =============================================================================
 # BASE STATS — authored in the inspector, NEVER touched at runtime
 # =============================================================================
 @export var ai_profile_override: AIProfile = null
@@ -55,8 +66,14 @@ var speed: JobData.SpeedRank = JobData.SpeedRank.NORMAL
 # =============================================================================
 var has_moved: bool = false
 var has_acted: bool = false
-@export var is_player_controlled: bool = false
 #var is_dead: bool = false
+# NOTE: there used to be a separate `is_player_controlled: bool` here, checked
+# independently of `type` (inherited from BattleActorData) in a few places.
+# That was a second source of truth for the same fact — and worse, treated
+# "not player controlled" as a two-way flag, silently lumping NEUTRAL in with
+# ENEMY wherever it was read as `not is_player_controlled`. Removed; every
+# caller now checks `data.type == BattleActorData.Type.PLAYER` (or ENEMY/
+# NEUTRAL explicitly) directly against the single Type enum instead.
 
 var equipment: Array[EquipmentData] = []		# resolved flat list of equipped pieces
 var abilities: Array[AbilityData] = []			# resolved: granted + job abilities
@@ -201,6 +218,22 @@ func unequip(equipment_type: EquipmentData.Type) -> void:
 		EquipmentData.Type.BOOTS:		equipped_boots = null
 		EquipmentData.Type.ACCESSORY:	equipped_accessory = null
 	resolve_equipment()
+
+# =============================================================================
+# UNIT-FIRST / JOB-FALLBACK LOOKUPS
+# UnitData is always the first stop for these — a unit-specific override wins
+# if one is authored, otherwise the job's default is used. This mirrors how
+# stats already fall back to job modifiers in resolve_stats().
+# =============================================================================
+
+# the scene to instantiate for this unit: its own override if it has one,
+# otherwise its job's scene, otherwise the bare generic Unit.tscn as a last resort
+func get_scene() -> PackedScene:
+	if scene_override != null:
+		return scene_override
+	if job != null and job.scene != null:
+		return job.scene
+	return load("res://Scenes/Battle/Units/Unit.tscn")
 
 func get_ai_profile() -> AIProfile:
 	if ai_profile_override != null:

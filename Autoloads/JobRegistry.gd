@@ -9,9 +9,9 @@ extends Node
 
 # --- AUTO-GENERATED JOBS LIST START ---
 const JOBS: Array[JobData] = [
-	preload("res://Data/Jobs/Archer.tres"),
-	preload("res://Data/Jobs/Knight.tres"),
-	preload("res://Data/Jobs/Pirate.tres"),
+	preload("res://Scenes/Battle/Units/Archer/Archer.tres"),
+	preload("res://Scenes/Battle/Units/Knight/Knight.tres"),
+	preload("res://Scenes/Battle/Units/Pirate/Pirate.tres"),
 ]
 # --- AUTO-GENERATED JOBS LIST END ---
 

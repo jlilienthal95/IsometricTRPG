@@ -46,19 +46,19 @@ func resolve(target, instance: EffectInstance, context: EffectContext) -> void:
 		# susceptibility check — extinguish if tile terrain can't sustain this effect
 		var susceptible = EffectRules.SUSCEPTIBLE_TERRAIN.get(get_effect_id(), [])
 		if not susceptible.is_empty() and not susceptible.has(target.terrain_type):
-			print("[EffectHandler] non-susceptible terrain for ", EffectId.Id.keys()[get_effect_id()], " — extinguishing")
 			await context.executor.remove_effect(target, get_effect_id(), EffectExecutor.RemovalReason.EXPIRED)
 			return
 		await _resolve_tile(target, instance, context)
-	elif target is Unit:
-		# immunity check
+	elif target is Unit or target is BattleObject:
+		# immunity check — identical for both actor types since both read
+		# immunities off the same BattleActorData base; a single check here
+		# instead of one copy per branch
 		if target.data.immunities.has(get_effect_id()):
 			return
-		await _resolve_unit(target, instance, context)
-	elif target is BattleObject:
-		if target.data.immunities.has(get_effect_id()):
-			return
-		await _resolve_object(target, instance, context)
+		if target is Unit:
+			await _resolve_unit(target, instance, context)
+		else:
+			await _resolve_object(target, instance, context)
 
 # =============================================================================
 # TYPE-SPECIFIC HOOKS — override in subclasses
@@ -136,7 +136,6 @@ func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, c
 			await _on_threshold_reached(tile, context)
 			await context.executor.remove_effect(tile, effect_id, EffectExecutor.RemovalReason.EXPIRED)
 			if get_propagation_config().converts_on_threshold:
-				print("attempting conversion")
 				_call_tile_conversion(tile, context)
 			return
 
@@ -205,7 +204,7 @@ func _spread_effect(target, effect_id: EffectId.Id, context: EffectContext, tick
 	if target == null:
 		return
 	if target.has_effect(effect_id):
-		print("[EffectHandler:_spread_effect] skipping — target already has effect: ", EffectId.Id.keys()[effect_id])
+		DebugLog.effects("spread skipped — %s already present on target" % EffectId.Id.keys()[effect_id])
 		return
 	await context.executor.apply_effect(target, effect_id, ticks)
 

@@ -28,6 +28,15 @@ const BASE_CRIT_CHANCE: float = 0.05
 const CRIT_MULTIPLIER: float = 2.0
 const POWER_VARIANCE: float = 0.2
 
+# --- Z-index / occlusion layering ---
+# Every elevation level reserves this many z-index slots (terrain, then actors
+# on top of it, then anything that must occlude them) — see BattleActor.update_z_index
+# and battle_scene._build_grid, which must agree on this stride.
+const Z_INDEX_LAYER_STRIDE: int = 4
+# z-index used for an actor with no occluders above it: the top of the highest
+# possible elevation layer, plus a small buffer so it draws above that layer's terrain.
+const UNOCCLUDED_ACTOR_Z_INDEX: int = MAX_ELEVATION * Z_INDEX_LAYER_STRIDE + 3
+
 #const ARROW_TRAVEL_DISTANCE: int = 50
 
 # one elevation step is equivalent to this many flat grid steps for distance estimation.

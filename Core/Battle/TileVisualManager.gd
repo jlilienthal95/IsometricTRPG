@@ -193,7 +193,7 @@ func _cell_to_world(cell: Vector3i) -> Vector2:
 	return world
 
 func play_effect_apply_animation(tile: BattleTileData, effect_id: EffectId.Id) -> void:
-	print("spawning ", EffectId.Id.keys()[effect_id], " at cell: ", tile.cell, " world: ", _cell_to_world(tile.cell))
+	DebugLog.effects("spawning %s at cell %s (world %s)" % [EffectId.Id.keys()[effect_id], tile.cell, _cell_to_world(tile.cell)])
 	var scene_file: PackedScene = EffectSceneRegistry.get_scene(effect_id)
 	if not scene_file:
 		return
@@ -206,12 +206,16 @@ func play_effect_apply_animation(tile: BattleTileData, effect_id: EffectId.Id) -
 	tween.tween_property(scene, "modulate:a", 1, 0.2)
 	await tween.finished
 	scene.z_as_relative = false
+	# one z-slot below where an actor standing here would draw (Constants.
+	# UNOCCLUDED_ACTOR_Z_INDEX / BattleActor.update_z_index use +3 / -1 for
+	# actors themselves) — a tile effect should sit under, not on top of, a
+	# unit or object occupying the same tile
 	var occluders = _grid.occlusion_map.get(tile.cell, [])
 	if occluders.is_empty():
-		scene.z_index = 14 * 4 + 2
+		scene.z_index = Constants.MAX_ELEVATION * Constants.Z_INDEX_LAYER_STRIDE + 2
 	else:
 		var lowest_occluder = occluders[occluders.size() - 1]
-		scene.z_index = lowest_occluder.z * 4 - 2
+		scene.z_index = lowest_occluder.z * Constants.Z_INDEX_LAYER_STRIDE - 2
 	if not _effect_sprites.has(tile.cell):
 		_effect_sprites[tile.cell] = {}
 	_effect_sprites[tile.cell][effect_id] = scene

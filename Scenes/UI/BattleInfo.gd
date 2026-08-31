@@ -21,7 +21,6 @@ func _process(delta: float) -> void:
 		MarqueeState.WAITING:
 			_marquee_timer -= delta
 			if _marquee_timer <= 0.0:
-				print("marque scrolling...")
 				_marquee_state = MarqueeState.SCROLLING
 		
 		MarqueeState.SCROLLING:

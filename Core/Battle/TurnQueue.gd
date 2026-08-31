@@ -46,14 +46,13 @@ func _on_turn_ended() -> void:
 # Dead units stay in the queue (their bodies stay on the field) but are
 # skipped here — the terrain sentinel guarantees the loop always terminates.
 func start_next_turn() -> void:
-	#print("starting next turn...")
 	var participant = get_next_participant()
 	while participant is Unit and participant.data.is_dead:
 		participant = get_next_participant()
 	if participant is Unit:
-		print("setting active unit: ", participant.data.name)
+		DebugLog.battle_state("active unit -> %s" % participant.data.name)
 	else:
-		print("setting active participant.")
+		DebugLog.battle_state("active participant -> terrain turn")
 	BattleManager.set_active_unit(participant)
 
 # pops the front participant and cycles it to the back. MUTATES the queue —

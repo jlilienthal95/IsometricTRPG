@@ -18,6 +18,12 @@
 [ext_resource type="PackedScene" uid="uid://chiled6p4i1l6" path="res://Scenes/Testing/DebugPanel.tscn" id="13_sufya"]
 [ext_resource type="TileSet" uid="uid://dksjpj2u6gwt8" path="res://Assets/Sprites/Tilesets/Jumpstart/Jumpstart.tres" id="14_6tvrj"]
 [ext_resource type="Script" uid="uid://b42v0b2e3owgr" path="res://Core/Battle/TurnQueue.gd" id="17_n1ain"]
+[ext_resource type="Script" uid="uid://cx1sv0invhqnq" path="res://Scenes/Battle/ActorMarker.gd" id="19_2oujk"]
+[ext_resource type="Resource" uid="uid://0p5a4c25r15j" path="res://Scenes/Battle/Objects/Barrel/Barrel.tres" id="20_fm2jp"]
+[ext_resource type="Resource" uid="uid://bmf27j11nde6l" path="res://Scenes/Battle/Units/Marta/Marta.tres" id="21_fm2jp"]
+[ext_resource type="Resource" uid="uid://clgn6724vufu4" path="res://Scenes/Battle/Units/Auburn/Auburn.tres" id="22_f4hcl"]
+[ext_resource type="Resource" uid="uid://dqiupvinbmbkr" path="res://Scenes/Battle/Units/Theo/Theo.tres" id="23_jbiss"]
+[ext_resource type="Resource" uid="uid://fs08aitti2jf" path="res://Scenes/Battle/Objects/Wood_Crate/Wood_Crate.tres" id="24_jbiss"]
 
 [sub_resource type="Animation" id="Animation_ik5sk"]
 length = 0.001
@@ -139,6 +145,48 @@ z_index = 4
 z_as_relative = false
 tile_map_data = PackedByteArray("AAD7/wIAAAAEAAMAAAD9/wIAAAAEAAMAAAD8/wIAAAAEAAMAAAD+/wIAAAAEAAMAAAD//wIAAAAEAAMAAAD///7/AAAEAAMAAAD/////AAAEAAMAAAD//wEAAAAEAAMAAAD2/wIAAAAEAAMAAAD3/wIAAAAEAAMAAAD4/wIAAAAEAAMAAAD5/wIAAAAEAAMAAAD6/wIAAAAEAAMAAAD1/wIAAAAEAAMAAAD//wAAAAAEAAMAAAD+/wEAAAAIAAEAAAD9/wEAAAAIAAEAAAD8/wEAAAAIAAEAAAD7/wEAAAAIAAEAAAD7/wAAAAAIAAEAAAD6/wAAAAAIAAEAAAD5/wAAAAAIAAEAAAD4/wAAAAAIAAEAAAD3/wAAAAAIAAEAAAD2/wAAAAAIAAEAAAD1/wAAAAAIAAEAAAD1/wEAAAAIAAEAAAD2/wEAAAAIAAEAAAD3/wEAAAAIAAEAAAD4/wEAAAAIAAEAAAD8/wAAAAAIAAEAAAD8////AAAIAAEAAAD9////AAAIAAEAAAD9/wAAAAAIAAEAAAD5/wEAAAAIAAEAAAD+////AAAIAAEAAAD+/wAAAAAIAAEAAAD7////AAAIAAEAAAD6////AAAIAAEAAAD5////AAAIAAEAAAD4////AAAIAAEAAAD3////AAAIAAEAAAD2////AAAIAAEAAAD1////AAAIAAEAAAD1//7/AAAIAAEAAAD2//7/AAAIAAEAAAD3//7/AAAIAAEAAAD4//7/AAAIAAEAAAD5//7/AAAIAAEAAAD9//7/AAAIAAEAAAD8//7/AAAIAAEAAAD7//7/AAAIAAEAAAD6//7/AAAIAAEAAAD+//7/AAAIAAEAAAD///3/AgAAAAMAAAD///z/AgAAAAMAAAD0/wEAAAALAAUAAAD0////AAALAAUAAAD0//7/AAALAAUAAADz//7/BgAGAAQAAAD0/wIAAAAEAAMAAAD0//3/AAAEAAMAAADz//3/AAAEAAMAAADz/wIAAAAEAAMAAAD0/wAAAAALAAUAAAD6/wEAAAAIAAEAAADz/wEABgAGAAQAAADz/wAABgAGAAQAAADz////BgAGAAQAAAA=")
 tile_set = ExtResource("14_6tvrj")
+
+[node name="ActorMarker" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=902515363 groups=["actor_markers"]]
+position = Vector2(-128, -80)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("21_fm2jp")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="ActorMarker2" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=1019069653 groups=["actor_markers"]]
+position = Vector2(-112, -72)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("22_f4hcl")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="ActorMarker3" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=294724677 groups=["actor_markers"]]
+position = Vector2(-96, -64)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("23_jbiss")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="BarrelMarker" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=1634253670 groups=["actor_markers"]]
+position = Vector2(-144, -120)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("20_fm2jp")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="BarrelMarker2" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=411001152 groups=["actor_markers"]]
+position = Vector2(-48, -72)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("20_fm2jp")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="CrateMarker" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=30015332 groups=["actor_markers"]]
+position = Vector2(0, -48)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("24_jbiss")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
+
+[node name="CrateMarker2" type="Node2D" parent="TerrainLayers/Elevation1" unique_id=1653896529 groups=["actor_markers"]]
+position = Vector2(16, -40)
+script = ExtResource("19_2oujk")
+actor_data = ExtResource("24_jbiss")
+metadata/_custom_type_script = "uid://cx1sv0invhqnq"
 
 [node name="Elevation2" type="TileMapLayer" parent="TerrainLayers" unique_id=357509507]
 z_index = 8

@@ -35,6 +35,7 @@ const SUSCEPTIBLE_TERRAIN: Dictionary = {
 		TYPE.WATER,
 		TYPE.SAND,
 		TYPE.PLAGUE,
+		TYPE.ICE
 	]
 }
 

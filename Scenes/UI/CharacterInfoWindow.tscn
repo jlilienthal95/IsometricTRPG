@@ -98,7 +98,7 @@ offset_bottom = 242.0
 theme = ExtResource("3_fv5t1")
 text = "MP"
 
-[node name="Divider" type="Label" parent="." unique_id=810509958]
+[node name="MpDivider" type="Label" parent="." unique_id=810509958]
 layout_mode = 0
 offset_left = 568.0
 offset_top = 176.0
@@ -108,7 +108,7 @@ theme = ExtResource("3_fv5t1")
 theme_override_colors/font_color = Color(0.1254902, 0.20784314, 0.38431373, 1)
 text = "/"
 
-[node name="Divider2" type="Label" parent="." unique_id=2086508907]
+[node name="HpDivider" type="Label" parent="." unique_id=2086508907]
 layout_mode = 0
 offset_left = 568.0
 offset_top = 88.0

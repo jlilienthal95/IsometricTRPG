@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" uid="uid://whn3ehlnh1fk" path="res://Scenes/Battle/Units/Unit.tscn" id="1_base"]
+[ext_resource type="SpriteFrames" uid="uid://v36n5kg3645p" path="res://Scenes/Battle/Units/Archer/ArcherFrames.tres" id="2_frames"]
+
+[node name="Archer" instance=ExtResource("1_base")]
+
+[node name="UnitSprite" parent="VisualRoot" index="0"]
+sprite_frames = ExtResource("2_frames")
+position = Vector2(-28.000002, -56.000004)
+animation = &"idle"
+autoplay = "idle"

@@ -76,12 +76,12 @@ static func make_job(hp_mod: float = 1.0, mp_mod: float = 1.0, atk_mod: float = 
 
 static func make_unit_data(job: JobData = null) -> UnitData:
 	var data = UnitData.new()
-	data.unit_name = "TestUnit"
+	data.name = "TestUnit"
 	data.job = job
 	return data
 
-static func make_object_data(walkable: bool, hp: int = 10) -> ObjectData:
-	var data = ObjectData.new()
+static func make_object_data(walkable: bool, hp: int = 10) -> BattleObjectData:
+	var data = BattleObjectData.new()
 	data.object_name = "TestObject"
 	data.is_walkable = walkable
 	data.base_max_hp = hp
@@ -90,9 +90,9 @@ static func make_object_data(walkable: bool, hp: int = 10) -> ObjectData:
 # instantiates a real Unit scene if its assets are available; returns null otherwise
 # (the project zip omits assets, so integration tests self-skip gracefully)
 static func try_make_unit(parent: Node, data: UnitData, grid: BattleGrid, cell: Vector3i) -> Unit:
-	if not ResourceLoader.exists("res://Scenes/Battle/Unit.tscn"):
+	if not ResourceLoader.exists("res://Scenes/Battle/Units/Unit.tscn"):
 		return null
-	var unit: Unit = load("res://Scenes/Battle/Unit.tscn").instantiate()
+	var unit: Unit = load("res://Scenes/Battle/Units/Unit.tscn").instantiate()
 	data.resolve()
 	parent.add_child(unit)
 	unit.setup(data, cell)

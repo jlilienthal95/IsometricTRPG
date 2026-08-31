@@ -204,7 +204,7 @@ func get_object_at(cell: Vector3i) -> BattleObject:
 	return tile.object_ref
 
 # returns whichever actor occupies the cell — unit takes priority over object
-func get_actor_at(cell: Vector3i):
+func get_actor_at(cell: Vector3i) -> BattleActor:
 	var tile = get_tile(cell)
 	if tile == null:
 		return null

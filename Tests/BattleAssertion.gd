@@ -57,14 +57,14 @@ func _on_actor_defeated(actor) -> void:
 func assert_unit_integrity(unit: Unit) -> void:
 	var d := unit.data
 	check(d.current_hp >= 0 and d.current_hp <= d.max_hp,
-		"unit HP within bounds", "%s hp=%d/%d" % [d.unit_name, d.current_hp, d.max_hp])
+		"unit HP within bounds", "%s hp=%d/%d" % [d.name, d.current_hp, d.max_hp])
 	check(d.current_mp >= 0 and d.current_mp <= d.max_mp,
-		"unit MP within bounds", "%s mp=%d/%d" % [d.unit_name, d.current_mp, d.max_mp])
+		"unit MP within bounds", "%s mp=%d/%d" % [d.name, d.current_mp, d.max_mp])
 	check(d.is_dead == (d.current_hp == 0),
-		"unit is_dead matches hp==0", "%s is_dead=%s hp=%d" % [d.unit_name, str(d.is_dead), d.current_hp])
+		"unit is_dead matches hp==0", "%s is_dead=%s hp=%d" % [d.name, str(d.is_dead), d.current_hp])
 	if d.is_dead:
 		check(d.active_effects.is_empty(),
-			"dead unit carries no lingering effects", "%s effect_count=%d" % [d.unit_name, d.active_effects.size()])
+			"dead unit carries no lingering effects", "%s effect_count=%d" % [d.name, d.active_effects.size()])
 
 func assert_object_integrity(object: BattleObject) -> void:
 	var d := object.data

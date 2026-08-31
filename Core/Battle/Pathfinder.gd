@@ -203,4 +203,3 @@ func debug_reachable(origin: Vector3i, query: RangeQuery, acting_unit: Unit = nu
 		by_elevation[cell.z].append([cell, cost])
 	
 	#for elev in by_elevation.keys():
-		#print("  Elevation ", elev, ": ", by_elevation[elev].size(), " cells")

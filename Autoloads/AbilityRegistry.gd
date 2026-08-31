@@ -7,10 +7,10 @@ const ABILITIES: Array[AbilityData] = [
 	preload("res://Data/Abilities/Fight_Archer.tres"),
 	preload("res://Data/Abilities/Fight_Knight.tres"),
 	preload("res://Data/Abilities/Fight_Pirate.tres"),
-	preload("res://Data/Abilities/Flame.tres"),
-	preload("res://Data/Abilities/Freeze.tres"),
+	preload("res://Data/Abilities/Flame/Flame.tres"),
+	preload("res://Data/Abilities/Freeze/Freeze.tres"),
 	preload("res://Data/Abilities/Last_Ditch_Effort.tres"),
-	preload("res://Data/Abilities/Spark.tres"),
+	preload("res://Data/Abilities/Spark/Spark.tres"),
 ]
 # --- AUTO-GENERATED ABILITIES LIST END ---
 

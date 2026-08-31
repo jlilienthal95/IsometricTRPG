@@ -16,7 +16,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _reference_layer == null:
 		return
 	if not BattleManager.active_unit == null:
-		if event is InputEventMouseMotion and BattleManager.active_unit.data.is_player_controlled:
+		if event is InputEventMouseMotion and BattleManager.active_unit.data.type == BattleActorData.Type.PLAYER:
 			var cell = _get_cell_under_mouse()
 			if cell != _last_hovered_cell:
 				_last_hovered_cell = cell

@@ -11,6 +11,8 @@ signal movement_complete(actor)
 
 var _grid: BattleGrid = null
 var _is_moving: bool = false
+var is_interrupted: bool = false
+var direction: Vector3i = Vector3i(999,999,999)
 
 func setup(grid: BattleGrid) -> void:
 	_grid = grid
@@ -20,6 +22,7 @@ func execute_movement(actor, steps: Array[MovementStep], get_world_pos: Callable
 		push_error("UnitMover: movement already in progress")
 		return
 	_is_moving = true
+	is_interrupted = false
 	_execute_steps(actor, steps, get_world_pos, camera)
 
 func _execute_steps(actor, steps: Array[MovementStep], get_world_pos: Callable, camera: BattleCamera) -> void:
@@ -27,6 +30,11 @@ func _execute_steps(actor, steps: Array[MovementStep], get_world_pos: Callable, 
 		# restore alpha to neutral — refresh_tile_occupancy will re-dim if needed
 		actor.set_effect_alpha(1.0)
 		var from = actor.grid_position
+		if is_interrupted:
+			var delta = step.cell - from
+			direction = Vector3i(sign(delta.x), sign(delta.y), 0)
+			continue
+		direction = Vector3i(999,999,999)
 		_grid.move_actor(actor, from, step.cell)
 		actor.update_z_index()
 		actor.set_facing_toward(from, step.cell)

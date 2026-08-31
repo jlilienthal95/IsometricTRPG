@@ -18,4 +18,4 @@ var description: String = ""
 var player_unit_specs: Array[Dictionary] = []
 var enemy_unit_specs: Array[Dictionary] = []
 
-var object_specs: Array[ObjectData] = []
+var object_specs: Array[BattleObjectData] = []

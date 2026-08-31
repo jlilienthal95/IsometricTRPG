@@ -2,8 +2,8 @@ class_name EffectSceneRegistry
 extends RefCounted
 
 const SCENES: Dictionary = {
-	EffectId.Id.BURNING: preload("res://Scenes/Battle/Effects/Burning.tscn"),
-	EffectId.Id.ELECTRIFIED: preload("res://Scenes/Battle/Effects/Electrified.tscn"),
+	EffectId.Id.BURNING: preload("res://Scenes/Battle/Effects/Burning/Burning.tscn"),
+	EffectId.Id.ELECTRIFIED: preload("res://Scenes/Battle/Effects/Electrified/Electrified.tscn"),
 }
 
 static func get_scene(effect_id: EffectId.Id) -> PackedScene:

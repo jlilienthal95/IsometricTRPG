@@ -39,3 +39,18 @@ func apply_effect(effect_id: EffectId.Id, ticks: int = -1) -> void:
 
 func remove_effect(effect_id: EffectId.Id) -> void:
 	EffectStore.remove_effect(active_effects, effect_id)
+
+# Duplicates this resource for a newly spawned actor. A shallow duplicate()
+# alone isn't sufficient — Array/Dictionary properties are shared by
+# reference even under a shallow duplicate, so each mutable container needs
+# its own explicit .duplicate() call, or "independent" instances would still
+# share one active_effects array etc. Reference fields that are genuinely
+# shared TEMPLATE data (scene, job, portrait) are deliberately left alone.
+func duplicate_for_instance() -> BattleActorData:
+	var copy: BattleActorData = duplicate(false)
+	copy.elemental_affinities = elemental_affinities.duplicate()
+	copy.active_effects = active_effects.duplicate()
+	copy.immunities = immunities.duplicate()
+	copy.weaknesses = weaknesses.duplicate()
+	copy.elemental_weaknesses = elemental_weaknesses.duplicate()
+	return copy
