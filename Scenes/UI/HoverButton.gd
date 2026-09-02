@@ -4,7 +4,9 @@ extends Button
 signal focused(button: Button)
 signal unfocused
 
-@onready var action_label: Label = $ActionLabel
+# optional — not every HoverButton carries a hover label (e.g. the info-icon
+# button in CharacterInfo has none), so look it up non-fatally instead of $
+@onready var action_label: Label = get_node_or_null("ActionLabel")
 
 func _ready() -> void:
 	mouse_entered.connect(func(): focused.emit(self))

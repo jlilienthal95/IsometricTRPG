@@ -101,6 +101,9 @@ func get_propagation_config() -> PropagationConfig:
 func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context) -> void:
 	await _spread_effect(actor, get_effect_id(), context)
 
+func on_tile_event(tile: BattleTileData, event: TileEvent, instance: EffectInstance, context: EffectContext) -> void:
+	pass
+
 # override to define what happens when ticks_active hits the threshold
 @warning_ignore("unused_parameter")
 func _on_threshold_reached(tile: BattleTileData, context: EffectContext) -> void:

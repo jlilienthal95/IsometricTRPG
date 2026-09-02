@@ -13,6 +13,18 @@ var _sequence_depth: int = 0
 var _beat_queue: Array[Callable] = []
 var _pumping: bool = false
 
+# --- deferred terrain batch ---
+# The terrain turn wants a SINGLE cinematic sequence wrapping every beat it
+# produces — but only if it produces any. A round where the only terrain
+# effects are static (permanent FROZEN/SLIPPERY sitting there, adding and
+# removing nothing) must not zoom the camera at all. So instead of opening a
+# sequence up front, the processor arms a batch; the sequence is opened lazily
+# the first time an actual beat runs, and end_batch() closes it only if it was
+# opened.
+var _batch_armed: bool = false
+var _batch_opened: bool = false
+var _batch_focus = null
+
 func setup(ui: BattleUI, camera: BattleCamera, get_world_pos: Callable) -> void:
 	_ui = ui
 	_camera = camera
@@ -49,6 +61,31 @@ func end_sequence() -> void:
 func is_sequence_active() -> bool:
 	return _sequence_depth > 0
 
+# True whenever the director owns the camera: a sequence is open, a beat is
+# playing, or beats are still queued (or a batch is armed and could open one).
+# Manual camera control must yield while this holds, or the player can pan away
+# mid-beat and cancel the sequence (leaving the letterbox bars stuck on).
+func is_busy() -> bool:
+	return _sequence_depth > 0 or _pumping or not _beat_queue.is_empty() or _batch_armed
+
+# Arms a lazy terrain-turn sequence. No camera work happens here — the sequence
+# is only actually opened (see _pump) if a beat runs while it's armed. `focus`
+# is where the camera pans when/if it opens (a Node2D or Vector2, or null to
+# just zoom in place and let the beats pan themselves).
+func begin_batch(focus = null) -> void:
+	_batch_armed = true
+	_batch_opened = false
+	_batch_focus = focus
+
+# Closes the terrain-turn sequence, but only if a beat ever opened it. If the
+# terrain turn produced no beats, this is a no-op and the camera never moved.
+func end_batch() -> void:
+	_batch_armed = false
+	_batch_focus = null
+	if _batch_opened:
+		_batch_opened = false
+		await end_sequence()
+
 func wait_until_idle() -> void:
 	while _pumping or not _beat_queue.is_empty():
 		await get_tree().process_frame
@@ -59,7 +96,12 @@ func wait_until_idle() -> void:
 
 func _on_turn_changed(_unit) -> void:
 	_beat_queue.clear()
-	
+	# a new turn cancels any armed-but-never-opened batch so it can't leak
+	# across turns (an opened one is closed by its own end_batch before here)
+	if not _batch_opened:
+		_batch_armed = false
+		_batch_focus = null
+
 
 # =============================================================================
 # REACTIVE BEATS
@@ -70,17 +112,17 @@ func _on_hp_changed(actor, amount: int, new_hp: int) -> void:
 		return
 	if actor is Unit and actor.data.is_dead:
 		return
-	var depth_at_enqueue = _sequence_depth
 	_enqueue(func():
 		if not is_instance_valid(actor):
 			return
 		if actor is Unit and actor.data.is_dead:
 			return
-		if _sequence_depth > 0:
-			await _camera.play_shake()
-		else:
+		# The impact shake is now owned by BattleActor.apply_damage (fired
+		# synchronously with the blow). The director only frames a STANDALONE hp
+		# change — one landing outside any active sequence/batch — so it still
+		# gets a moment on camera; mid-sequence hits need nothing here.
+		if _sequence_depth == 0:
 			await begin_sequence(actor)
-			await _camera.play_shake()
 			await get_tree().create_timer(DELAY_LONG).timeout
 			await end_sequence()
 	)
@@ -185,6 +227,12 @@ func _pump() -> void:
 		return
 	_pumping = true
 	while not _beat_queue.is_empty():
+		# A beat is about to run. If a terrain batch is armed but not yet
+		# opened, open the wrapping sequence now — so beats fold into one
+		# zoom, while a beat-free terrain turn never opens anything at all.
+		if _batch_armed and not _batch_opened and _sequence_depth == 0:
+			_batch_opened = true
+			await begin_sequence(_batch_focus)
 		var beat: Callable = _beat_queue.pop_front()
 		await beat.call()
 	_pumping = false

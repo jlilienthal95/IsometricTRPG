@@ -5,6 +5,9 @@ signal cell_selected(cell: Vector2i)
 signal cell_hovered(cell: Vector2i)
 signal cell_cancelled
 signal center_camera_called
+# Shift+select — a secondary "route through here" gesture (movement waypoints),
+# distinct from a plain select so fast/default movement stays a single click.
+signal waypoint_placed(cell: Vector2i)
 
 var _reference_layer: TileMapLayer = null
 var _last_hovered_cell: Vector2i = Vector2i(-999, 999)
@@ -23,7 +26,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				emit_signal("cell_hovered", cell)
 		if event.is_action_pressed("menu_select"):
 			var cell = _get_cell_under_mouse()
-			emit_signal("cell_selected", cell)
+			# Shift held turns a select into a waypoint placement; the mouse-button
+			# event carries the modifier state directly, so no separate input action
+			# is needed (and right-click is already taken by menu_cancel).
+			if event is InputEventWithModifiers and event.shift_pressed:
+				emit_signal("waypoint_placed", cell)
+			else:
+				emit_signal("cell_selected", cell)
 		if event.is_action_pressed("menu_cancel"):
 			emit_signal("cell_cancelled")
 		if event.is_action_pressed("center_camera"):

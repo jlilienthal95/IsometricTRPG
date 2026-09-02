@@ -211,16 +211,14 @@ func end_turn() -> void:
 	#if active_unit == null:
 		#return
 	if active_unit is Unit:
-		var has_effects = not active_unit.data.active_effects.is_empty()
-		var tile = _grid.get_tile(active_unit.grid_position)
-		var tile_has_effects = tile != null and not tile.active_effects.is_empty()
-		if has_effects or tile_has_effects:
-			await _cinematic_director.begin_sequence(active_unit)
-			await _process_unit_turn_end_effects(active_unit)
-			await _cinematic_director.wait_until_idle()
-			await _cinematic_director.end_sequence()
-		else:
-			await _process_unit_turn_end_effects(active_unit)
+		# Arm a lazy sequence: it opens only if resolving the unit's turn-end
+		# effects actually produces a beat (damage, an effect applied/removed).
+		# Standing on a static frozen/slippery tile with nothing to resolve no
+		# longer triggers an empty zoom.
+		_cinematic_director.begin_batch(active_unit)
+		await _process_unit_turn_end_effects(active_unit)
+		await _cinematic_director.wait_until_idle()
+		await _cinematic_director.end_batch()
 	active_unit = null
 	turn_ended.emit()
 	#await get_tree().create_timer(Constants.FADE_OUT_TIMER).timeout

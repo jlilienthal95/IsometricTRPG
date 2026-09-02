@@ -6,21 +6,23 @@ extends Node2D
 #
 # This class exists so that grid/turn/effect systems (UnitMover, EffectExecutor,
 # BattleGrid, etc.) can treat units and battle objects identically wherever
-# their behavior is genuinely identical — they don't need to know or care
-# which subclass they're holding.
+# their behavior is genuinely identical.
 #
-# Ownership rule for this file: if the SAME logic would otherwise be copy-pasted
-# into both Unit.gd and BattleObject.gd, it belongs here instead, with small
-# "hook" functions (the underscore-prefixed ones below) for subclasses to
-# plug in the one or two lines that actually differ (e.g. which local visual
-# effect plays, or what happens to the AnimationPlayer). Keep it that way —
-# this class drifting back into a stub of pass-only functions while the real
-# logic duplicates in subclasses is exactly the bug pattern we're avoiding.
+# THREE-LAYER SPLIT — every state change in this file belongs to exactly one:
+#   DATA   — mutates `data`, never touches visuals. Safe to call headlessly
+#            (tests, AI lookahead, save/load, rewind).
+#   ANIM   — plays visuals, never touches `data`. Safe to replay, skip, or
+#            call out of order (previews, cutscenes, debug tools).
+#   UNION  — the normal gameplay entry point: calls DATA then ANIM in the
+#            right order and emits the right events.
+#
+# Callers should reach for the UNION function unless they specifically want
+# one half without the other. Never mutate data.current_hp / data.is_dead
+# directly from outside — go through the DATA functions so events stay honest.
 # =============================================================================
 
 @onready var damage_count: Control = $DamageCount/DamageLabel
 
-# --- shared interface contract ---
 var grid_position: Vector3i = Vector3i.ZERO
 var data: BattleActorData = null
 
@@ -28,63 +30,42 @@ var data: BattleActorData = null
 # in update_z_index(). Subclasses must set this during their own setup().
 var _grid_ref: BattleGrid = null
 
-
-# =============================================================================
-# HP — the single mutation points for actor health, shared by units and
-# objects alike. All damage and healing flows through apply_damage / apply_heal,
-# which:
-#   1. mutate data.current_hp (the single source of truth)
-#   2. announce the change on BattleEvents (UI panels and the CinematicDirector
-#      react on their own — no caller has to remember to trigger them)
-#   3. play local feedback via the hooks below (damage number always; the
-#      rest is subclass-specific, since a Unit flashes/plays a hit animation
-#      and a BattleObject currently doesn't)
-# Callers must never write data.current_hp directly.
-# =============================================================================
-
-func apply_damage(amount: int) -> void:
-	if data.is_dead:
-		return
-	data.current_hp = maxi(0, data.current_hp - amount)
-	BattleEvents.hp_changed.emit(self, -amount, data.current_hp)
-	play_damage_count(amount)
-	_play_hit_feedback()
-	if data.current_hp == 0:
-		await _on_defeated()
-	else:
-		await _on_damaged()
-
-func apply_heal(amount: int) -> void:
-	if data.is_dead:
-		return
-	data.current_hp = mini(data.max_hp, data.current_hp + amount)
-	BattleEvents.hp_changed.emit(self, amount, data.current_hp)
-	play_damage_count(-amount)
-
-# --- hooks: subclasses override to add their own local reaction to damage ---
-
-# immediate visual feedback the instant damage lands (flash, particles, sfx)
-func _play_hit_feedback() -> void:
-	pass
-
-# non-lethal reaction — e.g. a "hit" animation. Awaited before control returns.
-func _on_damaged() -> void:
-	pass
-
-# lethal reaction — MUST end by emitting BattleEvents.actor_defeated (the base
-# implementation does this; override and call it, or replicate it, but never
-# skip it — turn queue / win-condition checks depend on this signal firing
-# exactly once per actor death).
-func _on_defeated() -> void:
-	BattleEvents.actor_defeated.emit(self)
+# Camera used for the impact shake that punctuates taking damage. Resolved
+# lazily from the scene (sibling of every spawned actor) and cached; null in
+# headless contexts (tests, AI lookahead), where apply_damage simply skips it.
+var _camera_ref: BattleCamera = null
 
 
 # =============================================================================
-# EFFECTS — both Unit and BattleObject store their active effects on `data`
-# (BattleActorData) identically, so the default read/write path lives here.
-# A subclass only needs to override apply_effect/remove_effect if it must also
-# do something extra beyond the data mutation (BattleObject additionally
-# registers itself with the grid, so effect propagation can find it).
+# DATA — pure state mutation. No visuals, no awaits, no scene-tree access.
+# =============================================================================
+
+# Applies a signed HP delta, clamped to [0, max_hp]. Returns the amount
+# actually applied, which can differ from `delta` when clamping kicks in —
+# callers use the return value for damage numbers so the popup matches what
+# really happened rather than what was requested.
+func modify_hp(delta: int) -> int:
+	var before := data.current_hp
+	data.current_hp = clampi(data.current_hp + delta, 0, data.max_hp)
+	var applied := data.current_hp - before
+	if applied != 0:
+		BattleEvents.hp_changed.emit(self, applied, data.current_hp)
+	return applied
+
+func mark_dead() -> void:
+	data.is_dead = true
+
+func mark_alive() -> void:
+	data.is_dead = false
+
+func is_alive() -> bool:
+	return not data.is_dead
+
+
+# =============================================================================
+# EFFECTS — data layer. Both Unit and BattleObject store effects on `data`
+# identically, so the default read/write path lives here. BattleObject
+# overrides apply/remove to additionally register with the grid.
 # =============================================================================
 
 func has_effect(effect_id: EffectId.Id) -> bool:
@@ -103,11 +84,16 @@ func remove_effect(effect_id: EffectId.Id) -> void:
 
 
 # =============================================================================
-# ANIMATION — default no-ops. Units override these with real sprite playback;
-# BattleObjects currently have no locomotion animations, so the no-op default
-# already IS their correct behavior (no need to re-declare empty overrides —
-# see the note in BattleObject.gd if you're tempted to add one back).
+# ANIM — pure presentation. Never reads or writes `data`.
+#
+# Defaults are no-ops: Units override with real sprite playback, and
+# BattleObjects genuinely have no locomotion animations, so the no-op default
+# already IS their correct behavior.
 # =============================================================================
+
+# BattleActor
+func play_movement(_type: MovementSequence.MovementType) -> void:
+	pass
 
 func play_idle() -> void:
 	pass
@@ -116,6 +102,14 @@ func play_walk() -> void:
 	pass
 
 func play_jump() -> void:
+	pass
+
+# one-shot defeat visual. Does NOT mark the actor dead — see mark_dead().
+func play_death() -> void:
+	pass
+
+# one-shot damage-reaction visual (flinch, flash, particles)
+func play_hit() -> void:
 	pass
 
 func set_facing_toward(_from_cell: Vector3i, _to_cell: Vector3i) -> void:
@@ -127,17 +121,15 @@ func set_effect_alpha(_alpha: float) -> void:
 func on_terrain_changed(_terrain_type: int) -> void:
 	pass
 
-# shared damage-number popup — the label/tween logic is identical for every
-# actor type; only the AnimationPlayer that owns the "damage_count" animation
-# differs, so subclasses point us at their own via _get_damage_anim_player().
-func play_damage_count(damage: int) -> void:
-	if damage < 0:
-		var heal_color: Color = Color(0.0, 0.74, 0.0, 1.0)
-		damage_count.add_theme_color_override("font_color", heal_color)
+# Floating damage/heal number. Takes the SIGNED hp delta as applied (negative
+# for damage, positive for healing) and handles its own colouring, so callers
+# can pass modify_hp()'s return value straight through.
+func play_damage_count(hp_delta: int) -> void:
+	if hp_delta > 0:
+		damage_count.add_theme_color_override("font_color", Color(0.0, 0.74, 0.0, 1.0))
 	else:
-		var damage_color: Color = Color("ff003b")
-		damage_count.add_theme_color_override("font_color", damage_color)
-	damage_count.text = str(absi(damage))
+		damage_count.add_theme_color_override("font_color", Color("ff003b"))
+	damage_count.text = str(absi(hp_delta))
 	var anim_player := _get_damage_anim_player()
 	if anim_player != null:
 		anim_player.play("damage_count")
@@ -145,6 +137,76 @@ func play_damage_count(damage: int) -> void:
 # hook: return the AnimationPlayer that owns this actor's "damage_count" clip
 func _get_damage_anim_player() -> AnimationPlayer:
 	return null
+
+
+# =============================================================================
+# UNION — the normal gameplay path. DATA first, then ANIM.
+# =============================================================================
+
+# play_reaction=false suppresses only the hit clip (which ends by returning to
+# idle) — used when the caller already owns the actor's pose and idle would
+# stomp it, e.g. crash damage mid-slip, where the fallen pose must hold until
+# the recovery clip. Impact shake, flash, damage number, and death still play.
+func apply_damage(amount: int, play_reaction: bool = true) -> void:
+	if data.is_dead:
+		return
+	# The shake is the impact: it leads, and the damage tally + hit reaction land
+	# on it. Owned here (not the CinematicDirector) so it's synchronous with the
+	# blow instead of trailing a moment behind on the director's beat queue.
+	await _play_impact()
+	var applied := modify_hp(-amount)
+	_play_hit_feedback()
+	play_damage_count(applied)
+	if data.current_hp == 0:
+		# play_reaction=false also skips the death clip: the actor is already
+		# collapsed in its slip/fall pose, which reads as dead, so replaying it
+		# would only re-animate a body that's already down.
+		await _defeat(play_reaction)
+	elif play_reaction:
+		await play_hit()
+
+# Camera shake marking the moment of impact. Awaited so the damage that follows
+# is felt to land on it. No-op when no camera is reachable (headless).
+func _play_impact() -> void:
+	var cam := _get_camera()
+	if cam != null:
+		await cam.play_shake()
+
+func _get_camera() -> BattleCamera:
+	if _camera_ref == null:
+		var parent := get_parent()
+		if parent != null:
+			_camera_ref = parent.get_node_or_null("BattleCamera")
+	return _camera_ref
+
+# Subclass hook: per-actor damage reaction (a unit flashes; an object doesn't).
+# Fires at impact, right after the shake. Default no-op covers objects.
+func _play_hit_feedback() -> void:
+	pass
+
+func apply_heal(amount: int) -> void:
+	if data.is_dead:
+		return
+	var applied := modify_hp(amount)
+	play_damage_count(applied)
+
+# Shared defeat sequence: mark dead (data) -> announce -> play the visual
+# (anim) -> subclass lifecycle cleanup. Kept as one function so the
+# actor_defeated signal can't be skipped or double-fired by a subclass
+# forgetting to call super(). play_anim=false skips only the death clip (the
+# data/announce/lifecycle still run) for when the actor is already in a fallen
+# pose the caller placed it in.
+func _defeat(play_anim: bool = true) -> void:
+	mark_dead()
+	BattleEvents.actor_defeated.emit(self)
+	if play_anim:
+		await play_death()
+	await _finalize_defeat()
+
+# hook: post-death lifecycle (grid removal, queue_free). Data/lifecycle only,
+# not visuals — those belong in play_death().
+func _finalize_defeat() -> void:
+	pass
 
 
 # =============================================================================

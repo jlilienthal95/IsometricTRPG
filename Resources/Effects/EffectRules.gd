@@ -41,19 +41,22 @@ const SUSCEPTIBLE_TERRAIN: Dictionary = {
 
 const DEFAULT_DURATION: Dictionary = {
 	ID.BURNING: 3,
-	ID.REDHOT: 2,
 	ID.ELECTRIFIED: 2,
 	ID.ELECTRIFIED_CONDUCTED: 2,
+	ID.FROZEN: 3,
+	ID.REDHOT: 2,
 	ID.SOAKED: 2,
+	ID.SLIPPERY: -1,
 }
 
 # how many ticks an effect must remain active before triggering its threshold consequence
 # (e.g. burning converts contiguous stone to lava after 3 ticks)
 const DURATION_THRESHOLD_TICKS: Dictionary = {
 	ID.BURNING: 3,
+	ID.FROZEN: 3,
 	ID.SOAKED: 2,
 	ID.REDHOT: 2,
-	ID.FROZEN: 3,
+	ID.SLIPPERY: -1,
 }
 
 const LIQUID_TERRAIN: Array[BattleTileData.TerrainType] = [

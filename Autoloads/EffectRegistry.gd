@@ -72,6 +72,12 @@ func _load_handlers() -> void:
 
 	_assert_full_coverage()
 
+func get_handler(effect_id: EffectId.Id) -> EffectHandler:
+	return _handlers.get(effect_id, null)
+
+func get_all_handlers() -> Dictionary:
+	return _handlers
+	
 func _assert_full_coverage() -> void:
 	for id in EffectId.Id.values():
 		if id == EffectId.Id.NONE:
@@ -79,8 +85,8 @@ func _assert_full_coverage() -> void:
 		if not _handlers.has(id):
 			push_warning("EffectRegistry: no handler registered for effect_id " + EffectId.Id.keys()[id])
 
-func get_handler(effect_id: EffectId.Id) -> EffectHandler:
-	return _handlers.get(effect_id, null)
-
-func get_all_handlers() -> Dictionary:
-	return _handlers
+func has_visuals(effect_id: EffectId.Id) -> bool:
+	var handler = get_handler(effect_id)
+	if handler == null:
+		push_warning("EffectRegistry: no handler registered for effect_id " + EffectId.Id.keys()[effect_id])
+	return handler.get_propagation_config().has_visual_effects

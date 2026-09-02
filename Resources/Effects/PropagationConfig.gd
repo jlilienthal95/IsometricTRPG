@@ -1,6 +1,9 @@
 class_name PropagationConfig
 extends RefCounted
 
+# --- visuals ---
+var has_visual_effects: bool = true #
+
 # --- propagation ---
 var style: EffectHandler.PropagationStyle = EffectHandler.PropagationStyle.NONE
 var propagates_vertically: bool = false

@@ -1,0 +1,15 @@
+[gd_resource type="AnimatedTexture" format=3 uid="uid://be8rr4haybmbq"]
+
+[ext_resource type="Texture2D" uid="uid://di87mj27xrbx" path="res://Assets/UI/modernuserinterface-win/Info_Icon/info_icon_48_1.png" id="1_tnc5c"]
+[ext_resource type="Texture2D" uid="uid://dv357608a1sbc" path="res://Assets/UI/modernuserinterface-win/Info_Icon/info_icon_48_2.png" id="2_c7eoe"]
+[ext_resource type="Texture2D" uid="uid://c21hv4lk4ot3g" path="res://Assets/UI/modernuserinterface-win/Info_Icon/info_icon_48_3.png" id="3_5r163"]
+
+[resource]
+frames = 3
+pause = true
+frame_0/texture = ExtResource("1_tnc5c")
+frame_0/duration = 0.2
+frame_1/texture = ExtResource("2_c7eoe")
+frame_1/duration = 0.2
+frame_2/texture = ExtResource("3_5r163")
+frame_2/duration = 0.2

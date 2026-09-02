@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://djcnqynklsoer"]
 
-[ext_resource type="Script" uid="uid://bd72xgccb26q7" path="res://Scenes/Battle/Cursor.gd" id="1_nvec1"]
+[ext_resource type="Script" uid="uid://bd72xgccb26q7" path="res://Scenes/Battle/cursor.gd" id="1_nvec1"]
 [ext_resource type="Texture2D" uid="uid://bme5128id72a7" path="res://Assets/UI/Cursor_Sheet.png" id="2_nvec1"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fwc37"]

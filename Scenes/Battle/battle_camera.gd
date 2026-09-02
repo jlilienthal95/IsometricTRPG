@@ -70,6 +70,18 @@ func snap_to(target_pos: Vector2) -> void:
 		_position_tween.kill()
 	position = target_pos
 
+# player-driven free pan (WASD). Nudges position by `offset` this frame, taking
+# position ownership like snap_to — it kills any pan/follow tween so a scripted
+# camera move (ability sequence, centering) and manual panning never fight. The
+# CALLER is responsible for only invoking this when the player is allowed to
+# drive the camera (see MouseDetectRect); a scripted pan_to/follow issued while
+# the player isn't panning simply reclaims ownership on its next call.
+func pan_manual(offset: Vector2) -> void:
+	stop_following()
+	if _position_tween != null and _position_tween.is_valid():
+		_position_tween.kill()
+	position += offset
+
 # =============================================================================
 # ZOOM
 # =============================================================================

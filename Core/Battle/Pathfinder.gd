@@ -49,19 +49,28 @@ func get_movement_path(origin: Vector3i, destination: Vector3i, query: RangeQuer
 	raw_path.reverse()
 	
 	# convert to MovementSteps
-	var steps: Array[MovementStep] = []
-	var prev = origin
-	for cell in raw_path:
-		var step = MovementStep.new()
-		step.cell = cell
-		step.elevation_delta = cell.z - prev.z
-		step.is_jump = step.elevation_delta != 0
-		var tile = _grid.get_tile(cell)
-		step.terrain_type = tile.terrain_type if tile else 0
-		steps.append(step)
-		prev = cell
-	
-	return steps
+	return generate_movement_steps(origin, raw_path)
+
+# Like get_movement_path but also returns the path's total move cost, so callers
+# stitching multiple legs together (waypoint routing) can budget against range.
+# Returns { "steps": Array[MovementStep], "cost": int } — cost -1 = no path.
+func get_movement_path_with_cost(origin: Vector3i, destination: Vector3i, query: RangeQuery, acting_unit: Unit = null) -> Dictionary:
+	var empty: Array[MovementStep] = []
+	if destination == origin:
+		return {"steps": empty, "cost": 0}
+	var result = _run_dijkstra(origin, query, acting_unit, destination)
+	var visited = result[0]
+	var came_from = result[1]
+	if not came_from.has(destination):
+		return {"steps": empty, "cost": -1}
+
+	var raw_path: Array[Vector3i] = []
+	var current = destination
+	while current != origin:
+		raw_path.append(current)
+		current = came_from[current]
+	raw_path.reverse()
+	return {"steps": generate_movement_steps(origin, raw_path), "cost": int(visited.get(destination, -1))}
 
 # private helpers
 func _run_dijkstra(origin: Vector3i, query: RangeQuery, acting_unit: Unit = null, destination: Vector3i = Vector3i(9999, 9999, 9999)) -> Array:
@@ -127,6 +136,20 @@ func _passes_filters(neighbor: Vector3i, cell: Vector3i, query: RangeQuery, acti
 		if elevation_diff > query.jump_height:
 			return false
 	return true
+	
+func generate_movement_steps(origin: Vector3i, raw_path: Array[Vector3i]) -> Array[MovementStep]:
+	var steps: Array[MovementStep] = []
+	var prev = origin
+	for cell in raw_path:
+		var step = MovementStep.new()
+		step.cell = cell
+		step.elevation_delta = cell.z - prev.z
+		step.is_jump = step.elevation_delta != 0
+		var tile = _grid.get_tile(cell)
+		step.terrain_type = tile.terrain_type if tile else 0
+		steps.append(step)
+		prev = cell
+	return steps
 
 func _calculate_move_cost(neighbor: Vector3i, cell: Vector3i, query: RangeQuery) -> int:
 	var tile = _grid.get_tile(neighbor)

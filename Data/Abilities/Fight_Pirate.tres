@@ -7,6 +7,6 @@ script = ExtResource("1_p0aup")
 ability_name = "Fight_Pirate"
 ability_id = 2
 description = "A basic attack. Hits anything in a one tile range."
+ability_force = 2
 max_elevation_difference = 1
-impact_delay = 367
 metadata/_custom_type_script = "uid://dwsnvmlbqqnbs"

@@ -24,6 +24,12 @@ extends BattleActorData
 @export var ai_profile_override: AIProfile = null
 @export var caster_impact_frame_overrides: Dictionary[AbilityData.UnitAnimation, int] = {}  # UnitAnimation -> int 
 
+# Explicit max HP for a hand-authored unit (miniboss/boss). 0 = auto: max_hp is
+# derived from base_max_hp * the job's hp modifier as usual. Any value > 0 wins
+# outright and skips that calc, so a boss's HP is exactly what's authored here
+# regardless of job. current_hp still starts full at max_hp either way.
+@export var max_hp_override: int = 0
+
 @export var base_max_mp: int = Constants.UNIT_BASE_MP
 @export var base_attack: int = Constants.UNIT_BASE_ATTACK
 @export var base_defense: int = Constants.UNIT_BASE_DEFENSE
@@ -123,10 +129,12 @@ func resolve_stats() -> void:
 	var atk_mod: float = job.attack_modifier if job else 1.0
 	var def_mod: float = job.defense_modifier if job else 1.0
 
-	max_hp = int(base_max_hp * hp_mod)
-	max_mp = int(base_max_mp * mp_mod)
-	attack = int((base_attack * atk_mod) + (current_lvl * 1.3))
-	defense = int(base_defense * def_mod)
+	# each scaling stat = base * job modifier + a flat per-level growth term.
+	# an authored HP override wins outright and skips both the mod and the growth.
+	max_hp = max_hp_override if max_hp_override > 0 else int((base_max_hp * hp_mod) + (current_lvl * Constants.UNIT_HP_PER_LEVEL))
+	max_mp = int((base_max_mp * mp_mod) + (current_lvl * Constants.UNIT_MP_PER_LEVEL))
+	attack = int((base_attack * atk_mod) + (current_lvl * Constants.UNIT_ATTACK_PER_LEVEL))
+	defense = int((base_defense * def_mod) + (current_lvl * Constants.UNIT_DEFENSE_PER_LEVEL))
 	current_hp = max_hp
 	current_mp = max_mp
 
@@ -247,4 +255,8 @@ func get_caster_impact_frame(anim: AbilityData.UnitAnimation) -> int:
 		return caster_impact_frame_overrides[anim]
 	if job != null and job.caster_impact_frames.has(anim):
 		return job.caster_impact_frames[anim]
+	# the finisher shares the plain attack's impact timing unless it was given
+	# its own override/job entry above
+	if anim == AbilityData.UnitAnimation.ATTACK_FINISHER:
+		return get_caster_impact_frame(AbilityData.UnitAnimation.ATTACK)
 	return 0

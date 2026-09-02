@@ -14,7 +14,7 @@ func get_propagation_config() -> PropagationConfig:
 	config.propagates_vertically = true
 	config.decrement_before_propagation = false
 	config.spreads_to_occupants = true
-	config.spreads_to_tile_on_turn_end = true
+	config.spreads_to_tile_on_turn_end = false
 	config.spreads_to_liquid_only = true
 	config.min_ticks_before_spread = 1
 	
@@ -34,3 +34,12 @@ func get_propagation_config() -> PropagationConfig:
 func _resolve_tile(tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
 	await context.executor.apply_effect(tile, EffectId.Id.SLIPPERY)
 	await super._resolve_tile(tile, instance, context)
+
+# FROZEN does NOT catch a passer-by. Unlike fire, merely walking or sliding
+# across an icy tile mid-move must not apply the effect — a unit only becomes
+# frozen if it is STILL on the tile when the terrain turn ticks (i.e. it ended
+# its turn there), which the generic occupant spread in _resolve_tile_propagation
+# handles. So the default on-entry spread is deliberately suppressed here.
+@warning_ignore("unused_parameter")
+func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context) -> void:
+	pass

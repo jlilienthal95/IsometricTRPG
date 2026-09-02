@@ -18,21 +18,21 @@ func process_terrain_turn(grid: BattleGrid, mover: UnitMover, effect_executor: E
 		for object in grid.get_objects_with_effect(effect_id):
 			object_work.append([effect_id, object])
 
-	var sequence_opened := false
+	# Arm a lazy cinematic sequence: it opens only if a tick actually produces
+	# a beat (an effect applied/removed, damage dealt). A terrain turn that just
+	# re-ticks static frozen/slippery tiles adds and removes nothing, so no
+	# sequence opens and the camera stays put.
+	director.begin_batch()
 
 	for entry in cell_work:
-		if not sequence_opened:
-			await director.begin_sequence_at_cell(entry[1])
-			sequence_opened = true
 		await _process_cell(grid, entry[1], entry[0], effect_executor, context)
 		await director.wait_until_idle()
 
 	for entry in object_work:
-		if not sequence_opened:
-			await director.begin_sequence(entry[1])
-			sequence_opened = true
 		await _process_object(entry[1], entry[0], effect_executor, context)
 		await director.wait_until_idle()
+
+	await director.end_batch()
 
 func _process_cell(grid: BattleGrid, cell: Vector3i, effect_id: EffectId.Id, effect_executor: EffectExecutor, context: EffectContext) -> void:
 	var tile = grid.get_tile(cell)

@@ -29,6 +29,7 @@ enum UnitAnimation { ATTACK, ATTACK_FINISHER, CAST_SPELL, }
 # Modifiers
 @export var base_hit_chance: float = 1.0 # base hit chance as a percentage (1.0 = 100%, 0.85 = 85% etc.)
 @export var base_crit_chance: float = 0.05 # base critical hit chance as a percentage
+@export var ability_force: AbilityForce.Level = AbilityForce.Level.NONE # Defines pushing or explosive force
 
 # Elevation rules
 @export var ignores_elevation: bool = false

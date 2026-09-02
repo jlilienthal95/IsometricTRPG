@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://bkpjwyj1tu52l" path="res://Core/AI/AIProfile.gd" id="2_bdl8b"]
 [ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_byrk4"]
 [ext_resource type="Resource" uid="uid://cm5rldk0hhdsl" path="res://Data/Abilities/Fight_Knight.tres" id="3_fight"]
-[ext_resource type="PackedScene" path="res://Scenes/Battle/Units/Knight/Knight.tscn" id="5_kejys"]
+[ext_resource type="PackedScene" uid="uid://c6q06162rtr0n" path="res://Scenes/Battle/Units/Knight/Knight.tscn" id="5_kejys"]
 
 [sub_resource type="Resource" id="Resource_8usvp"]
 script = ExtResource("2_bdl8b")
@@ -34,7 +34,7 @@ caster_impact_frames = Dictionary[int, int]({
 1: 34,
 2: 27
 })
-hp_modifier = 1.2
+hp_modifier = 0.01
 mp_modifier = 0.8
 attack_modifier = 1.2
 ai_profile = SubResource("Resource_8usvp")

@@ -2,6 +2,7 @@ class_name TileVisualManager
 extends Node
 
 const HIGHLIGHT_SCENE = preload("res://Scenes/Battle/HighlightTile.tscn")
+const TILE_TINT_SHADER = preload("res://Scenes/Battle/tile_tint.gdshader")
 
 const EFFECT_COLORS: Dictionary = {
 	EffectId.Id.REDHOT: Color(1.0, 0.1, 0.0, 1.0),
@@ -31,6 +32,20 @@ var _grid: BattleGrid = null
 
 # highlight overlays — cleared on selection change
 var _active_highlights: Array[Node2D] = []
+# move-path preview overlays — a separate layer so the previewed route can be
+# redrawn on every hover without disturbing the underlying range highlight
+var _active_path_highlights: Array[Node2D] = []
+
+# preview colors — chosen to read on TOP of the blue range highlight (so not
+# blue). Applied via the tint shader, not modulate, so they actually show.
+const PATH_COLOR := Color(0.25, 1.0, 0.35, 0.9)			# route tiles — green
+const PATH_WAYPOINT_COLOR := Color(1.0, 0.8, 0.1, 0.98)	# waypoints — gold
+const PATH_INVALID_COLOR := Color(1.0, 0.15, 0.15, 0.9)	# route exceeds range — red
+
+# tint materials are built once and reused across the three route roles
+var _path_material: ShaderMaterial = null
+var _waypoint_material: ShaderMaterial = null
+var _invalid_material: ShaderMaterial = null
 
 # effect lights — one PointLight2D per affected tile
 # Vector3i -> PointLight2D
@@ -66,8 +81,51 @@ func clear_highlights() -> void:
 		highlight.queue_free()
 	_active_highlights.clear()
 
+# Draws the previewed movement route on top of the range highlight: every tile
+# the unit will cross, with player-placed waypoints tinted distinctly, and the
+# whole route recolored when it overruns range. Cleared and redrawn per hover.
+func show_move_path(path_cells: Array, waypoint_cells: Array, get_world_pos: Callable, valid: bool = true) -> void:
+	clear_move_path()
+	_ensure_path_materials()
+	for cell in path_cells:
+		var highlight: Node2D = HIGHLIGHT_SCENE.instantiate()
+		add_child(highlight)
+		highlight.global_position = get_world_pos.call(cell)
+		highlight.z_index = cell.z * 4 + 2	# above the range highlight (+1)
+		# recolor via the tint shader on the sprite itself (modulate can't override
+		# the blue art); neutralize the scene's baked-in modulate so tint alpha wins
+		var sprite: CanvasItem = highlight.get_node("Sprite2D")
+		sprite.modulate = Color.WHITE
+		if not valid:
+			sprite.material = _invalid_material
+		elif waypoint_cells.has(cell):
+			sprite.material = _waypoint_material
+		else:
+			sprite.material = _path_material
+		_active_path_highlights.append(highlight)
+
+# builds the three reusable tint materials on first use
+func _ensure_path_materials() -> void:
+	if _path_material != null:
+		return
+	_path_material = _make_tint_material(PATH_COLOR)
+	_waypoint_material = _make_tint_material(PATH_WAYPOINT_COLOR)
+	_invalid_material = _make_tint_material(PATH_INVALID_COLOR)
+
+func _make_tint_material(color: Color) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = TILE_TINT_SHADER
+	mat.set_shader_parameter("tint", color)
+	return mat
+
+func clear_move_path() -> void:
+	for highlight in _active_path_highlights:
+		highlight.queue_free()
+	_active_path_highlights.clear()
+
 func clear() -> void:
 	clear_highlights()
+	clear_move_path()
 
 # =============================================================================
 # EFFECT VISUALS

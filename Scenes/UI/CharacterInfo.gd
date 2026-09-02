@@ -18,6 +18,7 @@ const NEUTRAL_BG = preload("res://Assets/UI/Windows/Character_Info_Window_Neutra
 @onready var mp_divider: Label = $MpDivider
 @onready var lvl_count: Label = $LvlCount
 @onready var lvl_accent: Label = $LvlAccent
+@onready var info_button: HoverButton = $InfoButton
 
 var _fade_tween: Tween = null
 
@@ -32,6 +33,10 @@ var _hovered_actor: BattleActor = null
 func _ready() -> void:
 	BattleManager.active_unit_changed.connect(_on_active_unit_changed)
 	BattleEvents.hp_changed.connect(_on_hp_changed)
+	
+	info_button.focused.connect(_on_info_focused)
+	info_button.unfocused.connect(_on_info_unfocused)
+	info_button.pressed.connect(_on_info_pressed)
 
 # =============================================================================
 # STATE — every mutation funnels into _update_display
@@ -56,6 +61,30 @@ func _on_hp_changed(actor, _amount: int, _new_hp: int) -> void:
 
 func refresh() -> void:
 	_update_display()
+
+# The info icon is an AnimatedTexture that ships paused (pause = true); it only
+# animates while the button is focused. HoverButton.focused emits the button as
+# an argument — the handler MUST accept it, or Godot drops the call at emit time
+# ("expected 0 arguments, called with 1") and this never fires.
+func _on_info_focused(_button: HoverButton) -> void:
+	_set_info_icon_playing(true)
+
+func _on_info_unfocused() -> void:
+	_set_info_icon_playing(false)
+	
+func _on_info_pressed() -> void:
+	print("info pressed")
+
+# `pause` lives on the AnimatedTexture, not the button — icon is typed Texture2D
+# so cast before touching it. Rewinds to frame 0 when stopping so each hover
+# restarts the animation cleanly.
+func _set_info_icon_playing(playing: bool) -> void:
+	var anim := info_button.icon as AnimatedTexture
+	if anim == null:
+		return
+	anim.pause = not playing
+	if not playing:
+		anim.current_frame = 0
 
 # =============================================================================
 # DISPLAY
@@ -134,11 +163,13 @@ func _hide_unit_details() -> void:
 	mp_divider.text = ""
 	lvl_count.text = ""
 	lvl_accent.text = ""
+	info_button.hide()
 
 func _show_unit_details() -> void:
 	mp_accent.text = "MP"
 	mp_divider.text = "/"
 	lvl_accent.text = "LV"
+	info_button.show()
 
 func hide_window() -> void:
 	await fade_out()

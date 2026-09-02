@@ -5,10 +5,13 @@ extends BattleActor
 # Unit — a player/enemy/neutral combatant.
 #
 # Adds everything BattleActor doesn't know about: MP, turn state (move/act),
-# job-driven sprites, and the full attack/cast/hit/death animation set.
-# HP mutation, effect storage, damage-number popups, and z-index are all
-# inherited from BattleActor unchanged — see that file before adding anything
-# here that might just be duplicating shared logic.
+# and the full attack/cast/hit/death animation set. HP mutation, effect
+# storage, damage-number popups, and z-index are inherited unchanged.
+#
+# Follows BattleActor's three-layer split: DATA / ANIM / UNION. Every play_*
+# function here is pure presentation — none of them touch `data`. See the
+# note above the ANIMATIONS section for how the death-pose guard works now
+# that play_death() no longer sets is_dead itself.
 # =============================================================================
 
 @onready var unit_visual_root: Node2D = $VisualRoot
@@ -33,15 +36,12 @@ var _default_material: Material = null
 func _ready() -> void:
 	unit_sprite.material = unit_sprite.material.duplicate()
 	_default_material = unit_sprite.material
-	if data != null:
+	if data != null and is_alive():
 		play_idle()
 
-# initializes the unit with its data resource and places it at the given grid position.
-# Sprite/frames/shadow are NOT touched here — they're already correct, baked
-# into whichever scene battle_scene._spawn_unit() instantiated via
-# unit_data.get_scene() (the job's inherited scene, or a unit-specific
-# override). There is deliberately no runtime sprite-swapping step anymore;
-# see JobData's VISUALS comment for why that used to be a bug source.
+# initializes the unit with its data resource and places it at the given grid
+# position. Sprite/frames/shadow are NOT touched here — they're already baked
+# into whichever scene battle_scene._spawn_unit() instantiated.
 func setup(unit_data: UnitData, start_position: Vector3i) -> void:
 	data = unit_data
 	grid_position = start_position
@@ -51,30 +51,9 @@ func setup(unit_data: UnitData, start_position: Vector3i) -> void:
 
 
 # =============================================================================
-# HP HOOKS — see BattleActor.apply_damage/apply_heal for the shared pipeline;
-# these just plug in the unit-specific local reactions.
+# DATA — MP and turn state. Units only; objects have neither.
 # =============================================================================
 
-func _play_hit_feedback() -> void:
-	gff_player.play("flash_and_particles")
-	_flash_red()
-
-func _on_damaged() -> void:
-	await play_hit()
-
-func _on_defeated() -> void:
-	await play_death()
-	BattleEvents.actor_defeated.emit(self)
-
-func _get_damage_anim_player() -> AnimationPlayer:
-	return unit_animation_player
-
-
-# =============================================================================
-# MP — units only; objects have no resource cost concept
-# =============================================================================
-
-# spends MP for an ability cost — no event, self-inflicted costs get no cinematic
 func spend_mp(amount: int) -> void:
 	if data.is_dead:
 		return
@@ -85,26 +64,18 @@ func restore_mp(amount: int) -> void:
 		return
 	data.current_mp = mini(data.max_mp, data.current_mp + amount)
 
-
-# =============================================================================
-# TURN STATE — units only; objects don't take turns
-# =============================================================================
-
-# marks the unit's move as used and notifies listeners
 func consume_move() -> void:
 	if data.is_dead:
 		return
 	data.has_moved = true
 	emit_signal("move_consumed")
 
-# marks the unit's action as used and notifies listeners
 func consume_ability() -> void:
 	if data.is_dead:
 		return
 	data.has_acted = true
 	emit_signal("ability_consumed")
 
-# resets move and action availability at the start of the unit's turn
 func reset_turn() -> void:
 	if data.is_dead:
 		return
@@ -122,7 +93,18 @@ func can_act() -> bool:
 
 
 # =============================================================================
-# ANIMATIONS
+# ANIM — pure presentation, no data mutation anywhere in this section.
+#
+# The old `if data.is_dead: return` guard is gone from the one-shot clips
+# (death, hit, attack, cast): those are only ever played on deliberate
+# request, so the caller's intent wins — that's what makes it possible to
+# play a death animation without killing the unit, and to kill a unit
+# without playing one.
+#
+# The guard is KEPT on the ambient locomotion clips (idle/walk/jump) because
+# those get driven automatically by UnitMover and the turn loop, which would
+# otherwise stomp a corpse's death pose back to standing. That's presentation
+# logic reading state, not data mutation, so it stays on this side of the line.
 # =============================================================================
 
 func play_idle() -> void:
@@ -130,10 +112,16 @@ func play_idle() -> void:
 		return
 	unit_sprite.play("idle")
 
-func play_walk() -> void:
+func play_movement(type: MovementSequence.MovementType) -> void:
 	if data.is_dead:
 		return
-	unit_sprite.play("walk")
+	match type:
+		MovementSequence.MovementType.WALK: unit_sprite.play("walk")
+		MovementSequence.MovementType.FLY: unit_sprite.play("fly")
+		MovementSequence.MovementType.SLIP: play_slip()
+		MovementSequence.MovementType.WIND: unit_sprite.play("wind")
+		MovementSequence.MovementType.MAGNET: unit_sprite.play("magnet")
+		_: unit_sprite.play("walk")
 
 func play_jump() -> void:
 	if data.is_dead:
@@ -141,33 +129,41 @@ func play_jump() -> void:
 	unit_sprite.play("jump")
 
 func play_attack() -> void:
-	if data.is_dead:
-		return
 	unit_sprite.play("attack")
 	await unit_animation_player.animation_finished
 
+# stronger attack variant, played instead of "attack" when the blow is lethal
+# (chosen by UnitAbilityExecutor, which only picks it when it exists)
+func play_attack_finisher() -> void:
+	unit_sprite.play("attack_finisher")
+	await unit_animation_player.animation_finished
+
 func play_cast_spell() -> void:
-	if data.is_dead:
-		return
 	unit_sprite.play("cast_spell")
+
+# true if the unit's sprite actually has the named animation — lets callers
+# fall back gracefully instead of playing a missing clip
+func has_sprite_animation(anim_name: String) -> bool:
+	return unit_sprite.sprite_frames != null and unit_sprite.sprite_frames.has_animation(anim_name)
+
+func play_slip() -> void:
+	await play_death()
 
 # plays the appropriate cast/attack animation, waits the ability's authored
 # impact delay, then fires ability_impact so the resolver applies the effect
 # in sync with the animation rather than on a hardcoded timer
 func play_attack_animation(cast_impact_delay: float, unit_anim: AbilityData.UnitAnimation) -> void:
-	if data.is_dead:
-		return
 	match unit_anim:
 		AbilityData.UnitAnimation.CAST_SPELL: play_cast_spell()
 		AbilityData.UnitAnimation.ATTACK: play_attack()
+		AbilityData.UnitAnimation.ATTACK_FINISHER: play_attack_finisher()
 		_: play_attack()  # default fallback
 	await get_tree().create_timer(cast_impact_delay / 1000).timeout
 	notify_ability_impact()
 
-# plays the hit reaction animation and returns to idle when finished
+# plays the hit reaction and returns to idle. play_idle()'s own is_dead guard
+# handles the case where something killed the unit while this was in flight.
 func play_hit() -> void:
-	if data.is_dead:
-		return
 	unit_sprite.play("hit")
 	await unit_sprite.animation_finished
 	play_idle()
@@ -177,13 +173,19 @@ func play_missed() -> void:
 	await unit_animation_player.animation_finished
 	play_idle()
 
-# plays the death animation and marks the unit as dead — does not return to idle
+# plays the death animation and leaves the unit in its final pose. Does NOT
+# mark the unit dead — BattleActor._defeat() calls mark_dead() before this.
 func play_death() -> void:
-	if not data.is_dead:
-		data.is_dead = true
-		unit_sprite.play("death")
-		await unit_sprite.animation_finished
-	return
+	unit_sprite.play("death")
+	await unit_sprite.animation_finished
+
+func play_recover() -> void:
+	unit_sprite.play_backwards("death")
+	await unit_sprite.animation_finished
+
+func _play_hit_feedback() -> void:
+	gff_player.play("flash_and_particles")
+	_flash_red()
 
 func _flash_red() -> void:
 	if unit_sprite.material == null:
@@ -212,6 +214,9 @@ func play_effect_apply_animation(effect_id: EffectId.Id) -> void:
 	await tween.finished
 	scene.z_as_relative = true
 	scene.z_index = unit_visual_root.z_index - 1
+
+func _get_damage_anim_player() -> AnimationPlayer:
+	return unit_animation_player
 
 # fires the ability_impact signal — called by AnimationPlayer at the impact frame
 func notify_ability_impact() -> void:

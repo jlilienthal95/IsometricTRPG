@@ -8,12 +8,23 @@ var _unit_mover: UnitMover = null
 var _is_executing: bool = false
 var _caster: Unit = null
 var _single_target = null	# Unit/BattleObject/BattleTile
+# The tile data at the targeted cell, captured unconditionally regardless of
+# whether an actor occupies it (unlike _single_target, which prefers the actor).
+var _target_tile: BattleTileData = null
 var _multi_target: Array = []
 var _ability: AbilityData = null
 var _action_resolver: ActionResolver = null
 var _effect_executor: EffectExecutor = null
 var _camera: BattleCamera = null
 var _director: CinematicDirector = null
+# The ability is resolved ONCE, up front (see _execute_sequence), so its outcome
+# can drive the caster animation (finisher on a lethal blow) AND be applied later
+# without re-rolling hit/crit. Null for tile targets, which don't resolve.
+var _result: ActionResult = null
+# The tile event fired at the moment of impact (drives passive terrain reactions
+# like a slip on ice). Built up front in _execute_sequence, consumed in
+# resolve_ability so it lands exactly when damage does.
+var _tile_event: TileEvent = null
 
 # initializes the executor with references it needs every battle
 func setup(grid: BattleGrid, mover: UnitMover, director: CinematicDirector) -> void:
@@ -28,9 +39,16 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 		return
 	_is_executing = true
 	_caster = caster
+	_target_tile = _grid.get_tile(target_cell)	# always capture tile data at the targeted cell
 	_single_target = _grid.get_actor_at(target_cell)	# units and objects are both valid targets
+	# a dead unit still sits on its tile as a corpse, but for anything other than a
+	# recovery ability it's treated as absent — the ability resolves against the
+	# tile instead, so attacks pass through the body rather than "targeting" it
+	# (and, in turn, can't be read as a lethal blow that triggers the finisher).
+	if _single_target is Unit and not _single_target.is_alive() and not _is_recovery_ability(ability):
+		_single_target = null
 	if _single_target == null:
-		_single_target = _grid.get_tile(target_cell)
+		_single_target = _target_tile
 	_ability = ability
 	_camera = camera
 	_action_resolver = action_resolver
@@ -52,13 +70,26 @@ func execute_ability(caster: Unit, target_cell: Vector3i, ability: AbilityData, 
 func _execute_sequence() -> void:
 	await _director.begin_sequence(_caster)
 	_face_target()
+	
+	_tile_event = TileEvent.create(TileEvent.Type.NONE, _caster)
+	if _ability.animation_path == AbilityData.AnimationPath.PROJECTILE:
+		_tile_event.type = TileEvent.Type.PROJECTILE_LANDED
+
+	# 0. resolve the outcome up front (actor targets only) so a lethal blow can
+	#    swap to the finisher animation; the same result is reused at apply time
+	if _single_target is Unit or _single_target is BattleObject:
+		_result = _action_resolver.resolve(_caster, _single_target, _ability)
+		if not _result.is_miss:
+			_tile_event.type = TileEvent.Type.ABILITY_HIT
+
+	var caster_anim := _select_caster_animation()
 
 	# 1. calculate all timing values up front — see AbilityTiming for the pure
 	#    frame->seconds math (kept separate from this sequencing function so
 	#    it's actually unit-testable; see Tests/AbilityTimingTests.gd)
-	var caster_anim_fps = _get_caster_anim_fps()
+	var caster_anim_fps = _get_caster_anim_fps(caster_anim)
 	var ability_anim_fps = _get_ability_anim_fps()
-	var caster_impact_delay = AbilityTiming.frame_to_seconds(_caster.data.get_caster_impact_frame(_ability.unit_animation), caster_anim_fps)
+	var caster_impact_delay = AbilityTiming.frame_to_seconds(_caster.data.get_caster_impact_frame(caster_anim), caster_anim_fps)
 	var charge_delay = AbilityTiming.frame_to_seconds(_ability.charge_frame, ability_anim_fps)
 	# impact_delay measured from effect anim start — subtract charge_delay
 	var impact_delay = AbilityTiming.effect_impact_delay(_ability.impact_frame, ability_anim_fps, charge_delay)
@@ -66,7 +97,7 @@ func _execute_sequence() -> void:
 	DebugLog.ability("fps: caster=%.1f ability=%.1f | delays: caster_impact=%.3f charge=%.3f impact=%.3f" % [caster_anim_fps, ability_anim_fps, caster_impact_delay, charge_delay, impact_delay])
 
 	# 2. caster animation starts — await until caster impact frame
-	_caster.play_attack_animation(caster_impact_delay, _ability.unit_animation)
+	_caster.play_attack_animation(caster_impact_delay, caster_anim)
 	await get_tree().create_timer(caster_impact_delay / Engine.time_scale).timeout
 
 	# 3. spawn visual at caster impact frame
@@ -107,7 +138,44 @@ func _execute_sequence() -> void:
 	_is_executing = false
 	emit_signal("ability_complete")
 	_clear_context()
+
+
+func _apply_event_effects(actor, event: TileEvent, tile: BattleTileData) -> void:
+	if _effect_executor == null or event == null:
+		return
+	if tile != null:
+		await _effect_executor.apply_tile_event_effects(actor, event, tile)
 	
+# Swaps the plain ATTACK animation for ATTACK_FINISHER when the resolved blow
+# will drop the target to 0 HP — but only if the caster actually has a finisher
+# animation to play. Spells, non-lethal hits, and misses keep their authored
+# animation.
+func _select_caster_animation() -> AbilityData.UnitAnimation:
+	if _ability.unit_animation != AbilityData.UnitAnimation.ATTACK:
+		return _ability.unit_animation
+	if not _is_lethal_result():
+		return _ability.unit_animation
+	if not _caster.has_sprite_animation("attack_finisher"):
+		return _ability.unit_animation
+	return AbilityData.UnitAnimation.ATTACK_FINISHER
+
+# true when the pre-resolved hit will defeat a unit target this strike
+func _is_lethal_result() -> bool:
+	if _result == null or _result.is_miss:
+		return false
+	if _ability.ability_type == AbilityData.AbilityType.HEALING:
+		return false
+	if not _single_target is Unit:
+		return false
+	if not _single_target.is_alive():
+		return false
+	return _result.damage >= _single_target.data.current_hp
+
+# recovery abilities (heals/revives) are the only actions that can meaningfully
+# target a downed unit; every other ability treats a corpse as empty space.
+func _is_recovery_ability(ability: AbilityData) -> bool:
+	return ability.ability_type == AbilityData.AbilityType.HEALING
+
 func _face_target() -> void:
 	if _single_target == null:
 		return
@@ -159,7 +227,10 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 	if _single_target == null:
 		return
 
-	var result = action_resolver.resolve(_caster, _single_target, _ability)
+	# reuse the outcome resolved in _execute_sequence (so hit/crit isn't re-rolled
+	# and the finisher decision matches the damage actually dealt); fall back to a
+	# fresh resolve only if we somehow arrived without one
+	var result = _result if _result != null else action_resolver.resolve(_caster, _single_target, _ability)
 	var tile = _grid.get_tile(_single_target.grid_position)
 	
 	_caster.spend_mp(_ability.mp_cost)
@@ -168,6 +239,9 @@ func resolve_ability(action_resolver: ActionResolver) -> void:
 			await _single_target.apply_heal(result.damage)
 		else:
 			await _single_target.apply_damage(result.damage)
+			# passive terrain reactions (e.g. a slip on ice) fire at the instant
+			# of impact, before rider effects — not on a trailing timer
+			await _apply_event_effects(_single_target, _tile_event, _target_tile)
 		await get_tree().create_timer(1).timeout
 
 		# apply the ability's rider effects to the target and its tile
@@ -204,10 +278,10 @@ func _launch_effect() -> AbilityVisual:
 func _travel_path(effect: Node2D, path: Array[Vector2] = []) -> void:
 	pass # TODO: implement path-based travel
 	
-func _get_caster_anim_fps() -> float:
+func _get_caster_anim_fps(anim: AbilityData.UnitAnimation) -> float:
 	var sprite = _caster.get_node_or_null("VisualRoot/UnitSprite")
 	if sprite is AnimatedSprite2D and sprite.sprite_frames != null:
-		var anim_name = AbilityData.UnitAnimation.keys()[_ability.unit_animation].to_lower()
+		var anim_name = AbilityData.UnitAnimation.keys()[anim].to_lower()
 		if sprite.sprite_frames.has_animation(anim_name):
 			return sprite.sprite_frames.get_animation_speed(anim_name)
 	return 12.0  # fallback if sprite or animation not found
@@ -218,5 +292,8 @@ func _get_ability_anim_fps() -> float:
 func _clear_context() -> void:
 	_caster = null
 	_single_target = null
+	_target_tile = null
 	_multi_target.clear()
 	_ability = null
+	_result = null
+	_tile_event = null

@@ -132,14 +132,15 @@ func place_unit(unit: BattleActor, cell: Vector3i) -> void:
 		return
 	tile.unit_ref = unit
 	unit.grid_position = cell
-	tile_occupancy_changed.emit(tile)
+	tile_occupancy_changed.emit(tile, unit, true)
 
 func remove_unit(cell: Vector3i) -> void:
 	var tile = get_tile(cell)
 	if tile == null:
 		return
+	var unit = tile.unit_ref
 	tile.unit_ref = null
-	tile_occupancy_changed.emit(tile)
+	tile_occupancy_changed.emit(tile, unit, false)
 
 # places an object on the given cell and updates the object's grid_position
 func place_object(object: BattleObject, cell: Vector3i) -> void:
@@ -150,14 +151,15 @@ func place_object(object: BattleObject, cell: Vector3i) -> void:
 	tile.object_ref = object
 	object.grid_position = cell
 	object._grid_ref = self
-	tile_occupancy_changed.emit(tile)
+	tile_occupancy_changed.emit(tile, object, true)
 
 func remove_object(cell: Vector3i) -> void:
 	var tile = get_tile(cell)
 	if tile == null:
 		return
+	var object = tile.object_ref
 	tile.object_ref = null
-	tile_occupancy_changed.emit(tile)
+	tile_occupancy_changed.emit(tile, object, false)
 
 # moves whichever kind of actor (Unit or BattleObject) between cells.
 # The single movement mutation point — UnitMover and push/slide actions all
