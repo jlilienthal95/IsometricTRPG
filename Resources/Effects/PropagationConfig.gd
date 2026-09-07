@@ -21,10 +21,14 @@ var deals_damage: bool = false
 var damage_multiplier: float = 1.0		# multiplied against Constants.BASE_DAMAGE_UNIT
 var damage_on_apply: bool = false		# deal damage when first applied
 var damage_every_tick: bool = true		# deal damage each terrain turn tick
-var respects_weaknesses: bool = true	# check unit weakness array
-var respects_immunities: bool = true	# already handled in base resolve, but explicit here
+var respects_weaknesses: bool = true		# check unit weakness array
+var respects_immunities: bool = true		# already handled in base resolve, but explicit here
 
 # --- terrain conversion ---
-var converts_terrain: BattleTileData.TerrainType = -1  # -1 = no conversion
-var converts_on_threshold: bool = true   # true = converts when ticks_active hits threshold
-var converts_instantly: bool = false     # true = converts immediately on application
+var converts_terrain: BattleTileData.TerrainType = -1	# -1 = no conversion
+var converts_on_threshold: bool = true   				# true = converts when ticks_active hits threshold
+var converts_instantly: bool = false						# true = converts immediately on application
+# true = the conversion is a REVERSIBLE override: the tile caches its previous
+# terrain and restores it when this effect is removed (e.g. ice melting back to
+# grass/water). false = a permanent change (e.g. stone charred to lava).
+var reverts_terrain_on_removal: bool = false

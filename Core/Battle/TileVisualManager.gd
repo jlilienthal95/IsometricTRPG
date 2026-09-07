@@ -4,6 +4,9 @@ extends Node
 const HIGHLIGHT_SCENE = preload("res://Scenes/Battle/HighlightTile.tscn")
 const TILE_TINT_SHADER = preload("res://Scenes/Battle/tile_tint.gdshader")
 
+# The single source of truth for per-effect tile colors — used by the effect
+# glow (_update_effect_light) AND the directional force arrows, so an effect
+# reads one color everywhere. Add an entry here to give an effect its color.
 const EFFECT_COLORS: Dictionary = {
 	EffectId.Id.REDHOT: Color(1.0, 0.1, 0.0, 1.0),
 	#EffectId.Id.BURNING: Color(1.0, 0.5, 0.0, 1.0),
@@ -11,7 +14,16 @@ const EFFECT_COLORS: Dictionary = {
 	EffectId.Id.DISEASED: Color(0.5, 0.0, 0.8, 1.0),
 	#EffectId.Id.ELECTRIFIED: Color(0.9, 0.9, 0.0, 1.0),
 	EffectId.Id.FROZEN: Color(0.5, 0.9, 1.0, 1.0),
+	EffectId.Id.MAGNETISED: Color(0.55, 0.55, 0.62, 1.0),	# magnetics — grey
+	EffectId.Id.WINDY: Color(0.78, 0.95, 0.25, 1.0),		# wind — yellow-green
 }
+
+# fallback for an effect with no authored color (keeps visuals from vanishing)
+const DEFAULT_EFFECT_COLOR := Color(1.0, 1.0, 1.0, 1.0)
+
+# the tile color for an effect, from the shared EFFECT_COLORS pipeline
+func get_effect_color(effect_id: EffectId.Id) -> Color:
+	return EFFECT_COLORS.get(effect_id, DEFAULT_EFFECT_COLOR)
 
 # terrain type -> [atlas_source_id, atlas_coords] for converted terrain visuals
 const TERRAIN_CONVERSION_TILES: Dictionary = {
@@ -35,6 +47,9 @@ var _active_highlights: Array[Node2D] = []
 # move-path preview overlays — a separate layer so the previewed route can be
 # redrawn on every hover without disturbing the underlying range highlight
 var _active_path_highlights: Array[Node2D] = []
+# directional force arrows (wind/magnetics), keyed per cell like _effect_lights
+# so a tile refresh updates just its own arrow. Cell -> arrow Node2D.
+var _effect_direction_indicators: Dictionary = {}
 
 # preview colors — chosen to read on TOP of the blue range highlight (so not
 # blue). Applied via the tint shader, not modulate, so they actually show.
@@ -123,7 +138,84 @@ func clear_move_path() -> void:
 		highlight.queue_free()
 	_active_path_highlights.clear()
 
+# =============================================================================
+# DIRECTIONAL FORCE INDICATORS (wind / magnetics)
+#
+# Part of the persistent effect-visual refresh (like the glow), NOT a
+# handler-facing API: an effect opts in simply by setting a non-zero `direction`
+# on its EffectInstance, and refresh() draws the matching arrow — colored from
+# the shared EFFECT_COLORS pipeline and pointing that way. Handlers never touch
+# the visual manager.
+# =============================================================================
+
+# Draws (or clears) this tile's force arrow. The first active effect carrying a
+# non-zero direction wins; arbitration between stacked forces is a separate
+# concern (see ForcedMovement). The screen-space heading is derived from
+# the world delta to the neighbour cell, so it's correct under the iso skew.
+func _refresh_direction_indicator(tile: BattleTileData) -> void:
+	var directional: EffectInstance = null
+	for instance in tile.active_effects:
+		if instance.direction != Vector3i.ZERO:
+			directional = instance
+			break
+
+	_remove_direction_indicator(tile.cell)	# clear any stale arrow first
+	if directional == null:
+		return
+
+	var cell := tile.cell
+	var from := _cell_to_world(cell)
+	var to := _cell_to_world(cell + directional.direction)
+	var arrow := _make_direction_arrow(get_effect_color(directional.effect_id))
+	add_child(arrow)
+	# lift onto the tile face — _cell_to_world sits near the tile's bottom origin,
+	# so nudge up by the tile origin offset to center the arrow on the diamond
+	arrow.global_position = from + Vector2(0, -(Constants.TILE_ORIGIN_OFFSET / 2))
+	arrow.rotation = (to - from).angle()	# heading unaffected by the vertical nudge
+	arrow.z_index = cell.z * 4 + 3	# above range (+1) and path (+2) highlights
+	_effect_direction_indicators[cell] = arrow
+
+func _remove_direction_indicator(cell: Vector3i) -> void:
+	if _effect_direction_indicators.has(cell):
+		_effect_direction_indicators[cell].queue_free()
+		_effect_direction_indicators.erase(cell)
+
+# a flat chevron pointing along +X (screen right); rotation aims it at the flow.
+# Half the previous size, with a dark outline so the fill (which shares its
+# effect's glow color) still reads over that same-colored tile glow.
+const ARROW_OUTLINE_COLOR := Color(0.05, 0.05, 0.05, 0.9)
+const ARROW_OUTLINE_WIDTH := 2.0
+
+func _make_direction_arrow(color: Color) -> Node2D:
+	var shape := PackedVector2Array([
+		Vector2(5, 0), Vector2(-3, -4), Vector2(-1, 0), Vector2(-3, 4)
+	])
+	var arrow := Node2D.new()
+
+	# dark outline underneath (closed loop; append the first point to close it)
+	var outline := Line2D.new()
+	var loop := shape.duplicate()
+	loop.append(shape[0])
+	outline.points = loop
+	outline.width = ARROW_OUTLINE_WIDTH
+	outline.default_color = ARROW_OUTLINE_COLOR
+	outline.joint_mode = Line2D.LINE_JOINT_ROUND
+	outline.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	outline.end_cap_mode = Line2D.LINE_CAP_ROUND
+	arrow.add_child(outline)
+
+	# colored fill on top
+	var fill := Polygon2D.new()
+	fill.polygon = shape
+	fill.color = color
+	arrow.add_child(fill)
+
+	return arrow
+
 func clear() -> void:
+	# selection overlays only — force indicators (like effect lights) are
+	# persistent environmental visuals, cleared by their own effect's lifecycle,
+	# not by a change of selection
 	clear_highlights()
 	clear_move_path()
 
@@ -135,6 +227,7 @@ func refresh(tile: BattleTileData) -> void:
 	_refresh_tile_effect_visuals(tile)
 	_refresh_terrain_visual(tile)
 	_refresh_tile_occupancy(tile)
+	_refresh_direction_indicator(tile)
 	
 func _refresh_tile_effect_visuals(tile: BattleTileData) -> void:
 	if tile.active_effects.is_empty():

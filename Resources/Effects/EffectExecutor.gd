@@ -46,6 +46,7 @@ func apply_effect(target, effect_id: EffectId.Id, ticks: int = -1) -> void:
 	
 	var is_new = not target.has_effect(effect_id)  # check BEFORE applying
 	target.apply_effect(effect_id, ticks)
+	print("applying effect")
 	var has_visuals: bool = EffectRegistry.has_visuals(effect_id)
 	
 	if is_new and has_visuals:
@@ -75,8 +76,22 @@ func apply_effect_to_unit_and_tile(unit: Unit, effect_id: EffectId.Id, context: 
 
 # removes an effect from a target — mutates, then plays the animation matching the reason
 func remove_effect(target, effect_id: EffectId.Id, reason: RemovalReason = RemovalReason.EXPIRED) -> void:
+	var handler = EffectRegistry.get_handler(effect_id)
+	var instance = target.get_effect(effect_id)	# captured before removal for the hook
 	target.remove_effect(effect_id)
-	
+
+	# only run reversion/teardown if the effect was actually present
+	if handler != null and instance != null:
+		# a reversible terrain effect restores the tile's cached terrain as it
+		# leaves (declarative — any such effect just sets the config flag)
+		if target is BattleTileData and handler.get_propagation_config().reverts_terrain_on_removal:
+			target.restore_base_terrain()
+			if _tile_visual_manager != null:
+				_tile_visual_manager.refresh(target)
+		# effect-specific teardown (e.g. FROZEN clearing the SLIPPERY it laid down)
+		var context = EffectContext.create(_grid, _unit_mover, self)
+		await handler.on_removed(target, instance, context, reason)
+
 	var has_visuals: bool = EffectRegistry.has_visuals(effect_id)
 	if has_visuals:
 		if target is BattleTileData:
@@ -105,8 +120,8 @@ func apply_tile_event_effects(actor: BattleActor, event: TileEvent, tile: Battle
 		if handler != null:
 			await handler.on_tile_event(tile, event, instance, context)
 
-func convert_terrain(tile: BattleTileData, new_terrain: BattleTileData.TerrainType) -> void:
-	tile.terrain_type = new_terrain
+func convert_terrain(tile: BattleTileData, new_terrain: BattleTileData.TerrainType, reversible: bool = false) -> void:
+	tile.set_terrain(new_terrain, reversible)
 	if _tile_visual_manager != null:
 		_tile_visual_manager.refresh(tile)
 

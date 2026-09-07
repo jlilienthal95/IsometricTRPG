@@ -39,21 +39,24 @@ const SUSCEPTIBLE_TERRAIN: Dictionary = {
 	]
 }
 
+# rounds an effect lasts before it expires on its own. -1 = permanent: it never
+# ticks down and is only removed when acted upon (neutralized/melted).
 const DEFAULT_DURATION: Dictionary = {
 	ID.BURNING: 3,
 	ID.ELECTRIFIED: 2,
 	ID.ELECTRIFIED_CONDUCTED: 2,
-	ID.FROZEN: 3,
+	ID.FROZEN: -1,	# permanent — ice stays until melted/neutralized
 	ID.REDHOT: 2,
 	ID.SOAKED: 2,
 	ID.SLIPPERY: -1,
 }
 
-# how many ticks an effect must remain active before triggering its threshold consequence
-# (e.g. burning converts contiguous stone to lava after 3 ticks)
+# how many ticks an effect must remain active before triggering its threshold
+# consequence (e.g. burning converts contiguous stone to lava after 3 ticks).
+# -1 = no threshold: the effect never self-expires or converts on a timer.
 const DURATION_THRESHOLD_TICKS: Dictionary = {
 	ID.BURNING: 3,
-	ID.FROZEN: 3,
+	ID.FROZEN: -1,	# permanent — no threshold expiry (converts instantly instead)
 	ID.SOAKED: 2,
 	ID.REDHOT: 2,
 	ID.SLIPPERY: -1,

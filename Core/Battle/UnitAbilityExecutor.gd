@@ -71,7 +71,7 @@ func _execute_sequence() -> void:
 	await _director.begin_sequence(_caster)
 	_face_target()
 	
-	_tile_event = TileEvent.create(TileEvent.Type.NONE, _caster)
+	_tile_event = TileEvent.create(TileEvent.Type.NONE, _caster, _ability.ability_force)
 	if _ability.animation_path == AbilityData.AnimationPath.PROJECTILE:
 		_tile_event.type = TileEvent.Type.PROJECTILE_LANDED
 
@@ -98,6 +98,13 @@ func _execute_sequence() -> void:
 
 	# 2. caster animation starts — await until caster impact frame
 	_caster.play_attack_animation(caster_impact_delay, caster_anim)
+	# Direct attacks spawn no travelling visual, so nothing else pans the camera
+	# to the victim before the blow lands. Pan now, fire-and-forget, so it drifts
+	# onto the target DURING the wind-up and is in focus by impact — no added delay.
+	# Visual abilities (arrows/spells) move the camera themselves; leave those be
+	# so we don't fight the projectile's follow().
+	if not _ability_moves_camera() and _single_target != null:
+		_camera.pan_to(_get_target_world_pos())
 	await get_tree().create_timer(caster_impact_delay / Engine.time_scale).timeout
 
 	# 3. spawn visual at caster impact frame
@@ -181,6 +188,13 @@ func _face_target() -> void:
 		return
 	var target_pos = _get_target_world_pos()
 	_caster.set_facing(target_pos.x < _caster.global_position.x + 8.0)
+
+# True when this ability spawns a travelling visual that pans/follows the camera
+# to the target on its own (Instant/Arrow/Projectile all do). Mirrors the spawn
+# condition in _launch_effect — a false here means a direct, visual-less attack,
+# the one case where the executor must focus the target itself.
+func _ability_moves_camera() -> bool:
+	return _ability.animation_id != "" and AbilitySceneRegistry.SCENES.has(_ability.animation_id)
 
 func _get_target_world_pos() -> Vector2:
 	if _single_target is BattleActor:

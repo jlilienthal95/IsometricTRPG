@@ -4,7 +4,7 @@
 [ext_resource type="Resource" uid="uid://dw31v3bfg3y8c" path="res://Data/Abilities/Fight_Archer.tres" id="2_bqgeu"]
 [ext_resource type="Script" uid="uid://bkpjwyj1tu52l" path="res://Core/AI/AIProfile.gd" id="2_fk3u4"]
 [ext_resource type="Script" uid="uid://ct2virpcpm7ny" path="res://Resources/JobData.gd" id="2_pk5v1"]
-[ext_resource type="PackedScene" path="res://Scenes/Battle/Units/Archer/Archer.tscn" id="9_scene"]
+[ext_resource type="PackedScene" uid="uid://fg8b7myp78hu" path="res://Scenes/Battle/Units/Archer/Archer.tscn" id="9_scene"]
 
 [sub_resource type="Resource" id="Resource_mikfo"]
 script = ExtResource("2_fk3u4")

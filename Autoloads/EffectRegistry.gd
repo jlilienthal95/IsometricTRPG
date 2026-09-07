@@ -55,6 +55,7 @@ const HANDLER_SCRIPTS: Array[GDScript] = [
 	preload("res://Resources/Effects/Handlers/SquishedHandler.gd"),
 	preload("res://Resources/Effects/Handlers/StaggeredHandler.gd"),
 	preload("res://Resources/Effects/Handlers/StopHandler.gd"),
+	preload("res://Resources/Effects/Handlers/WindyHandler.gd"),
 ]
 # --- AUTO-GENERATED HANDLERS LIST END ---
 

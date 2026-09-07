@@ -16,9 +16,11 @@ enum Type {
 
 var type: Type = Type.NONE
 var caster: Unit = null		# the source actor — origin of knockback/attribution
+var force: AbilityForce.Level = AbilityForce.Level.NONE	# knockback strength of the source ability
 
-static func create(type: Type, caster: Unit) -> TileEvent:
+static func create(type: Type, caster: Unit, force: AbilityForce.Level = AbilityForce.Level.NONE) -> TileEvent:
 	var event = TileEvent.new()
 	event.type = type
 	event.caster = caster
+	event.force = force
 	return event

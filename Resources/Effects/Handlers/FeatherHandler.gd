@@ -6,14 +6,9 @@ extends EffectHandler
 
 const EFFECT = EffectId.Id.FEATHER
 
-func _resolve_unit(unit: Unit, instance: EffectInstance, context: EffectContext) -> void:
-	pass
-
-func _resolve_tile(tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
-	pass
-
-func _resolve_object(object: BattleObject, instance: EffectInstance, context: EffectContext) -> void:
-	pass
-
-func on_unit_turn_end(unit: Unit, instance: EffectInstance, context: EffectContext) -> void:
-	pass
+func get_propagation_config() -> PropagationConfig:
+	var config = PropagationConfig.new()
+	config.style = PropagationStyle.NONE
+	config.spreads_to_occupants = false
+	config.spreads_to_tile_on_turn_end = false
+	return config

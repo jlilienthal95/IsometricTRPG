@@ -98,10 +98,18 @@ func get_propagation_config() -> PropagationConfig:
 	return PropagationConfig.new()
 	
 @warning_ignore("unused_parameter")
-func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context) -> void:
+func on_actor_entered_tile(actor: BattleActor, tile: BattleTileData, instance: EffectInstance, context: EffectContext) -> void:
 	await _spread_effect(actor, get_effect_id(), context)
 
 func on_tile_event(tile: BattleTileData, event: TileEvent, instance: EffectInstance, context: EffectContext) -> void:
+	pass
+
+# override to clean up when this effect is removed, for ANY reason (expired,
+# neutralized, melted). Fires after the effect is off the target; terrain that
+# was reversibly converted is already restored by the time this runs. Default
+# no-op. `instance` is the removed effect's pre-removal state (may be null).
+@warning_ignore("unused_parameter")
+func on_removed(target, instance: EffectInstance, context: EffectContext, reason) -> void:
 	pass
 
 # override to define what happens when ticks_active hits the threshold
@@ -134,7 +142,10 @@ func _resolve_tile_propagation(tile: BattleTileData, instance: EffectInstance, c
 				_call_tile_conversion(tile, context)
 			return
 	else:
-		if instance.ticks_active >= EffectRules.DURATION_THRESHOLD_TICKS.get(effect_id, 999):
+		# a negative threshold means "no threshold" — a permanent effect that
+		# never self-expires here (e.g. FROZEN, which persists until acted upon)
+		var threshold: int = EffectRules.DURATION_THRESHOLD_TICKS.get(effect_id, 999)
+		if threshold >= 0 and instance.ticks_active >= threshold:
 			@warning_ignore("redundant_await")
 			await _on_threshold_reached(tile, context)
 			await context.executor.remove_effect(tile, effect_id, EffectExecutor.RemovalReason.EXPIRED)
@@ -231,4 +242,7 @@ func _dispatch_turn_end(actor, instance: EffectInstance, context: EffectContext)
 		await _resolve_object(actor, instance, context)
 
 func _call_tile_conversion(tile: BattleTileData, context: EffectContext) -> void:
-	context.executor.convert_terrain(tile, get_propagation_config().converts_terrain)
+	var config = get_propagation_config()
+	# reversible conversions cache the tile's previous terrain so it can be
+	# restored when this effect is removed (see EffectExecutor.remove_effect)
+	context.executor.convert_terrain(tile, config.converts_terrain, config.reverts_terrain_on_removal)

@@ -34,7 +34,7 @@ caster_impact_frames = Dictionary[int, int]({
 1: 34,
 2: 27
 })
-hp_modifier = 0.01
+hp_modifier = 1.2
 mp_modifier = 0.8
 attack_modifier = 1.2
 ai_profile = SubResource("Resource_8usvp")

@@ -119,8 +119,8 @@ func play_movement(type: MovementSequence.MovementType) -> void:
 		MovementSequence.MovementType.WALK: unit_sprite.play("walk")
 		MovementSequence.MovementType.FLY: unit_sprite.play("fly")
 		MovementSequence.MovementType.SLIP: play_slip()
-		MovementSequence.MovementType.WIND: unit_sprite.play("wind")
-		MovementSequence.MovementType.MAGNET: unit_sprite.play("magnet")
+		MovementSequence.MovementType.PUSH: play_hit()
+		#MovementSequence.MovementType.MAGNET: unit_sprite.play("magnet")
 		_: unit_sprite.play("walk")
 
 func play_jump() -> void:

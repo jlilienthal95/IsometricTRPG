@@ -29,6 +29,7 @@ script = ExtResource("2_da18a")
 name = "Auburn"
 job = ExtResource("2_7jy57")
 ai_profile_override = SubResource("Resource_latfd")
+max_hp_override = 5
 base_max_mp = null
 base_attack = null
 base_defense = null

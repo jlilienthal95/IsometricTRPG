@@ -102,6 +102,11 @@ func _execute_sequence(actor, sequence: MovementSequence) -> bool:
 	# tile, while a looping clip (walk) simply keeps looping. Jumps are discrete
 	# hops, so each one replays and then hands back to the movement clip.
 	var movement_playing := false
+	# whole-path easing (if enabled) is pre-split into one duration per tile here,
+	# so the loop below just reads durations[i] instead of the per-step fields
+	var path_durations: Array[float] = []
+	if sequence.uses_path_easing():
+		path_durations = sequence.compute_step_durations(sequence.steps.size())
 	for i in range(sequence.steps.size()):
 		var step: MovementStep = sequence.steps[i]
 
@@ -124,9 +129,19 @@ func _execute_sequence(actor, sequence: MovementSequence) -> bool:
 
 		var target_pos: Vector2 = _get_world_pos.call(step.cell)
 		var is_first := i == 0
-		var duration: float = sequence.first_step_duration if is_first else sequence.step_duration
-		var ease_type: Tween.EaseType = sequence.first_step_ease if is_first else sequence.step_ease
-		var trans_type: Tween.TransitionType = sequence.first_step_trans if is_first else sequence.step_trans
+		var duration: float
+		var ease_type: Tween.EaseType
+		var trans_type: Tween.TransitionType
+		if not path_durations.is_empty():
+			# whole-path easing: the profile lives in the per-tile durations, so
+			# each hop is a plain linear tween of its computed length
+			duration = path_durations[i]
+			ease_type = Tween.EASE_IN_OUT
+			trans_type = Tween.TRANS_LINEAR
+		else:
+			duration = sequence.first_step_duration if is_first else sequence.step_duration
+			ease_type = sequence.first_step_ease if is_first else sequence.step_ease
+			trans_type = sequence.first_step_trans if is_first else sequence.step_trans
 
 		var tween = actor.create_tween()
 		tween.set_ease(ease_type).set_trans(trans_type)
