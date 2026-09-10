@@ -95,6 +95,7 @@ func _setup_systems() -> void:
 
 	# CharacterInfo follows the CURSOR's cell, not the raw mouse cell, so a
 	# frozen cursor keeps the panel pinned to the tile it froze on
+	_cursor.setup(_battle_grid)
 	_cursor.cell_changed.connect(_on_cursor_cell_changed)
 
 	# cinematic director — reacts to BattleEvents on its own once set up
@@ -140,6 +141,7 @@ func _setup_systems() -> void:
 	_battle_grid.tile_occupancy_changed.connect(func(tile, _actor, entered):
 		_tile_visual_manager.refresh(tile)
 	)
+	_battle_grid.rider_dropped.connect(_on_rider_dropped)
 	
 	# ai systems
 	_ai_brain.setup(_battle_grid, _pathfinder, _turn_queue, _input_handler)
@@ -304,7 +306,13 @@ func grid_to_world(cell: Vector3i) -> Vector2:
 	var tile = _battle_grid.get_tile(cell)
 	if tile == null:
 		return Vector2.ZERO
-	var layer: TileMapLayer = _terrain_layers.get_node("Elevation" + str(cell.z))
+	# object-top tiles live at an elevation with no layer of its own; fall back to
+	# any layer (all share position, so the (x,y) mapping is identical)
+	var layer: TileMapLayer = _battle_grid.get_layer(cell.z)
+	if layer == null:
+		layer = _battle_grid.get_reference_layer()
+	if layer == null:
+		return Vector2.ZERO
 	var local_pos = layer.map_to_local(Vector2i(cell.x, cell.y))
 	var world_pos = layer.to_global(local_pos)
 	world_pos.y -= Constants.TILE_ORIGIN_OFFSET
@@ -313,9 +321,7 @@ func grid_to_world(cell: Vector3i) -> Vector2:
 # converts a world position (Vector2) to a grid cell (Vector3i) using the highest elevation layer
 func world_to_grid(world_pos: Vector2, elevation: int) -> Vector3i:
 	world_pos.y += Constants.TILE_ORIGIN_OFFSET
-	var layer: TileMapLayer = _terrain_layers.get_node(
-		"Elevation" + str(elevation)
-	)
+	var layer: TileMapLayer = _battle_grid.get_layer(elevation)
 	var local_pos := layer.to_local(world_pos)
 	var cell_2d := layer.local_to_map(local_pos)
 	
@@ -521,6 +527,15 @@ func _on_battle_state_changed(new_state: BattleManager.BattleState) -> void:
 # _turn_context is built here, atomically, from the same unit reference BattleManager just set
 # as active_unit. No other function may assign _turn_context, so there is nowhere for a stale
 # unit reference to leak in and desync from BattleManager.active_unit.
+# A unit's platform (a walkable object) was destroyed; the grid already dropped
+# it onto the object's old base cell — tween it down to that cell's world spot
+# and refresh its z-index (it's on real ground now, no longer an object top).
+func _on_rider_dropped(rider: BattleActor, cell: Vector3i) -> void:
+	rider.update_z_index()
+	var target := grid_to_world(cell)
+	var tween := rider.create_tween()
+	tween.tween_property(rider, "global_position", target, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
 func _on_active_unit_changed(unit: Unit) -> void:
 	_turn_context = TurnContext.for_unit(unit, _pathfinder)
 

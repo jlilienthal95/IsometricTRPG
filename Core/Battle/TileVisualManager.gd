@@ -86,10 +86,20 @@ func show_move_range(cells: Dictionary, get_world_pos: Callable) -> void:
 		var highlight: Node2D = HIGHLIGHT_SCENE.instantiate()
 		add_child(highlight)
 		highlight.global_position = get_world_pos.call(cell)
-		highlight.z_index = cell.z * 4 + 1
+		highlight.z_index = _highlight_z(cell, 1)
 		if cells[cell] == false:
 			highlight.modulate = Color(1, 0, 0, 0.75)
 		_active_highlights.append(highlight)
+
+# z-index for a tile highlight. Normally terrain-level (below actors). But an
+# object-TOP tile sits under an object drawn at UNOCCLUDED_ACTOR_Z_INDEX, so its
+# highlight must clear the object instead of hiding behind it. `tier` stacks
+# range (1) < path (2) < arrows (3).
+func _highlight_z(cell: Vector3i, tier: int) -> int:
+	var tile := _grid.get_tile(cell)
+	if tile != null and tile.is_object_top:
+		return Constants.UNOCCLUDED_ACTOR_Z_INDEX + tier
+	return cell.z * Constants.Z_INDEX_LAYER_STRIDE + tier
 
 func clear_highlights() -> void:
 	for highlight in _active_highlights:
@@ -106,7 +116,7 @@ func show_move_path(path_cells: Array, waypoint_cells: Array, get_world_pos: Cal
 		var highlight: Node2D = HIGHLIGHT_SCENE.instantiate()
 		add_child(highlight)
 		highlight.global_position = get_world_pos.call(cell)
-		highlight.z_index = cell.z * 4 + 2	# above the range highlight (+1)
+		highlight.z_index = _highlight_z(cell, 2)	# above the range highlight (tier 1)
 		# recolor via the tint shader on the sprite itself (modulate can't override
 		# the blue art); neutralize the scene's baked-in modulate so tint alpha wins
 		var sprite: CanvasItem = highlight.get_node("Sprite2D")
@@ -172,7 +182,7 @@ func _refresh_direction_indicator(tile: BattleTileData) -> void:
 	# so nudge up by the tile origin offset to center the arrow on the diamond
 	arrow.global_position = from + Vector2(0, -(Constants.TILE_ORIGIN_OFFSET / 2))
 	arrow.rotation = (to - from).angle()	# heading unaffected by the vertical nudge
-	arrow.z_index = cell.z * 4 + 3	# above range (+1) and path (+2) highlights
+	arrow.z_index = _highlight_z(cell, 3)	# above range (1) and path (2)
 	_effect_direction_indicators[cell] = arrow
 
 func _remove_direction_indicator(cell: Vector3i) -> void:
@@ -236,7 +246,7 @@ func _refresh_tile_effect_visuals(tile: BattleTileData) -> void:
 		_update_effect_light(tile)
 		
 func _refresh_terrain_visual(tile: BattleTileData) -> void:
-	var layer = _terrain_layers.get_node("Elevation" + str(tile.cell.z))
+	var layer = _grid.get_layer(tile.cell.z)
 	if layer == null:
 		return
 	var cell_2d = Vector2i(tile.cell.x, tile.cell.y)
@@ -336,7 +346,7 @@ func _remove_effect_light(cell: Vector3i) -> void:
 		_effect_lights.erase(cell)
 
 func _cell_to_world(cell: Vector3i) -> Vector2:
-	var layer = _terrain_layers.get_node("Elevation" + str(cell.z))
+	var layer = _grid.get_layer(cell.z)
 	if layer == null:
 		return Vector2.ZERO
 	var world = layer.to_global(layer.map_to_local(Vector2i(cell.x, cell.y)))

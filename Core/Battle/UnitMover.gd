@@ -117,7 +117,10 @@ func _execute_sequence(actor, sequence: MovementSequence) -> bool:
 		var delta: Vector3i = step.cell - from
 		direction = Constants.direction_step(delta)
 
-		_grid.move_actor(actor, from, step.cell)
+		# move_actor returns a rider (a unit carried on a walkable object's top)
+		# when this actor is such an object — it's already been relocated on the
+		# grid; we tween its world position alongside the object below.
+		var rider: BattleActor = _grid.move_actor(actor, from, step.cell)
 		actor.update_z_index()
 		actor.set_facing_toward(from, step.cell)
 		if step.is_jump:
@@ -146,6 +149,9 @@ func _execute_sequence(actor, sequence: MovementSequence) -> bool:
 		var tween = actor.create_tween()
 		tween.set_ease(ease_type).set_trans(trans_type)
 		tween.tween_property(actor, "global_position", target_pos, duration)
+		# carry the rider in sync — same duration/shaping, its own target cell
+		if rider != null:
+			tween.parallel().tween_property(rider, "global_position", _get_world_pos.call(rider.grid_position), duration)
 		await tween.finished
 		_camera.pan_to(target_pos)
 

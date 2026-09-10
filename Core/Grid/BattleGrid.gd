@@ -2,11 +2,15 @@ class_name BattleGrid
 extends Node
 
 signal tile_occupancy_changed(tile: BattleTileData, actor: BattleActor, entered: bool)
+# a unit was standing on an object that got destroyed; it has been dropped onto
+# the object's old base cell (grid-side), and needs its world position synced.
+signal rider_dropped(rider: BattleActor, cell: Vector3i)
 
 # =============================================================================
 # STATE
 # =============================================================================
 var _grid: Dictionary = {}					# Vector3i -> BattleTileData
+var _layers: Dictionary = {}				# int (elevation) -> TileMapLayer, cached as the grid is built
 var occlusion_map: Dictionary = {}			# Vector3i -> Array[Vector3i] of occluding tiles
 var active_effect_cells: Dictionary = {}	# EffectId.Id -> Array[Vector3i] (terrain)
 var active_effect_units: Dictionary = {}	# EffectId.Id -> Array[Unit]
@@ -19,19 +23,41 @@ var active_effect_objects: Dictionary = {}	# EffectId.Id -> Array[BattleObject]
 # reads all tiles from a TileMapLayer and adds them to the logical grid at the given elevation
 # skips tiles marked as visual-only since they have no gameplay significance
 func build_from_tilemap(tilemap: TileMapLayer, elevation: int) -> void:
+	_layers[elevation] = tilemap	# cache the source layer so get_layer() can hand it back
 	for c in tilemap.get_used_cells():
+		var tile = create_tile(c, tilemap, elevation)
+		if tile == null:
+			continue
+		print("tile: ", tile)
+		add_tile(Vector3i(c.x, c.y, elevation), tile)
+
+# The TileMapLayer backing a given elevation, or null (procedural/test grids
+# built via add_tile() have no source layers). Keyed by the real elevation the
+# grid was built with — no "Elevation<z>" node-name lookup involved.
+func get_layer(z: int) -> TileMapLayer:
+	return _layers.get(z, null)
+
+# Any cached layer. All elevation layers share position (0,0) and differ only by
+# z_index, so any one maps a cell's (x,y) to the same screen point — used to
+# position tiles at elevations that have no layer of their own (object tops).
+func get_reference_layer() -> TileMapLayer:
+	for layer in _layers.values():
+		return layer
+	return null
+
+func create_tile(c: Vector2i, tilemap: TileMapLayer, elevation: int) -> BattleTileData:
 		var tile_data = tilemap.get_cell_tile_data(c)
 		if tile_data == null:
-			continue
+			return
 		if tile_data.get_custom_data("is_visual_only"):
-			continue
+			return
 		var tile = BattleTileData.new()
 		tile.elevation = elevation
 		tile.terrain_type = tile_data.get_custom_data("terrain_type")
 		tile.is_walkable = tile_data.get_custom_data("is_walkable")
 		tile.atlas_source_id = tilemap.get_cell_source_id(c)
 		tile.atlas_coords = tilemap.get_cell_atlas_coords(c)
-		add_tile(Vector3i(c.x, c.y, elevation), tile)
+		return tile
 
 # registers a single tile in the logical grid. Public so tests and future
 # procedural maps can construct grids without a TileMapLayer.
@@ -92,7 +118,10 @@ func is_walkable(cell: Vector3i) -> bool:
 	var tile = get_tile(cell)
 	if tile == null or not tile.is_walkable:
 		return false
-	if tile.object_ref != null and not tile.object_ref.data.is_walkable:
+	# ANY object blocks its own footprint at ground level. A "walkable" object
+	# isn't walk-through — it's stand-on-TOP, and place_object() registers the
+	# separate walkable tile at cell.z + height for units to path onto.
+	if tile.object_ref != null:
 		return false
 	return true
 
@@ -148,6 +177,8 @@ func place_object(object: BattleObject, cell: Vector3i) -> void:
 	if tile == null:
 		push_error("Tried to place object on invalid cell: " + str(cell))
 		return
+	if object.data.is_walkable:
+		_add_object_top(object, cell)
 	tile.object_ref = object
 	object.grid_position = cell
 	object._grid_ref = self
@@ -159,37 +190,91 @@ func remove_object(cell: Vector3i) -> void:
 		return
 	var object = tile.object_ref
 	tile.object_ref = null
+	# tear down the stand-on tile with the object. If a unit was riding it, the
+	# platform is gone — drop it onto the object's old base cell (a real, in-bounds
+	# tile) so it doesn't end up stranded at the erased top cell.
+	var rider: BattleActor = null
+	if object != null and object.data.is_walkable:
+		rider = _remove_object_top(object, cell)
+		if rider != null:
+			tile.unit_ref = rider
+			rider.grid_position = cell
 	tile_occupancy_changed.emit(tile, object, false)
+	if rider != null:
+		rider_dropped.emit(rider, cell)	# world position synced by the scene
+
+# =============================================================================
+# OBJECT-TOP TILES — the synthetic stand-on tile a walkable object provides.
+# Created/relocated/destroyed in lockstep with the object so it never lingers at
+# a stale position (see place_object / move_actor / remove_object).
+# =============================================================================
+
+# the stand-on cell for a walkable object based at `base` — "straight up" h
+# levels, which in this iso encoding is a (-h, -h, +h) shift (see place_object).
+func _object_top_cell(object: BattleObject, base: Vector3i) -> Vector3i:
+	var h: int = object.data.height
+	return Vector3i(base.x - h, base.y - h, base.z + h)
+
+func _add_object_top(object: BattleObject, base: Vector3i) -> void:
+	var base_tile := get_tile(base)
+	var top_tile := BattleTileData.new()
+	top_tile.is_walkable = true
+	top_tile.terrain_type = base_tile.terrain_type if base_tile != null else BattleTileData.TerrainType.GRASS
+	top_tile.is_object_top = true	# overlays here must draw above the object
+	add_tile(_object_top_cell(object, base), top_tile)
+
+# Removes the object's stand-on tile. Returns the unit standing on it (or null),
+# so a move can carry that rider along and a removal can decide its fate.
+func _remove_object_top(object: BattleObject, base: Vector3i) -> BattleActor:
+	var top := _object_top_cell(object, base)
+	var top_tile := get_tile(top)
+	if top_tile == null:
+		return null
+	var rider: BattleActor = top_tile.unit_ref
+	_grid.erase(top)
+	return rider
 
 # moves whichever kind of actor (Unit or BattleObject) between cells.
 # The single movement mutation point — UnitMover and push/slide actions all
 # route through here so occupancy bookkeeping can never diverge by actor type.
-func move_actor(actor, from: Vector3i, to: Vector3i) -> void:
+# Returns the rider (a unit carried along on a walkable object's top) when the
+# move relocated one, else null — so the mover can tween the rider in sync.
+func move_actor(actor, from: Vector3i, to: Vector3i) -> BattleActor:
 	var from_tile = get_tile(from)
 	var to_tile = get_tile(to)
 	if from_tile == null or to_tile == null:
 		push_error("Invalid move from " + str(from) + " to " + str(to))
-		return
-		
+		return null
+
+	var rider: BattleActor = null
 	if actor is Unit:
 		if to_tile.unit_ref != null:
 			push_error("Tried to move unit to occupied cell: " + str(to))
-			return
+			return null
 		to_tile.unit_ref = actor
 		from_tile.unit_ref = null
 	elif actor is BattleObject:
 		if to_tile.object_ref != null:
 			push_error("Tried to move object to object-occupied cell: " + str(to))
-			return
+			return null
+		# relocate the object's stand-on tile, carrying any rider to the new top
+		if actor.data.is_walkable:
+			rider = _remove_object_top(actor, from)
+			_add_object_top(actor, to)
+			if rider != null:
+				var new_top := get_tile(_object_top_cell(actor, to))
+				new_top.unit_ref = rider
+				rider.grid_position = new_top.cell	# world position is synced by UnitMover
 		to_tile.object_ref = actor
 		from_tile.object_ref = null
 	else:
 		push_error("move_actor: unknown actor type")
-		return
-		
+		return null
+
 	actor.grid_position = to
 	tile_occupancy_changed.emit(from_tile, actor, false)  # leaving
 	tile_occupancy_changed.emit(to_tile, actor, true)     # entering
+	return rider
 
 # returns the Unit on the given cell, or null if unoccupied
 func get_unit_at(cell: Vector3i) -> BattleActor:
@@ -221,9 +306,10 @@ func is_cell_occupied(cell: Vector3i) -> bool:
 	var tile = get_tile(cell)
 	if tile == null:
 		return false
-	if tile.unit_ref != null:
-		return true
-	return tile.object_ref != null and not tile.object_ref.data.is_walkable
+	#if tile.unit_ref != null:
+		#return true
+	#return tile.object_ref != null and not tile.object_ref.data.is_walkable
+	return tile.unit_ref != null or tile.object_ref != null
 
 # =============================================================================
 # EFFECT PROPAGATION SUPPORT

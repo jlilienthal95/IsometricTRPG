@@ -10,5 +10,6 @@ object_name = "Barrel"
 scene = ExtResource("1_jtemy")
 portrait = ExtResource("1_lju20")
 is_walkable = true
+height = 1
 base_max_hp = 25
 metadata/_custom_type_script = "uid://cvs4v7tedqcxg"

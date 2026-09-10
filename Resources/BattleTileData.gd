@@ -29,6 +29,12 @@ var atlas_coords: Vector2i = Vector2i.ZERO
 var active_effects: Array[EffectInstance] = []
 var _grid_ref: BattleGrid = null	# set by BattleGrid when the tile is created
 
+# True for the synthetic stand-on tile a walkable object provides. Such a tile
+# has no terrain layer of its own and sits visually ON TOP of an object drawn at
+# UNOCCLUDED_ACTOR_Z_INDEX, so overlays on it (highlight, cursor) must draw ABOVE
+# that band instead of at terrain level, or they hide behind the object.
+var is_object_top: bool = false
+
 # The terrain this tile falls back to when a REVERSIBLE conversion is undone
 # (e.g. FROZEN melting back off ICE). A reversible conversion caches the real
 # pre-conversion terrain here; a tile that is BORN already-converted (spawned as

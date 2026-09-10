@@ -217,6 +217,13 @@ func _finalize_defeat() -> void:
 func update_z_index() -> void:
 	if _grid_ref == null:
 		return
+	# standing ON an object: the object draws at UNOCCLUDED_ACTOR_Z_INDEX and, being
+	# lower on screen, y-sorts in FRONT of us at the same z — so clear its band to
+	# sit on top of it (above the object's highlights/cursor too).
+	var tile := _grid_ref.get_tile(grid_position)
+	if tile != null and tile.is_object_top:
+		z_index = Constants.UNOCCLUDED_ACTOR_Z_INDEX + 5
+		return
 	var occluders = _grid_ref.occlusion_map.get(grid_position, [])
 	if occluders.is_empty():
 		z_index = Constants.UNOCCLUDED_ACTOR_Z_INDEX

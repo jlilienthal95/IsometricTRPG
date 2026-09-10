@@ -13,6 +13,7 @@ extends BattleActorData
 # whether units can stand on / path through the tile this object occupies
 # (crate = true, barrel = false)
 @export var is_walkable: bool = false
+@export var height: int = 1	#if units can stand on top of object, use height for vertical elevation units
 
 # whether unit actions can push/slide this object
 @export var is_movable: bool = true
